@@ -22,7 +22,7 @@ export default {
                 .setColor(0x00AEEF)
                 .setTitle('Neon: Vision Eye')
                 .setDescription('Character Stats Overview')
-                //.setThumbnail('attachment://neon.png')
+                .setThumbnail('https://tse2.mm.bing.net/th/id/OIP.CCAX0VqoevWmHKG1Nul7gQAAAA?rs=1&pid=ImgDetMain&o=7&rm=3')
                 .addFields(
                     {
                     name: '',
