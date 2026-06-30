@@ -64,8 +64,8 @@ export default {
                     {
                     name: 'Metadata',
                     value: [
-                        '**Last Updated:** June 29, 2026 02:28',
-                        '**XEN:** 674'
+                        '**Last Updated:** tesete',
+                        '**USER:** test'
                     ].join('\n'),
                     inline: false
                     }
