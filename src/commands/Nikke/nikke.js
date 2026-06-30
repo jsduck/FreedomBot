@@ -18,15 +18,11 @@ export default {
 
         async execute(interaction) {
             try {
-                return await InteractionHelper.safeEditReply(interaction, {
-                    embeds: [
-                        createEmbed({
-                            title: '✅ Cum',
-                            description:
-                                `Test`,
-                            color: 'success',
-                        }),
-                    ],
+                await InteractionHelper.safeEditReply(interaction, {
+                    embeds: [createEmbed({ 
+                        title: "⏱️ test", 
+                        description: `test` 
+                    })],
                 });
             } catch (error) {
                 await handleInteractionError(interaction, error, {
