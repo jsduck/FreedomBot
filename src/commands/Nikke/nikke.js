@@ -18,7 +18,7 @@ export default {
 
         async execute(interaction) {
             try {
-                const embed = new EmbedBuilder()
+                const embed = new createEmbed()
                 .setColor(0x00AEEF)
                 .setTitle('Neon: Vision Eye')
                 .setDescription('Character Stats Overview')
