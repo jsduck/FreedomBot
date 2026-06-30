@@ -85,7 +85,7 @@ class TitanBot extends Client {
       startupLog('Discord login successful');
       
       startupLog('Registering slash commands...');
-      await this.registerCommands();
+      //await this.registerCommands();
       startupLog('Slash commands registration complete');
       
       const databaseMode = dbStatus.isDegraded
@@ -381,6 +381,3 @@ try {
 }
 
 export default TitanBot;
-
-
-
