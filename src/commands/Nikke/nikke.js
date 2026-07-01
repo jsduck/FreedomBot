@@ -155,6 +155,7 @@ async function getUnitDetails(listofnikkeids, uid) {
         credentials: "include"
     });
     const res = await response.json();
+    console.log(res);
     const units = res.data.character_details,
         effects = res.data.state_effects;
     const lines = ["arm_equip_option1_id", "arm_equip_option2_id", "arm_equip_option3_id", "head_equip_option1_id", "head_equip_option2_id", "head_equip_option3_id", "leg_equip_option1_id", "leg_equip_option2_id", "leg_equip_option3_id", "torso_equip_option1_id", "torso_equip_option2_id", "torso_equip_option3_id"];
