@@ -6,6 +6,11 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError } from '../../utils/errorHandler.js';
 
+import fetch from "node-fetch";
+import fetchCookie from "fetch-cookie";
+
+const fetchWithCookies = fetchCookie(fetch);
+
 const players = [
     {
         name: "Kaarako",
@@ -97,7 +102,7 @@ const nikkeBase = [
 ];
 
 async function clogin() {
-    var response = await fetch("https://api.blablalink.com/api/user/CheckLogin", {
+    var response = await fetchWithCookies("https://api.blablalink.com/api/user/CheckLogin", {
         method: "POST",
         credentials: "include"
     });
@@ -107,7 +112,7 @@ async function clogin() {
 }
 
 async function login() {
-    var response = await fetch("https://api.blablalink.com/api/user/Login", {
+    var response = await fetchWithCookies("https://api.blablalink.com/api/user/Login", {
         method: "POST",
         body: JSON.stringify({
             game_openid:"3166452414820481224",
@@ -140,7 +145,7 @@ function extractOLvalue(gear, dict) {
 }
 
 async function getUnitDetails(listofnikkeids, uid) {
-    var response = await fetch("https://api.blablalink.com/api/game/proxy/Game/GetUserCharacterDetails", {
+    var response = await fetchWithCookies("https://api.blablalink.com/api/game/proxy/Game/GetUserCharacterDetails", {
         method: "POST",
         body: JSON.stringify({
             intl_open_id: 3166452414820481224,
