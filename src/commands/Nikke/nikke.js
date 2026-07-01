@@ -224,7 +224,7 @@ export default {
                         '**Bond:** 10',
                         '**LB:** 0',
                         '**Skills:** 10 / 10 / 10',
-                        '**Doll:** ' + players[0].nikke['5170'].doll,
+                        '**Doll:** Cock',
                         '**Cube:** Quantum 8 | None',
                         '**CP:** 385,288 | 371,714'
                     ].join('\n'),
