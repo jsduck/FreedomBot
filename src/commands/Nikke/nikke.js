@@ -99,11 +99,6 @@ const nikkeBase = [
 async function clogin() {
     var response = await fetch("https://api.blablalink.com/api/user/CheckLogin", {
         method: "POST",
-        body: JSON.stringify({
-            intl_open_id: uid,
-            name_codes: listofnikkeids,
-            nikke_area_id: areaId
-        }),
         credentials: "include"
     });
     const res = await response.json();
@@ -214,6 +209,9 @@ export default {
             try {
                 var lg = await login();
                 console.log(lg);
+
+                var clg = await clogin();
+                console.log(clg);
 
                 var units = await getUnitDetails(1, 1);
                 console.log(units);
