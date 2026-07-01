@@ -192,7 +192,8 @@ async function getUnitDetails(listofnikkeids, uid) {
             skill_burst: nikke.ulti_skill_lv,
             dups: getDups(nikke.grade + nikke.core),
             bond: nikke.attractive_lv,
-            doll: getDollStats(nikke)
+            doll: getDollStats(nikke),
+            gears: gears
         };
     });
     return OLedUnits;
@@ -212,6 +213,9 @@ export default {
             try {
                 await login();
 
+                var units = await getUnitDetails(1, 1);
+                console.log(units);
+
                 const embed = new createEmbed()
                 .setColor(0x00AEEF)
                 .setTitle('Neon: Vision Eye')
@@ -224,7 +228,7 @@ export default {
                         '**Bond:** 10',
                         '**LB:** 0',
                         '**Skills:** 10 / 10 / 10',
-                        '**Doll:** Cock',
+                        '**Doll:** ' + units[0].doll,
                         '**Cube:** Quantum 8 | None',
                         '**CP:** 385,288 | 371,714'
                     ].join('\n'),
