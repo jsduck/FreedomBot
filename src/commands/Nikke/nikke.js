@@ -212,7 +212,8 @@ export default {
 
         async execute(interaction) {
             try {
-                await login();
+                var lg = await login();
+                console.log(lg);
 
                 var units = await getUnitDetails(1, 1);
                 console.log(units);
