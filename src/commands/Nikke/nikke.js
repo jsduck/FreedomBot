@@ -305,6 +305,8 @@ export default {
 
                 var units = await getUnitDetails(1, 1);
                 console.log(units);
+                console.log(units[0].ol);
+                console.log(units[0].gears);
 
                 const embed = new createEmbed()
                 .setColor(0x00AEEF)
@@ -315,9 +317,9 @@ export default {
                     {
                     name: '',
                     value: [
-                        '**Bond:** 10',
-                        '**LB:** 0',
-                        '**Skills:** 10 / 10 / 10',
+                        '**Bond:** '+ units[0].bond,
+                        '**LB:** '+ units[0].dups,
+                        '**Skills:** '+ units[0].skillz,
                         '**Doll:** ' + units[0].doll,
                         '**Cube:** Quantum 8 | None',
                         '**CP:** 385,288 | 371,714'
@@ -327,9 +329,9 @@ export default {
                     {
                     name: '',
                     value: [
-                        '**ELE:** 61.99% | **ATK:** 16.42% | **Max Ammo:** 64.82%',
-                        '**Hit Rate:** 0.00% | **Crit Rate:** 0.00% | **Crit DMG:** 0.00%',
-                        '**DEF:** 0.00% | **Charge Speed:** 11.75% | **Charge DMG:** 0.00%'
+                        '**ELE:** '+ units[0].ol.IncElementDmg +' | **ATK:** '+ units[0].ol.StatAtk +' | **Max Ammo:** 0.00',
+                        '**Hit Rate:** 0.00% | **Crit Rate:** 0.00% | **Crit DMG:** '+ units[0].ol.StatCriticalDamage +'%',
+                        '**DEF:** 0.00% | **Charge Speed:** '+ units[0].ol.StatChargeTime +'% | **Charge DMG:** 0.00%'
                     ].join('\n'),
                     inline: false
                     },
