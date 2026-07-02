@@ -6,6 +6,11 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError } from '../../utils/errorHandler.js';
 
+import fetch from "node-fetch";
+import fetchCookie from "fetch-cookie";
+
+const fetchWithCookies = fetchCookie(fetch);
+
 const players = [
     {
         name: "Kaarako",
@@ -100,25 +105,7 @@ const nikkeBase = [
 
 async function clogin() {
     var response = await fetch("https://api.blablalink.com/api/user/CheckLogin", {
-        method: "POST",
-        headers: {
-            "content-type": "application/json",
-            "x-token": token,
-            "x-channel-type": "2",
-            "x-language": "en",
-            "x-common-params": JSON.stringify({
-                game_id: "16",
-                area_id: "global",
-                source: "pc_web",
-                intl_game_id: "29080",
-                language: "en",
-                env: "prod",
-                data_statistics_scene: "outer",
-                data_statistics_page_id: "https://www.blablalink.com/login?to=/&back_to=/",
-                data_statistics_client_type: "pc_web",
-                data_statistics_lang: "en"
-            })
-        }
+        method: "POST"
     });
     const res = await response.json();
 
@@ -126,7 +113,7 @@ async function clogin() {
 }
 
 async function login() {
-    var response = await fetch("https://api.blablalink.com/api/user/Login", {
+    var response = await fetchWithCookies("https://api.blablalink.com/api/user/Login", {
         method: "POST",
         body: JSON.stringify({
             game_openid:"3166452414820481224",
@@ -160,7 +147,7 @@ function extractOLvalue(gear, dict) {
 }
 
 async function getUnitDetails(listofnikkeids, uid) {
-    var response = await fetch("https://api.blablalink.com/api/game/proxy/Game/GetUserCharacterDetails", {
+    var response = await fetchWithCookies("https://api.blablalink.com/api/game/proxy/Game/GetUserCharacterDetails", {
         method: "POST",
         body: JSON.stringify({
             intl_open_id: 3166452414820481224,
