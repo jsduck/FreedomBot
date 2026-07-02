@@ -6,17 +6,14 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError } from '../../utils/errorHandler.js';
 
-import fetch from "node-fetch";
-import fetchCookie from "fetch-cookie";
-
-const fetchWithCookies = fetchCookie(fetch);
-
 const players = [
     {
         name: "Kaarako",
         link: "https://www.blablalink.com/shiftyspad?uid=MjkwODAtMzE2NjQ1MjQxNDgyMDQ4MTIyNA%3D%3D"
     }
 ]
+
+const token = "";
 
 const nikkeBase = [
     { id: 203201, name_code: 5017, name: "Miranda", getol: true },
@@ -102,9 +99,12 @@ const nikkeBase = [
 ];
 
 async function clogin() {
-    var response = await fetchWithCookies("https://api.blablalink.com/api/user/CheckLogin", {
+    var response = await fetch("https://api.blablalink.com/api/user/CheckLogin", {
         method: "POST",
-        credentials: "include"
+        headers: {
+            "content-type": "application/json",
+            "x-token": token
+        }
     });
     const res = await response.json();
 
@@ -112,7 +112,7 @@ async function clogin() {
 }
 
 async function login() {
-    var response = await fetchWithCookies("https://api.blablalink.com/api/user/Login", {
+    var response = await fetch("https://api.blablalink.com/api/user/Login", {
         method: "POST",
         body: JSON.stringify({
             game_openid:"3166452414820481224",
@@ -129,7 +129,8 @@ async function login() {
         credentials: "include"
     });
     const res = await response.json();
-    
+
+    token = res.data.token ?? "0";
     return res;
 }
 
@@ -145,14 +146,17 @@ function extractOLvalue(gear, dict) {
 }
 
 async function getUnitDetails(listofnikkeids, uid) {
-    var response = await fetchWithCookies("https://api.blablalink.com/api/game/proxy/Game/GetUserCharacterDetails", {
+    var response = await fetch("https://api.blablalink.com/api/game/proxy/Game/GetUserCharacterDetails", {
         method: "POST",
         body: JSON.stringify({
             intl_open_id: 3166452414820481224,
             name_codes: [5129],
             nikke_area_id: 84
         }),
-        credentials: "include"
+        headers: {
+            "content-type": "application/json",
+            "x-token": token
+        }
     });
     const res = await response.json();
     console.log(res);
