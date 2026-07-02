@@ -140,8 +140,7 @@ async function clogin() {
     });
     const res = await response.json();
 
-    console.log("Login Headers:", response.headers.raw());
-    console.log("Login Set-Cookie:", response.headers.raw()["set-cookie"]);
+    console.log("CheckLogin Headers:", response.headers.raw());
 
     return res;
 }
@@ -197,26 +196,14 @@ async function getUnitDetails(listofnikkeids, uid) {
             nikke_area_id: 84
         }),
         headers: {
-            "content-type": "application/json",
-            "x-token": token,
-            "x-channel-type": "2",
-            "x-language": "en",
-            "x-common-params": JSON.stringify({
-                game_id: "16",
-                area_id: "global",
-                source: "pc_web",
-                intl_game_id: "29080",
-                language: "en",
-                env: "prod",
-                data_statistics_scene: "outer",
-                data_statistics_page_id: "https://www.blablalink.com/login?to=/&back_to=/",
-                data_statistics_client_type: "pc_web",
-                data_statistics_lang: "en"
-            })
+            ...COMMON_HEADERS,
+            "x-token": token
         }
     });
     const res = await response.json();
-    console.log(res);
+    
+    console.log("getUnitDetails Headers:", response.headers.raw());
+
     const units = res.data.character_details,
         effects = res.data.state_effects;
     const lines = ["arm_equip_option1_id", "arm_equip_option2_id", "arm_equip_option3_id", "head_equip_option1_id", "head_equip_option2_id", "head_equip_option3_id", "leg_equip_option1_id", "leg_equip_option2_id", "leg_equip_option3_id", "torso_equip_option1_id", "torso_equip_option2_id", "torso_equip_option3_id"];
