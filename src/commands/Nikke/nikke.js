@@ -21,6 +21,14 @@ const players = [
 // These MUST match browser requests exactly
 const COMMON_HEADERS = {
     "content-type": "application/json",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    "accept": "application/json, text/plain, */*",
+    "accept-language": "en-US,en;q=0.9",
+    "origin": "https://www.blablalink.com",
+    "referer": "https://www.blablalink.com/",
+    "sec-fetch-site": "same-origin",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-dest": "empty",
     "x-channel-type": "2",
     "x-language": "en",
     "x-common-params": JSON.stringify({
