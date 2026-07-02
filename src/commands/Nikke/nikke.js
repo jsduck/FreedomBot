@@ -103,7 +103,21 @@ async function clogin() {
         method: "POST",
         headers: {
             "content-type": "application/json",
-            "x-token": token
+            "x-token": token,
+            "x-channel-type": "2",
+            "x-language": "en",
+            "x-common-params": JSON.stringify({
+                game_id: "16",
+                area_id: "global",
+                source: "pc_web",
+                intl_game_id: "29080",
+                language: "en",
+                env: "prod",
+                data_statistics_scene: "outer",
+                data_statistics_page_id: "https://www.blablalink.com/login?to=/&back_to=/",
+                data_statistics_client_type: "pc_web",
+                data_statistics_lang: "en"
+            })
         }
     });
     const res = await response.json();
@@ -155,7 +169,21 @@ async function getUnitDetails(listofnikkeids, uid) {
         }),
         headers: {
             "content-type": "application/json",
-            "x-token": token
+            "x-token": token,
+            "x-channel-type": "2",
+            "x-language": "en",
+            "x-common-params": JSON.stringify({
+                game_id: "16",
+                area_id: "global",
+                source: "pc_web",
+                intl_game_id: "29080",
+                language: "en",
+                env: "prod",
+                data_statistics_scene: "outer",
+                data_statistics_page_id: "https://www.blablalink.com/login?to=/&back_to=/",
+                data_statistics_client_type: "pc_web",
+                data_statistics_lang: "en"
+            })
         }
     });
     const res = await response.json();
