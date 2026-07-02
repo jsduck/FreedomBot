@@ -203,6 +203,7 @@ async function getUnitDetails(listofnikkeids, uid) {
     const res = await response.json();
     
     console.log("getUnitDetails Headers:", response.headers.raw());
+    console.log("getUnitDetails JSON:", res);
 
     const units = res.data.character_details,
         effects = res.data.state_effects;
