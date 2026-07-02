@@ -18,6 +18,25 @@ const players = [
     }
 ]
 
+// These MUST match browser requests exactly
+const COMMON_HEADERS = {
+    "content-type": "application/json",
+    "x-channel-type": "2",
+    "x-language": "en",
+    "x-common-params": JSON.stringify({
+        game_id: "16",
+        area_id: "global",
+        source: "pc_web",
+        intl_game_id: "29080",
+        language: "en",
+        env: "prod",
+        data_statistics_scene: "outer",
+        data_statistics_page_id: "https://www.blablalink.com/login?to=/&back_to=/",
+        data_statistics_client_type: "pc_web",
+        data_statistics_lang: "en"
+    })
+};
+
 var token = "";
 
 const nikkeBase = [
@@ -106,18 +125,9 @@ const nikkeBase = [
 async function clogin() {
     var response = await fetch("https://api.blablalink.com/api/user/CheckLogin", {
         method: "POST",
-        headers: {
-            "content-type": "application/json",
-            "x-channel-type": "2",
-            "x-language": "en",
-            "x-common-params": JSON.stringify({
-                game_id: "16",
-                area_id: "global",
-                source: "pc_web",
-                intl_game_id: "29080",
-                language: "en",
-                env: "prod"
-            })
+        headers: { 
+            ...COMMON_HEADERS,
+            "x-token": token
         }
     });
     const res = await response.json();
@@ -128,23 +138,7 @@ async function clogin() {
 async function login() {
     var response = await fetchWithCookies("https://api.blablalink.com/api/user/Login", {
         method: "POST",
-        headers: {
-            "content-type": "application/json",
-            "x-channel-type": "2",
-            "x-language": "en",
-            "x-common-params": JSON.stringify({
-                game_id: "16",
-                area_id: "global",
-                source: "pc_web",
-                intl_game_id: "29080",
-                language: "en",
-                env: "prod",
-                data_statistics_scene: "outer",
-                data_statistics_page_id: "https://www.blablalink.com/login?to=/&back_to=/",
-                data_statistics_client_type: "pc_web",
-                data_statistics_lang: "en"
-            })
-        },
+        headers: COMMON_HEADERS,
         body: JSON.stringify({
             game_openid:"3166452414820481224",
             game_channelid:131,
@@ -161,7 +155,13 @@ async function login() {
     });
     const res = await response.json();
 
-    token = res.data.token ?? "0";
+    console.log("Login Set-Cookie:", res.headers.raw()["set-cookie"]);
+
+    if (!res.headers.raw()["set-cookie"]) {
+        throw new Error("Login failed: No cookies received");
+    }
+
+    token = res.data?.token;
     return res;
 }
 
