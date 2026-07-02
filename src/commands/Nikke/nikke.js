@@ -131,7 +131,7 @@ const nikkeBase = [
 ];
 
 async function clogin() {
-    var response = await fetch("https://api.blablalink.com/api/user/CheckLogin", {
+    var response = await fetchWithCookies("https://api.blablalink.com/api/user/CheckLogin", {
         method: "POST",
         headers: { 
             ...COMMON_HEADERS,
