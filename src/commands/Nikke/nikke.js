@@ -155,9 +155,9 @@ async function login() {
     });
     const res = await response.json();
 
-    console.log("Login Set-Cookie:", res.headers.raw()["set-cookie"]);
+    console.log("Login Set-Cookie:", response.headers.raw()["set-cookie"]);
 
-    if (!res.headers.raw()["set-cookie"]) {
+    if (!response.headers.raw()["set-cookie"]) {
         throw new Error("Login failed: No cookies received");
     }
 
