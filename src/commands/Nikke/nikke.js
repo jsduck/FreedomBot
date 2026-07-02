@@ -191,7 +191,7 @@ async function getUnitDetails(listofnikkeids, uid) {
     var response = await fetchWithCookies("https://api.blablalink.com/api/game/proxy/Game/GetUserCharacterDetails", {
         method: "POST",
         body: JSON.stringify({
-            intl_open_id: 16338490109246680481,
+            intl_open_id: "16338490109246680481",
             name_codes: [5170],
             nikke_area_id: 84
         }),
