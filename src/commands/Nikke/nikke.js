@@ -140,6 +140,9 @@ async function clogin() {
     });
     const res = await response.json();
 
+    console.log("Login Headers:", response.headers.raw());
+    console.log("Login Set-Cookie:", response.headers.raw()["set-cookie"]);
+
     return res;
 }
 
