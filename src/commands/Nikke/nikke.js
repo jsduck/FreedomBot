@@ -249,6 +249,42 @@ async function getUnitDetails(listofnikkeids, uid) {
     return OLedUnits;
 }
 
+function getDups(dups) {
+    switch (dups) {
+        case 0:
+        case 1:
+        case 2:
+            return `LB ${dups}`;
+        case 3:
+            return "MLB";
+        default:
+            return `CORE ${dups-3}`;
+    }
+}
+
+function getDollStats(rawNikke) {
+    switch (rawNikke.favorite_item_tid) {
+        case 0:
+            return ``;
+        case 100101:
+        case 100201:
+        case 100301:
+        case 100401:
+        case 100501:
+        case 100601:
+            return `R ${rawNikke.favorite_item_lv}`;
+        case 100102:
+        case 100202:
+        case 100302:
+        case 100402:
+        case 100502:
+        case 100602:
+            return `SR ${rawNikke.favorite_item_lv}`;
+        default:
+            return `SSR ${rawNikke.favorite_item_lv+1}`;
+    }
+}
+
 export default {
     data: new SlashCommandBuilder()
         .setName("nikke")
