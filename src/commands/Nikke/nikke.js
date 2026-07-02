@@ -13,7 +13,7 @@ const players = [
     }
 ]
 
-const token = "";
+var token = "";
 
 const nikkeBase = [
     { id: 203201, name_code: 5017, name: "Miranda", getol: true },
