@@ -140,7 +140,7 @@ async function clogin() {
     });
     const res = await response.json();
 
-    console.log("CheckLogin Headers:", response.headers.raw());
+    //console.log("CheckLogin Headers:", response.headers.raw());
 
     return res;
 }
@@ -165,8 +165,8 @@ async function login() {
     });
     const res = await response.json();
 
-    console.log("Login Headers:", response.headers.raw());
-    console.log("Login Set-Cookie:", response.headers.raw()["set-cookie"]);
+    //console.log("Login Headers:", response.headers.raw());
+    //console.log("Login Set-Cookie:", response.headers.raw()["set-cookie"]);
 
     if (!response.headers.raw()["set-cookie"]) {
         throw new Error("Login failed: No cookies received");
@@ -262,10 +262,10 @@ export default {
         async execute(interaction) {
             try {
                 var lg = await login();
-                console.log(lg);
+                //console.log(lg);
 
-                var clg = await clogin();
-                console.log(clg);
+                //var clg = await clogin();
+                //console.log(clg);
 
                 var units = await getUnitDetails(1, 1);
                 console.log(units);
