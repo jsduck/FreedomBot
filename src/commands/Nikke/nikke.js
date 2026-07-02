@@ -150,16 +150,16 @@ async function login() {
         method: "POST",
         headers: COMMON_HEADERS,
         body: JSON.stringify({
-            game_openid:"3166452414820481224",
+            game_openid:"16338490109246680481",
             game_channelid:131,
-            game_token:"922ec4a98d52f9c022e57caae5a342cd0102704f",
+            game_token:"34d5f9dcf73ccfe137eab4612a47a83801796841",
             game_id:"29080",
-            game_expire_time:1785454833,
-            game_uid:"54150814256118",
-            game_user_name:"Kaarako17",
-            game_user_region:"360",
+            game_expire_time:1785623494,
+            game_uid:"1818698667806006",
+            game_user_name:"Player_jddztnHq",
+            game_user_region:"704",
             game_adult_status:1,
-            game_email:"accnike666@gmail.com"
+            game_email:"niikke900@gmail.com"
         }),
         credentials: "include"
     });
@@ -191,8 +191,8 @@ async function getUnitDetails(listofnikkeids, uid) {
     var response = await fetchWithCookies("https://api.blablalink.com/api/game/proxy/Game/GetUserCharacterDetails", {
         method: "POST",
         body: JSON.stringify({
-            intl_open_id: 3166452414820481224,
-            name_codes: [5129],
+            intl_open_id: 16338490109246680481,
+            name_codes: [5170],
             nikke_area_id: 84
         }),
         headers: {
