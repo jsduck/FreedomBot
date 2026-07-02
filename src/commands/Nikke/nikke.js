@@ -105,7 +105,20 @@ const nikkeBase = [
 
 async function clogin() {
     var response = await fetch("https://api.blablalink.com/api/user/CheckLogin", {
-        method: "POST"
+        method: "POST",
+        headers: {
+            "content-type": "application/json",
+            "x-channel-type": "2",
+            "x-language": "en",
+            "x-common-params": JSON.stringify({
+                game_id: "16",
+                area_id: "global",
+                source: "pc_web",
+                intl_game_id: "29080",
+                language: "en",
+                env: "prod"
+            })
+        }
     });
     const res = await response.json();
 
@@ -115,6 +128,23 @@ async function clogin() {
 async function login() {
     var response = await fetchWithCookies("https://api.blablalink.com/api/user/Login", {
         method: "POST",
+        headers: {
+            "content-type": "application/json",
+            "x-channel-type": "2",
+            "x-language": "en",
+            "x-common-params": JSON.stringify({
+                game_id: "16",
+                area_id: "global",
+                source: "pc_web",
+                intl_game_id: "29080",
+                language: "en",
+                env: "prod",
+                data_statistics_scene: "outer",
+                data_statistics_page_id: "https://www.blablalink.com/login?to=/&back_to=/",
+                data_statistics_client_type: "pc_web",
+                data_statistics_lang: "en"
+            })
+        },
         body: JSON.stringify({
             game_openid:"3166452414820481224",
             game_channelid:131,
