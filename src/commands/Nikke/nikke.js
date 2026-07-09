@@ -27,10 +27,10 @@ export default {
             try {
                 switch (subcommand) {
                     case "login":
-                        //await handleLogin(interaction, client);
+                        await handleLogin(interaction, client);
                         break;
                     case "checklogin":
-                        //await handleCheckLogin(interaction, client);
+                        await handleCheckLogin(interaction, client);
                         break;
                     default:
                         await InteractionHelper.safeReply(interaction, {
