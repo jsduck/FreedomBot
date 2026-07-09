@@ -1175,7 +1175,7 @@ const NIKE_GG_CHARACTER_PREVIEW = {
 async function fetchNikkeApi(endpoint, method, payload = null) {
     const url = `${NIKKE_API_BASE_URL}${endpoint}`;
     const options = {
-        method,
+        method: method,
         headers: { ...NIKKE_COMMON_HEADERS, "x-token": token || "" }
     };
     if (payload) {
@@ -1196,7 +1196,15 @@ async function fetchNikkeGGApi(endpoint, method, payload = null) {
 }
 
 export async function login() {
-    var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.LOGIN, NIKKE_API_METHODS.LOGIN, NIKKE_PAYLOADS.LOGIN);
+    const url = `${NIKKE_API_BASE_URL}${NIKKE_API_ENDPOINTS.LOGIN}`;
+    const options = {
+        method: NIKKE_API_METHODS.LOGIN,
+        headers: { ...NIKKE_COMMON_HEADERS }
+    };
+    if (NIKKE_PAYLOADS.LOGIN) {
+        options.body = JSON.stringify(NIKKE_PAYLOADS.LOGIN);
+    }
+    var res = await fetchWithCookies(url, options);
 
     if (!res.headers.raw()["set-cookie"]) {
         console.log(res);
