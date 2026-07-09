@@ -16,10 +16,34 @@ export default {
             subcommand
                 .setName("login")
                 .setDescription("Generate login token for Nikke API"))
+                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addSubcommand(subcommand =>
             subcommand
                 .setName("checklogin")
                 .setDescription("Check login status for Nikke API"))
+                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName("fetch-api")
+                .setDescription("Direct API call to Nikke API"))
+                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+                .addStringOption(option =>
+                    option
+                        .setName("endpoint")
+                        .setDescription("The API endpoint to call")
+                        .setRequired(true)
+                )
+                .addStringOption(option =>
+                    option
+                        .setName("method")
+                        .setDescription("The HTTP method to use")
+                        .setRequired(true)
+                )
+                .addStringOption(option =>
+                    option
+                        .setName("payload")
+                        .setDescription("The payload for the API request")
+                )
         ,
         async execute(interaction, client) {
             const subcommand = interaction.options.getSubcommand();
@@ -31,6 +55,9 @@ export default {
                         break;
                     case "checklogin":
                         await handleCheckLogin(interaction, client);
+                        break;
+                    case "fetch-api":
+                        await handleFetchApi(interaction, client);
                         break;
                     default:
                         await InteractionHelper.safeReply(interaction, {

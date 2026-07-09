@@ -43,7 +43,7 @@ export async function handleLogin(interaction, client) {
     }
 }
 
-export const handleCheckLogin = async (interaction, client) => {
+export async function handleCheckLogin(interaction, client) {
     const guild = interaction.guild;
 
     // Defer reply immediately to ensure interaction is acknowledged

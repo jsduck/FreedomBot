@@ -1172,7 +1172,7 @@ const NIKE_GG_CHARACTER_PREVIEW = {
     }
 };
 
-async function fetchNikkeApi(endpoint, method, payload = null) {
+export async function fetchNikkeApi(endpoint, method, payload = null) {
     const url = `${NIKKE_API_BASE_URL}${endpoint}`;
     const options = {
         method: method,
