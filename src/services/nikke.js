@@ -1195,7 +1195,7 @@ async function fetchNikkeGGApi(endpoint, method, payload = null) {
     return await fetchWithCookies(url, options);
 }
 
-async function login() {
+export async function login() {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.LOGIN, NIKKE_API_METHODS.LOGIN, NIKKE_PAYLOADS.LOGIN);
 
     if (!res.headers.raw()["set-cookie"]) {
@@ -1206,7 +1206,7 @@ async function login() {
     return res;
 }
 
-async function checkLogin() {
+export async function checkLogin() {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.CHECK_LOGIN, NIKKE_API_METHODS.CHECK_LOGIN);
 
     return res;
