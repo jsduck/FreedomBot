@@ -148,8 +148,8 @@ const NIKKE_GG_API_METHODS = {
 
 const NIKKE_API_BASE_URL = 'https://api.blablalink.com/api';
 const NIKKE_API_ENDPOINTS = {
-    LOGIN: 'user/Login',
-    CHECK_LOGIN: 'user/CheckLogin',
+    LOGIN: '/user/Login',
+    CHECK_LOGIN: '/user/CheckLogin',
     GET_CHARACTER_DETAILS: '/game/proxy/Game/GetUserCharacterDetails',
     GET_USER_GAME_INFO: '/ugc/direct/standalonesite/User/GetUserGamePlayerInfo',
     GET_MY_GUILD_INFO: '/game/proxy/Game/GetMyGuildInfo',
