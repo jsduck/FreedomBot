@@ -16,18 +16,15 @@ export default {
         .addSubcommand(subcommand =>
             subcommand
                 .setName("login")
-                .setDescription("Generate login token for Nikke API")
-                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator))
+                .setDescription("Generate login token for Nikke API"))
         .addSubcommand(subcommand =>
             subcommand
                 .setName("checklogin")
-                .setDescription("Check login status for Nikke API")
-                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator))
+                .setDescription("Check login status for Nikke API"))
         .addSubcommand(subcommand =>
             subcommand
                 .setName("fetch-api")
                 .setDescription("Direct API call to Nikke API")
-                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
                 .addStringOption(option =>
                     option
                         .setName("endpoint")
