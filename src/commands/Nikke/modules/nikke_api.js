@@ -5,6 +5,12 @@ import { fetchNikkeApi } from '../../../services/nikke.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 
+function safeJSON(obj) {
+  return JSON.stringify(obj, (_, v) =>
+    typeof v === "bigint" ? v.toString() : v
+  );
+}
+
 export async function handleFetchApi(interaction, client) {
     const guild = interaction.guild;
     
@@ -33,12 +39,19 @@ export async function handleFetchApi(interaction, client) {
         const res = await fetchNikkeApi(endpoint, method, payload ? JSON.parse(payload) : null);
         if (res.ok) {
             const data = await res.json();
+            const json = safeJSON(data);
+
+            const fieldValue =
+            json && json.length > 0 && json.length <= 1024
+                ? `\`\`\`json\n${json}\n\`\`\``
+                : "Response too large or empty.";
+
             const embed = createEmbed({
                     title: "✅ API Call Successful",
                     description: `Successfully called Nikke API endpoint \`${endpoint}\` with method \`${method}\`.`,
                     color: getColor('success')
                 }).addFields(
-                    { name: "Response Data", value: `\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\`` }
+                    { name: "Response Data", value: `\`\`\`${fieldValue}\n\`\`\`` }
                 );
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [embed]
