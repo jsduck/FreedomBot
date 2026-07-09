@@ -18,7 +18,7 @@ export default {
                 .setDescription("Generate login token for Nikke API"))
         .addSubcommand(subcommand =>
             subcommand
-                .setName("checkLogin")
+                .setName("checklogin")
                 .setDescription("Check login status for Nikke API"))
         ,
         async execute(interaction, client) {
@@ -29,7 +29,7 @@ export default {
                     case "login":
                         //await handleLogin(interaction, client);
                         break;
-                    case "checkLogin":
+                    case "checklogin":
                         //await handleCheckLogin(interaction, client);
                         break;
                     default:
