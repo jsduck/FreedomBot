@@ -13,11 +13,11 @@ export default {
     data: new SlashCommandBuilder()
         .setName("nikke")
         .setDescription("Nikke commands.")
-        .addSubcommand(subcommand =>
+        .addSubcommand((subcommand =>
             subcommand
                 .setName("login")
                 .setDescription("Generate login token for Nikke API"))
-                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator))
         .addSubcommand((subcommand =>
             subcommand
                 .setName("checklogin")
