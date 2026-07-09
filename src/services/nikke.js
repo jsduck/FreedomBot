@@ -1199,6 +1199,7 @@ export async function login() {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.LOGIN, NIKKE_API_METHODS.LOGIN, NIKKE_PAYLOADS.LOGIN);
 
     if (!res.headers.raw()["set-cookie"]) {
+        console.log(res);
         throw new Error("Login failed: No cookies received");
     }
     token = res.data?.token;
