@@ -1176,7 +1176,10 @@ export async function fetchNikkeApi(endpoint, method, payload = null) {
     const url = `${NIKKE_API_BASE_URL}${endpoint}`;
     const options = {
         method: method,
-        headers: { ...NIKKE_COMMON_HEADERS, "x-token": token || "" }
+        headers: { 
+            ...NIKKE_COMMON_HEADERS, 
+            "x-token": token || "" 
+        }
     };
     if (payload) {
         options.body = JSON.stringify(payload);

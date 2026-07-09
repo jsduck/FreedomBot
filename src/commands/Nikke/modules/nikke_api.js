@@ -25,8 +25,9 @@ export async function handleFetchApi(interaction, client) {
     }
 
     const endpoint = interaction.options.getString("endpoint");
-    const method = interaction.options.getString("method");
+    const method = 'POST';//interaction.options.getString("method");
     const payload = interaction.options.getString("payload");
+    console.log(payload);
 
     try {
         const res = await fetchNikkeApi(endpoint, method, payload ? JSON.parse(payload) : null);
