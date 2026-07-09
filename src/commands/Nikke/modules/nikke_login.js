@@ -36,7 +36,7 @@ export async function handleLogin(interaction, client) {
             }).catch(logger.error);
         }
     } catch (error) {
-        logger.error("Error displaying counters:", error);
+        logger.error("Error trying to login:", error);
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [errorEmbed("An error occurred while trying to login. Please try again.")]
         }).catch(logger.error);

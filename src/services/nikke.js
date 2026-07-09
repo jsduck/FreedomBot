@@ -206,16 +206,16 @@ const NIKKE_API_RESPONSE_CODES = {
     INVALID_CREDENTIALS: 1001
 };
 const NIKKE_PAYLOAD_LOGIN = {
-    game_openid:"16338490109246680481",
-    game_channelid:131,
-    game_token:"34d5f9dcf73ccfe137eab4612a47a83801796841",
-    game_id:"29080",
-    game_expire_time:1785623494,
-    game_uid:"1818698667806006",
-    game_user_name:"Player_jddztnHq",
-    game_user_region:"704",
-    game_adult_status:1,
-    game_email:"niikke900@gmail.com"
+    game_openid: "3166452414820481224",
+    game_channelid: 131,
+    game_token: "e1247000b845dc653b0531f1194887f201a8d3b1",
+    game_id: "29080",
+    game_expire_time: 1786208463,
+    game_uid: "54150814256118",
+    game_user_name: "Kaarako17",
+    game_user_region: "360",
+    game_adult_status: 1,
+    game_email: "accnike666@gmail.com"
 };
 const NIKKE_PAYLOADS = {
     LOGIN: NIKKE_PAYLOAD_LOGIN
