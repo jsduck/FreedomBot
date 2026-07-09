@@ -51,7 +51,7 @@ export async function handleFetchApi(interaction, client) {
                     description: `Successfully called Nikke API endpoint \`${endpoint}\` with method \`${method}\`.`,
                     color: getColor('success')
                 }).addFields(
-                    { name: "Response Data", value: `\`\`\`${fieldValue}\n\`\`\`` }
+                    { name: "Response Data", value: `\`\`\`json\n${fieldValue}\n\`\`\`` }
                 );
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [embed]
