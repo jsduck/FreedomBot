@@ -1090,7 +1090,7 @@ const NIKE_GG_CHARACTER_PREVIEW = {
     skillprio: {
         _id: "6a47afd7333d61a16675f23d",
         name: "Alice",
-        PvP?: "FALSE",
+        PvP: "FALSE",
         "Budget Skill investments": "7/4/7",
         "Recommended Skill Investments": "10/4/10",
         "Skill Order Priority": "S1 > S2",
@@ -1195,7 +1195,7 @@ async function fetchNikkeGGApi(endpoint, method, payload = null) {
     return await fetchWithCookies(url, options);
 }
 
-export async function login() {
+async function login() {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.LOGIN, NIKKE_API_METHODS.LOGIN, NIKKE_PAYLOADS.LOGIN);
 
     if (!res.headers.raw()["set-cookie"]) {
@@ -1206,7 +1206,7 @@ export async function login() {
     return res;
 }
 
-export async function checkLogin() {
+async function checkLogin() {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.CHECK_LOGIN, NIKKE_API_METHODS.CHECK_LOGIN);
 
     return res;

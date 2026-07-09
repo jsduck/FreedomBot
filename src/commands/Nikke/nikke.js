@@ -11,7 +11,7 @@ import { handleLogin, handleCheckLogin } from './modules/nikke_login.js';
 export default {
     data: new SlashCommandBuilder()
         .setName("nikke")
-        .setDescription("Nikke command for testing purposes.")
+        .setDescription("Nikke commands.")
         .addSubcommand(subcommand =>
             subcommand
                 .setName("login")
@@ -27,10 +27,10 @@ export default {
             try {
                 switch (subcommand) {
                     case "login":
-                        await handleLogin(interaction, client);
+                        //await handleLogin(interaction, client);
                         break;
                     case "checkLogin":
-                        await handleCheckLogin(interaction, client);
+                        //await handleCheckLogin(interaction, client);
                         break;
                     default:
                         await InteractionHelper.safeReply(interaction, {
