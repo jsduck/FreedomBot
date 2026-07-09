@@ -33,7 +33,7 @@ export async function handleFetchApi(interaction, client) {
     const endpoint = interaction.options.getString("endpoint");
     const method = 'POST';//interaction.options.getString("method");
     const payload = interaction.options.getString("payload");
-    console.log(JSON.parse(payload));
+    //console.log(JSON.parse(payload));
 
     try {
         const res = await fetchNikkeApi(endpoint, method, payload ? JSON.parse(payload) : null);
@@ -41,20 +41,23 @@ export async function handleFetchApi(interaction, client) {
             const data = await res.json();
             const json = safeJSON(data);
 
-            const fieldValue =
-            json && json.length > 0 && json.length <= 1024
-                ? `\`\`\`json\n${json}\n\`\`\``
-                : "Response too large or empty.";
+            const preview = safeJSON(data).slice(0, 1000); // fits in embed
 
             const embed = createEmbed({
                     title: "✅ API Call Successful",
                     description: `Successfully called Nikke API endpoint \`${endpoint}\` with method \`${method}\`.`,
                     color: getColor('success')
                 }).addFields(
-                    { name: "Response Data", value: `\`\`\`json\n${fieldValue}\n\`\`\`` }
+                    { name: "Response Preview", value: `\`\`\`json\n${preview}\n\`\`\`` }
                 );
             await InteractionHelper.safeEditReply(interaction, {
-                embeds: [embed]
+                embeds: [embed],
+                files: [
+                    {
+                        attachment: Buffer.from(json),
+                        name: "response.json"
+                    }
+                ]
             }).catch(logger.error);
         }
     } catch (error) {
