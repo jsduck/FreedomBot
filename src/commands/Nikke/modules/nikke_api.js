@@ -5,11 +5,13 @@ import { fetchNikkeApi } from '../../../services/nikke.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 
-function safeJSON(obj) {
+function safeJSON(obj, spaces = 2) {
   return JSON.stringify(obj, (_, v) =>
-    typeof v === "bigint" ? v.toString() : v
+    typeof v === "bigint" ? v.toString() : v,
+    spaces
   );
 }
+
 
 export async function handleFetchApi(interaction, client) {
     const guild = interaction.guild;
@@ -39,9 +41,9 @@ export async function handleFetchApi(interaction, client) {
         const res = await fetchNikkeApi(endpoint, method, payload ? JSON.parse(payload) : null);
         if (res.ok) {
             const data = await res.json();
-            const json = safeJSON(data);
+            const json = safeJSON(data, 2);
 
-            const preview = safeJSON(data).slice(0, 1000); // fits in embed
+            const preview = safeJSON(data, 2).slice(0, 1000); // fits in embed
 
             const embed = createEmbed({
                     title: "✅ API Call Successful",
