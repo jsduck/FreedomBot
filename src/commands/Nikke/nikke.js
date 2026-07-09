@@ -7,6 +7,7 @@ import { logger } from '../../utils/logger.js';
 import { handleInteractionError } from '../../utils/errorHandler.js';
 
 import { handleLogin, handleCheckLogin } from './modules/nikke_login.js';
+import { handleFetchApi } from './modules/nikke_api.js';
 
 export default {
     data: new SlashCommandBuilder()
