@@ -13,20 +13,20 @@ export default {
     data: new SlashCommandBuilder()
         .setName("nikke")
         .setDescription("Nikke commands.")
-        .addSubcommand((subcommand =>
+        .addSubcommand(subcommand =>
             subcommand
                 .setName("login")
-                .setDescription("Generate login token for Nikke API"))
+                .setDescription("Generate login token for Nikke API")
                 .setDefaultMemberPermissions(PermissionFlagsBits.Administrator))
-        .addSubcommand((subcommand =>
+        .addSubcommand(subcommand =>
             subcommand
                 .setName("checklogin")
-                .setDescription("Check login status for Nikke API"))
+                .setDescription("Check login status for Nikke API")
                 .setDefaultMemberPermissions(PermissionFlagsBits.Administrator))
-        .addSubcommand((subcommand =>
+        .addSubcommand(subcommand =>
             subcommand
                 .setName("fetch-api")
-                .setDescription("Direct API call to Nikke API"))
+                .setDescription("Direct API call to Nikke API")
                 .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
                 .addStringOption(option =>
                     option
