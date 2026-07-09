@@ -18,12 +18,12 @@ export default {
                 .setName("login")
                 .setDescription("Generate login token for Nikke API"))
                 .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-        .addSubcommand(subcommand =>
+        .addSubcommand((subcommand =>
             subcommand
                 .setName("checklogin")
                 .setDescription("Check login status for Nikke API"))
-                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-        .addSubcommand(subcommand =>
+                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator))
+        .addSubcommand((subcommand =>
             subcommand
                 .setName("fetch-api")
                 .setDescription("Direct API call to Nikke API"))
@@ -44,7 +44,7 @@ export default {
                     option
                         .setName("payload")
                         .setDescription("The payload for the API request")
-                )
+                ))
         ,
         async execute(interaction, client) {
             const subcommand = interaction.options.getSubcommand();
