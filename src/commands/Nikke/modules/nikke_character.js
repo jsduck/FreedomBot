@@ -40,6 +40,7 @@ export async function handleUserCharacter(interaction, client) {
         //console.log(char_json);
 
         const name_codes_array = [ getNameCodeByName(name_codes) ];
+        console.log("name_codes_array:", name_codes_array);
     
         try {
             const res = await getUserCharacterDetails(intl_open_id, name_codes_array);
