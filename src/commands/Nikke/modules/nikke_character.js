@@ -3,7 +3,7 @@ import { PermissionFlagsBits } from 'discord.js';
 import { createEmbed, errorEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
-import { getUserCharacterDetails, getCharacters, getCharacterByName, safeJSON } from '../../../services/nikke.js';
+import { getUserCharacterDetails, getCharacters, getCharacterByName, getNameCodeByName, safeJSON } from '../../../services/nikke.js';
 
 export async function handleUserCharacter(interaction, client) {
     const guild = interaction.guild;
@@ -28,12 +28,18 @@ export async function handleUserCharacter(interaction, client) {
 
         //console.log("intl_open_id:", intl_open_id);
         //console.log("name_codes:", name_codes);
-        const character_db = await getCharacterByName(name_codes);
+        const slug = str =>
+            str
+                .toLowerCase()
+                .replace(/[:]/g, "")        // remove colons
+                .replace(/\s+/g, "-")       // replace spaces with hyphens
+                .replace(/[^a-z0-9-]/g, ""); // remove anything not allowed
         
+        const character_db = await getCharacterByName(slug(name_codes));
         const char_json = await character_db.json();
         //console.log(char_json);
 
-        const name_codes_array = [ char_json.statTableId ];
+        const name_codes_array = [ getNameCodeByName(name_codes) ];
     
         try {
             const res = await getUserCharacterDetails(intl_open_id, name_codes_array);

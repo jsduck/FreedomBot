@@ -1231,12 +1231,12 @@ export function safeJSON(obj, spaces = 2) {
   );
 }
 
-function getNameCodeById(id) {
+export function getNameCodeById(id) {
     const unit = NIKKE_UNITS.find(unit => unit.id === id);
     return unit ? unit.name_code : null;
 }
 
-function getNameCodeByName(name) {
+export function getNameCodeByName(name) {
     const unit = NIKKE_UNITS.find(unit => unit.name === name);
     return unit ? unit.name_code : null;
 }
