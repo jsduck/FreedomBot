@@ -209,7 +209,7 @@ export default {
                 ))
         .addSubcommand(subcommand =>
             subcommand
-                .setName("union-raid-data-of-guild-season")
+                .setName("union-raid-data-of-season")
                 .setDescription("Get union raid data of a guild season from Nikke API")
                 .addIntegerOption(option =>
                     option
@@ -242,7 +242,7 @@ export default {
                 ))
         .addSubcommand(subcommand =>
             subcommand
-                .setName("union-raid-level-data-of-guild-season")
+                .setName("union-raid-level-data-of-season")
                 .setDescription("Get union raid level data of a guild season from Nikke API")
                 .addIntegerOption(option =>
                     option
@@ -556,10 +556,10 @@ export default {
                     case "union-raid-level-data":
                         await handleUnionRaidLevelData(interaction, client);
                         break;
-                    case "union-raid-data-of-guild-season":
+                    case "union-raid-data-of-season":
                         await handleUnionRaidDataOfGuildSeason(interaction, client);
                         break;
-                    case "union-raid-level-data-of-guild-season":
+                    case "union-raid-level-data-of-season":
                         await handleUnionRaidLevelDataOfGuildSeason(interaction, client);
                         break;
                     case "query-guild-card-list":
