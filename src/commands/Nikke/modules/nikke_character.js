@@ -39,6 +39,7 @@ export async function handleUserCharacter(interaction, client) {
         const char_json = await character_db.json();
         //console.log(char_json);
 
+        console.log(name_codes);
         const name_codes_array = [ getNameCodeByName(name_codes) ];
         console.log("name_codes_array:", name_codes_array);
     

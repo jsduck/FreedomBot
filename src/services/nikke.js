@@ -163,7 +163,9 @@ const NIKKE_API_ENDPOINTS = {
     QUERY_GUILD_CARD_LIST: '/game/direct/Game/QueryGuildCardList',
     SEARCH_USER: '/ugc/direct/standalonesite/User/SearchUser',
     GET_USER_PROFILE: '/ugc/direct/standalonesite/User/GetUserProfile',
-    GET_USER_CHARACTERS: '/game/proxy/Game/GetUserCharacters'
+    GET_USER_CHARACTERS: '/game/proxy/Game/GetUserCharacters',
+    GET_UNION_RAID_DATA: '/game/proxy/Game/GetUnionRaidData',
+    GET_UNION_RAID_LEVEL_INFO: '/game/proxy/Game/GetUnionRaidLevelInfo'
 };
 const NIKKE_API_URLS = {
     LOGIN: `${NIKKE_API_BASE_URL}${NIKKE_API_ENDPOINTS.LOGIN}`,
@@ -181,7 +183,9 @@ const NIKKE_API_URLS = {
     QUERY_GUILD_CARD_LIST: `${NIKKE_API_BASE_URL}${NIKKE_API_ENDPOINTS.QUERY_GUILD_CARD_LIST}`,
     SEARCH_USER: `${NIKKE_API_BASE_URL}${NIKKE_API_ENDPOINTS.SEARCH_USER}`,
     GET_USER_PROFILE: `${NIKKE_API_BASE_URL}${NIKKE_API_ENDPOINTS.GET_USER_PROFILE}`,
-    GET_USER_CHARACTERS: `${NIKKE_API_BASE_URL}${NIKKE_API_ENDPOINTS.GET_USER_CHARACTERS}`
+    GET_USER_CHARACTERS: `${NIKKE_API_BASE_URL}${NIKKE_API_ENDPOINTS.GET_USER_CHARACTERS}`,
+    GET_UNION_RAID_DATA: `${NIKKE_API_BASE_URL}${NIKKE_API_ENDPOINTS.GET_UNION_RAID_DATA}`,
+    GET_UNION_RAID_LEVEL_INFO: `${NIKKE_API_BASE_URL}${NIKKE_API_ENDPOINTS.GET_UNION_RAID_LEVEL_INFO}`
 };
 const NIKKE_API_METHODS = {
     LOGIN: 'POST',
@@ -199,7 +203,9 @@ const NIKKE_API_METHODS = {
     QUERY_GUILD_CARD_LIST: 'POST',
     SEARCH_USER: 'POST',
     GET_USER_PROFILE: 'POST',
-    GET_USER_CHARACTERS: 'POST'
+    GET_USER_CHARACTERS: 'POST',
+    GET_UNION_RAID_DATA: 'POST',
+    GET_UNION_RAID_LEVEL_INFO: 'POST'
 };
 const NIKKE_API_RESPONSE_CODES = {
     SUCCESS: 0,
@@ -1237,9 +1243,15 @@ export function getNameCodeById(id) {
 }
 
 export function getNameCodeByName(name) {
-    const unit = NIKKE_UNITS.find(unit => unit.name === name);
-    return unit ? unit.name_code : null;
+  const lower = name.toLowerCase();
+
+  const unit = NIKKE_UNITS.find(
+    u => u.name.toLowerCase() === lower
+  );
+
+  return unit ? unit.name_code : null;
 }
+
 
 export async function getUserCharacterDetails(intl_open_id, name_codes) {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_CHARACTER_DETAILS, NIKKE_API_METHODS.GET_CHARACTER_DETAILS, {
@@ -1250,7 +1262,7 @@ export async function getUserCharacterDetails(intl_open_id, name_codes) {
     return res;
 };
 
-async function getUserGameInfo(intl_open_id) {
+export async function getUserGameInfo(intl_open_id) {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_USER_GAME_INFO, NIKKE_API_METHODS.GET_USER_GAME_INFO, {
         intl_open_id: intl_open_id
     });
@@ -1258,7 +1270,7 @@ async function getUserGameInfo(intl_open_id) {
     return res;
 };
 
-async function getMyGuildInfo(intl_open_id, target_nikke_area_id = NIKKE_AREA_ID) {
+export async function getMyGuildInfo(intl_open_id, target_nikke_area_id = NIKKE_AREA_ID) {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_MY_GUILD_INFO, NIKKE_API_METHODS.GET_MY_GUILD_INFO, {
         intl_open_id: intl_open_id,
         target_nikke_area_id: target_nikke_area_id
@@ -1267,7 +1279,7 @@ async function getMyGuildInfo(intl_open_id, target_nikke_area_id = NIKKE_AREA_ID
     return res;
 };
 
-async function getUserProfileBasicInfo(intl_open_id, nikke_area_id = NIKKE_AREA_ID) {
+export async function getUserProfileBasicInfo(intl_open_id, nikke_area_id = NIKKE_AREA_ID) {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_USER_PROFILE_BASIC_INFO, NIKKE_API_METHODS.GET_USER_PROFILE_BASIC_INFO, {
         intl_open_id: intl_open_id,
         nikke_area_id: nikke_area_id
@@ -1276,7 +1288,7 @@ async function getUserProfileBasicInfo(intl_open_id, nikke_area_id = NIKKE_AREA_
     return res;
 };
 
-async function getUserProfileOutpostInfo(intl_open_id, nikke_area_id = NIKKE_AREA_ID) {
+export async function getUserProfileOutpostInfo(intl_open_id, nikke_area_id = NIKKE_AREA_ID) {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_USER_PROFILE_OUTPOST_INFO, NIKKE_API_METHODS.GET_USER_PROFILE_OUTPOST_INFO, {
         intl_open_id: intl_open_id,
         nikke_area_id: nikke_area_id
@@ -1285,7 +1297,7 @@ async function getUserProfileOutpostInfo(intl_open_id, nikke_area_id = NIKKE_ARE
     return res;
 };
 
-async function getUserDailyContentsProgress(intl_open_id, nikke_area_id = NIKKE_AREA_ID) {
+export async function getUserDailyContentsProgress(intl_open_id, nikke_area_id = NIKKE_AREA_ID) {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_USER_DAILY_CONTENTS_PROGRESS, NIKKE_API_METHODS.GET_USER_DAILY_CONTENTS_PROGRESS, {
         intl_open_id: intl_open_id,
         nikke_area_id: nikke_area_id
@@ -1294,7 +1306,7 @@ async function getUserDailyContentsProgress(intl_open_id, nikke_area_id = NIKKE_
     return res;
 }
 
-async function getGuildDetail(guild_id, nikke_area_id = NIKKE_AREA_ID) {
+export async function getGuildDetail(guild_id, nikke_area_id = NIKKE_AREA_ID) {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_GUILD_DETAIL, NIKKE_API_METHODS.GET_GUILD_DETAIL, {
         guild_id: guild_id,
         nikke_area_id: nikke_area_id
@@ -1303,7 +1315,7 @@ async function getGuildDetail(guild_id, nikke_area_id = NIKKE_AREA_ID) {
     return res;
 }
 
-async function getGuildMembers(guild_id, nikke_area_id = NIKKE_AREA_ID) {
+export async function getGuildMembers(guild_id, nikke_area_id = NIKKE_AREA_ID) {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_GUILD_MEMBERS, NIKKE_API_METHODS.GET_GUILD_MEMBERS, {
         guild_id: guild_id,
         nikke_area_id: nikke_area_id
@@ -1312,7 +1324,7 @@ async function getGuildMembers(guild_id, nikke_area_id = NIKKE_AREA_ID) {
     return res;
 }
 
-async function getUnionRaidDataOfGuildSeason(area_id, guild_id, season_id = NIKKE_CURRENT_SEASON_ID) {
+export async function getUnionRaidDataOfGuildSeason(area_id, guild_id, season_id = NIKKE_CURRENT_SEASON_ID) {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_UNION_RAID_DATA_OF_GUILD_SEASON, NIKKE_API_METHODS.GET_UNION_RAID_DATA_OF_GUILD_SEASON, {
         area_id: area_id,
         guild_id: guild_id,
@@ -1322,7 +1334,7 @@ async function getUnionRaidDataOfGuildSeason(area_id, guild_id, season_id = NIKK
     return res;
 }
 
-async function getUnionRaidLevelDataOfGuildSeason(area_id, guild_id, season_id = NIKKE_CURRENT_SEASON_ID) {
+export async function getUnionRaidLevelDataOfGuildSeason(area_id, guild_id, season_id = NIKKE_CURRENT_SEASON_ID) {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_UNION_RAID_LEVEL_DATA_OF_GUILD_SEASON, NIKKE_API_METHODS.GET_UNION_RAID_LEVEL_DATA_OF_GUILD_SEASON, {
         area_id: area_id,
         guild_id: guild_id,
@@ -1332,7 +1344,7 @@ async function getUnionRaidLevelDataOfGuildSeason(area_id, guild_id, season_id =
     return res;
 }
 
-async function queryGuildCardList(cursor = "", guild_rank = -1, guild_rank_num = -1, keyword = "", nikke_area_id = NIKKE_AREA_ID, page_size = 10) {
+export async function queryGuildCardList(cursor = "", guild_rank = -1, guild_rank_num = -1, keyword = "", nikke_area_id = NIKKE_AREA_ID, page_size = 10) {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.QUERY_GUILD_CARD_LIST, NIKKE_API_METHODS.QUERY_GUILD_CARD_LIST, {
         cursor: cursor,
         guild_rank: guild_rank,
@@ -1345,7 +1357,7 @@ async function queryGuildCardList(cursor = "", guild_rank = -1, guild_rank_num =
     return res;
 }
 
-async function searchUser(limit = 20, next_page_cursor = "", user_name = "") {
+export async function searchUser(limit = 20, next_page_cursor = "", user_name = "") {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.SEARCH_USER, NIKKE_API_METHODS.SEARCH_USER, {
         limit: limit,
         next_page_cursor: next_page_cursor,
@@ -1355,7 +1367,7 @@ async function searchUser(limit = 20, next_page_cursor = "", user_name = "") {
     return res;
 }
 
-async function getUserProfile(intl_open_id) {
+export async function getUserProfile(intl_open_id) {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_USER_PROFILE, NIKKE_API_METHODS.GET_USER_PROFILE, {
         intl_open_id: intl_open_id
     });
@@ -1363,7 +1375,7 @@ async function getUserProfile(intl_open_id) {
     return res;
 }
 
-async function getUserCharacters(intl_open_id, nikke_area_id = NIKKE_AREA_ID) {
+export async function getUserCharacters(intl_open_id, nikke_area_id = NIKKE_AREA_ID) {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_USER_CHARACTERS, NIKKE_API_METHODS.GET_USER_CHARACTERS, {
         intl_open_id: intl_open_id,
         nikke_area_id: nikke_area_id
@@ -1380,6 +1392,26 @@ export async function getCharacters() {
 
 export async function getCharacterByName(name) {
     var res = await fetchNikkeGGApi(NIKKE_GG_API_ENDPOINTS.CHARACTER + `/${name}`, NIKKE_GG_API_METHODS.CHARACTER);
+
+    return res;
+}
+
+export async function getUnionRaidData(guild_id, intl_open_id, nikke_area_id = NIKKE_AREA_ID) {
+    var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_UNION_RAID_DATA, NIKKE_API_METHODS.GET_UNION_RAID_DATA, {
+        guild_id: guild_id,
+        intl_open_id: intl_open_id,
+        nikke_area_id: nikke_area_id
+    });
+
+    return res;
+}
+
+export async function getUnionRaidLevelData(guild_id, intl_open_id, nikke_area_id = NIKKE_AREA_ID) {
+    var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_UNION_RAID_LEVEL_DATA, NIKKE_API_METHODS.GET_UNION_RAID_LEVEL_DATA, {
+        guild_id: guild_id,
+        intl_open_id: intl_open_id,
+        nikke_area_id: nikke_area_id
+    });
 
     return res;
 }
