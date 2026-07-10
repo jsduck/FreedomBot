@@ -113,7 +113,7 @@ export default {
             subcommand
                 .setName("guild-members")
                 .setDescription("Get guild members from Nikke API")
-                .addStringOption(option =>
+                .addIntegerOption(option =>
                     option
                         .setName("guild_id")
                         .setDescription("ID of the guild to fetch details for")
@@ -122,7 +122,7 @@ export default {
                             { name: "Avaricia", value: 25471 }
                         )
                 )
-                .addStringOption(option =>
+                .addIntegerOption(option =>
                     option
                         .setName("nikke_area_id")
                         .setDescription("Nikke area ID")
@@ -135,7 +135,7 @@ export default {
             subcommand
                 .setName("union-raid-data")
                 .setDescription("Get union raid data from Nikke API")
-                .addStringOption(option =>
+                .addIntegerOption(option =>
                     option
                         .setName("guild_id")
                         .setDescription("ID of the guild to fetch details for")
@@ -160,7 +160,7 @@ export default {
                             { name: "Nelex", value: "1175532717634698043" }                 
                         )
                 )
-                .addStringOption(option =>
+                .addIntegerOption(option =>
                     option
                         .setName("nikke_area_id")
                         .setDescription("Nikke area ID")
@@ -173,7 +173,7 @@ export default {
             subcommand
                 .setName("union-raid-level-data")
                 .setDescription("Get union raid level data from Nikke API")
-                .addStringOption(option =>
+                .addIntegerOption(option =>
                     option
                         .setName("guild_id")
                         .setDescription("ID of the guild to fetch details for")
@@ -198,7 +198,7 @@ export default {
                             { name: "Nelex", value: "1175532717634698043" }                 
                         )
                 )
-                .addStringOption(option =>
+                .addIntegerOption(option =>
                     option
                         .setName("nikke_area_id")
                         .setDescription("Nikke area ID")
@@ -211,7 +211,7 @@ export default {
             subcommand
                 .setName("union-raid-data-of-guild-season")
                 .setDescription("Get union raid data of a guild season from Nikke API")
-                .addStringOption(option =>
+                .addIntegerOption(option =>
                     option
                         .setName("guild_id")
                         .setDescription("ID of the guild to fetch details for")
@@ -220,13 +220,18 @@ export default {
                             { name: "Avaricia", value: 25471 }
                         )
                 )
-                .addStringOption(option =>
+                .addIntegerOption(option =>
                     option
                         .setName("season_id")
                         .setDescription("ID of the season to fetch union raid data for")
                         .setRequired(true)
+                        .addChoices(
+                            { name: "Season 1", value: 100001 },
+                            { name: "Season 2", value: 100002 },
+                            { name: "Season 41", value: 1000041 }
+                        )
                 )
-                .addStringOption(option =>
+                .addIntegerOption(option =>
                     option
                         .setName("area_id")
                         .setDescription("Area ID")
@@ -239,7 +244,7 @@ export default {
             subcommand
                 .setName("union-raid-level-data-of-guild-season")
                 .setDescription("Get union raid level data of a guild season from Nikke API")
-                .addStringOption(option =>
+                .addIntegerOption(option =>
                     option
                         .setName("guild_id")
                         .setDescription("ID of the guild to fetch details for")
@@ -248,13 +253,18 @@ export default {
                             { name: "Avaricia", value: 25471 }
                         )
                 )
-                .addStringOption(option =>
+                .addIntegerOption(option =>
                     option
                         .setName("season_id")
                         .setDescription("ID of the season to fetch union raid data for")
                         .setRequired(true)
+                        .addChoices(
+                            { name: "Season 1", value: 100001 },
+                            { name: "Season 2", value: 100002 },
+                            { name: "Season 41", value: 1000041 }
+                        )
                 )
-                .addStringOption(option =>
+                .addIntegerOption(option =>
                     option
                         .setName("area_id")
                         .setDescription("Area ID")
@@ -291,7 +301,7 @@ export default {
                         .setDescription("Keyword filter")
                         .setRequired(false)
                 )
-                .addStringOption(option =>
+                .addIntegerOption(option =>
                     option
                         .setName("nikke_area_id")
                         .setDescription("Nikke area ID")
