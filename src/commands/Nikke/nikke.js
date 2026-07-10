@@ -64,6 +64,16 @@ export default {
                         .setName("intl_open_id")
                         .setDescription("OpenID of the user to fetch character info for")
                         .setRequired(true)
+                        .addChoices(
+                            { name: "Kaarako", value: "3166452414820481224" },
+                            { name: "Demi", value: "16338490109246680481" },
+                            { name: "Shaito", value: "12167197956671690221" },
+                            { name: "Fizix", value: "5877343215992272387" },
+                            { name: "Jae", value: "15097183441877165889" },
+                            { name: "Effelon", value: "16338490109246680481" },
+                            { name: "Fesha", value: "12816795455667592937" },
+                            { name: "Nelex", value: "1175532717634698043" }                 
+                        )
                 )
                 .addStringOption(option =>
                     option

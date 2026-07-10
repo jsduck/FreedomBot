@@ -3,7 +3,7 @@ import { PermissionFlagsBits } from 'discord.js';
 import { createEmbed, errorEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
-import { getUserCharacterDetails, safeJSON } from '../../../services/nikke.js';
+import { getUserCharacterDetails, getCharacters, getCharacterByName, safeJSON } from '../../../services/nikke.js';
 
 export async function handleUserCharacter(interaction, client) {
     const guild = interaction.guild;
@@ -24,10 +24,13 @@ export async function handleUserCharacter(interaction, client) {
         }
     
         const intl_open_id = interaction.options.getString("intl_open_id");
-        const name_codes = interaction.options.getString("name_codes").split(",").map(v => Number(v.trim()));
+        const name_codes = interaction.options.getString("name_codes");//split(",").map(v => Number(v.trim()));
+        const character_db = await getCharacterByName(name_codes);
+
+        const name_codes_array = [ character_db.statTableId ];
     
         try {
-            const res = await getUserCharacterDetails(intl_open_id, name_codes);
+            const res = await getUserCharacterDetails(intl_open_id, name_codes_array);
             if (res.ok) {
                 const data = await res.json();
                 const json = safeJSON(data, 2);
