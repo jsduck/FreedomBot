@@ -91,7 +91,7 @@ export default {
             subcommand
                 .setName("guild-details")
                 .setDescription("Get guild details from Nikke API")
-                .addStringOption(option =>
+                .addIntegerOption(option =>
                     option
                         .setName("guild_id")
                         .setDescription("ID of the guild to fetch details for")
@@ -100,7 +100,7 @@ export default {
                             { name: "Avaricia", value: 25471 }
                         )
                 )
-                .addStringOption(option =>
+                .addIntegerOption(option =>
                     option
                         .setName("nikke_area_id")
                         .setDescription("Nikke area ID")

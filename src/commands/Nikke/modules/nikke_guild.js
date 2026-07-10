@@ -23,8 +23,8 @@ export async function handleGuildDetails(interaction, client) {
         return;
     }
 
-    const guild_id = interaction.options.getString("guild_id");
-    const nikke_area_id = interaction.options.getString("nikke_area_id");
+    const guild_id = interaction.options.getInteger("guild_id");
+    const nikke_area_id = interaction.options.getInteger("nikke_area_id");
     try {
         const res = await getGuildDetail(guild_id, nikke_area_id);
         if (res.ok) {
