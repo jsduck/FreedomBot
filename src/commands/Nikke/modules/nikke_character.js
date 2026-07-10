@@ -25,11 +25,14 @@ export async function handleUserCharacter(interaction, client) {
     
         const intl_open_id = interaction.options.getString("intl_open_id");
         const name_codes = interaction.options.getString("name_codes");//split(",").map(v => Number(v.trim()));
+
+        console.log("intl_open_id:", intl_open_id);
+        console.log("name_codes:", name_codes);
         const character_db = await getCharacterByName(name_codes);
         
-        const char_json = safeJSON(character_db.json(), 2);
-
+        const char_json = await character_db.json();
         console.log(char_json);
+
         const name_codes_array = [ char_json.statTableId ];
     
         try {
