@@ -49,7 +49,7 @@ export async function handleUserCharacter(interaction, client) {
                         color: getColor('success')
                     }).addFields(
                         { name: "Response Preview", value: `\`\`\`json\n${preview}\n\`\`\`` }
-                    ).setThumbnail("https://static.dotgg.gg/nikke/characters/" + char_json.img);
+                    ).setThumbnail("https://static.dotgg.gg/nikke/characters/" + char_json.img + ".webp");
                 if (length > 1000) {
                     await InteractionHelper.safeEditReply(interaction, {
                         embeds: [embed],
