@@ -12,8 +12,8 @@ import { handleFetchApi } from './modules/nikke_api.js';
 import { handleCharacterByName } from './modules/nikke_gg.js';
 import { handleUserCharacter } from './modules/nikke_character.js';
 import { handleGuildDetails, handleGuildMembers } from './modules/nikke_guild.js';
-import { handleUnionRaidData, handleUnionRaidLevelData, handleUnionRaidDataOfGuildSeason, handleUnionRaidLevelDataOfGuildSeason } from './modules/nikke_union_raid.js';
-import { handleQueryGuildCardList } from './modules/nikke_guild_card.js';
+import { handleUnionRaidData, handleUnionRaidLevelData, handleUnionRaidDataOfGuildSeason, handleUnionRaidLevelDataOfGuildSeason } from './modules/nikke_guild.js';
+import { handleQueryGuildCardList } from './modules/nikke_guild.js';
 import { handleGetMyGuildInfo, handleGetUserDailyContentsProgress, handleGetUserProfileOutpostInfo, handleGetUserProfileBasicInfo, handleGetUserGameInfo, handleGetUserCharacters, handleGetUserProfile, handleSearchUser } from './modules/nikke_user.js';
 
 export default {
