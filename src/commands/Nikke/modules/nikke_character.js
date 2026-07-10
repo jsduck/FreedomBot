@@ -26,12 +26,12 @@ export async function handleUserCharacter(interaction, client) {
         const intl_open_id = interaction.options.getString("intl_open_id");
         const name_codes = interaction.options.getString("name_codes");//split(",").map(v => Number(v.trim()));
 
-        console.log("intl_open_id:", intl_open_id);
-        console.log("name_codes:", name_codes);
+        //console.log("intl_open_id:", intl_open_id);
+        //console.log("name_codes:", name_codes);
         const character_db = await getCharacterByName(name_codes);
         
         const char_json = await character_db.json();
-        console.log(char_json);
+        //console.log(char_json);
 
         const name_codes_array = [ char_json.statTableId ];
     
@@ -49,7 +49,7 @@ export async function handleUserCharacter(interaction, client) {
                         color: getColor('success')
                     }).addFields(
                         { name: "Response Preview", value: `\`\`\`json\n${preview}\n\`\`\`` }
-                    ).setThumbnail("https://static.dotgg.gg/nikke/characters/" + char_json.si_c191_00_s);
+                    ).setThumbnail("https://static.dotgg.gg/nikke/characters/" + char_json.img);
                 if (length > 1000) {
                     await InteractionHelper.safeEditReply(interaction, {
                         embeds: [embed],
