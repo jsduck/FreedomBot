@@ -1407,7 +1407,7 @@ export async function getUnionRaidData(guild_id, intl_open_id, nikke_area_id = N
 }
 
 export async function getUnionRaidLevelData(guild_id, intl_open_id, nikke_area_id = NIKKE_AREA_ID) {
-    var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_UNION_RAID_LEVEL_DATA, 'POST', {
+    var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_UNION_RAID_LEVEL_INFO, 'POST', {
         guild_id: guild_id,
         intl_open_id: intl_open_id,
         nikke_area_id: nikke_area_id
