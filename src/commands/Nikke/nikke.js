@@ -259,9 +259,10 @@ export default {
                         .setDescription("ID of the season to fetch union raid data for")
                         .setRequired(true)
                         .addChoices(
-                            { name: "Season 1", value: 100001 },
-                            { name: "Season 2", value: 100002 },
-                            { name: "Season 41", value: 1000041 }
+                            { name: "Season 30", value: 1000039 },
+                            { name: "Season 40", value: 1000040 },
+                            { name: "Season 41", value: 1000041 },
+                            { name: "Season 42", value: 1000042 }
                         )
                 )
                 .addIntegerOption(option =>

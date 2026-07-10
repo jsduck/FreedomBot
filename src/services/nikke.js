@@ -1397,7 +1397,7 @@ export async function getCharacterByName(name) {
 }
 
 export async function getUnionRaidData(guild_id, intl_open_id, nikke_area_id = NIKKE_AREA_ID) {
-    var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_UNION_RAID_DATA, NIKKE_API_METHODS.GET_UNION_RAID_DATA, {
+    var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_UNION_RAID_DATA, 'POST', {
         guild_id: guild_id,
         intl_open_id: intl_open_id,
         nikke_area_id: nikke_area_id
@@ -1407,7 +1407,7 @@ export async function getUnionRaidData(guild_id, intl_open_id, nikke_area_id = N
 }
 
 export async function getUnionRaidLevelData(guild_id, intl_open_id, nikke_area_id = NIKKE_AREA_ID) {
-    var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_UNION_RAID_LEVEL_DATA, NIKKE_API_METHODS.GET_UNION_RAID_LEVEL_DATA, {
+    var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_UNION_RAID_LEVEL_DATA, 'POST', {
         guild_id: guild_id,
         intl_open_id: intl_open_id,
         nikke_area_id: nikke_area_id
