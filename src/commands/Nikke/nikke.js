@@ -9,6 +9,8 @@ import { handleInteractionError } from '../../utils/errorHandler.js';
 import { handleLogin, handleCheckLogin } from './modules/nikke_login.js';
 import { handleFetchApi } from './modules/nikke_api.js';
 
+import { handleCharacterByName } from './modules/nikke_gg.js';
+
 export default {
     data: new SlashCommandBuilder()
         .setName("nikke")
@@ -42,6 +44,16 @@ export default {
                         .setName("payload")
                         .setDescription("The payload for the API request")
                 ))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName("character")
+                .setDescription("Get character info from NikkeGG API")
+                .addStringOption(option =>
+                    option
+                        .setName("name")
+                        .setDescription("Nikke name, no spaces")
+                        .setRequired(true)   
+                ))
         ,
         async execute(interaction, client) {
             const subcommand = interaction.options.getSubcommand();
@@ -56,6 +68,9 @@ export default {
                         break;
                     case "fetch-api":
                         await handleFetchApi(interaction, client);
+                        break;
+                    case "character":
+                        await handleCharacterByName(interaction, client);
                         break;
                     default:
                         await InteractionHelper.safeReply(interaction, {

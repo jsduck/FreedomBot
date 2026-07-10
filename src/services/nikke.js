@@ -1187,7 +1187,7 @@ export async function fetchNikkeApi(endpoint, method, payload = null) {
     return await fetchWithCookies(url, options);
 }
 
-async function fetchNikkeGGApi(endpoint, method, payload = null) {
+export async function fetchNikkeGGApi(endpoint, method, payload = null) {
     const url = `${NIKKE_GG_API_BASE_URL}${endpoint}`;
     const options = {
         method
@@ -1223,6 +1223,13 @@ export async function checkLogin() {
 
     return res;
 };
+
+export function safeJSON(obj, spaces = 2) {
+  return JSON.stringify(obj, (_, v) =>
+    typeof v === "bigint" ? v.toString() : v,
+    spaces
+  );
+}
 
 function getNameCodeById(id) {
     const unit = NIKKE_UNITS.find(unit => unit.id === id);
@@ -1365,13 +1372,13 @@ async function getUserCharacters(intl_open_id, nikke_area_id = NIKKE_AREA_ID) {
     return res;
 }
 
-async function getCharacters() {
+export async function getCharacters() {
     var res = await fetchNikkeGGApi(NIKKE_GG_API_ENDPOINTS.CHARACTERS, NIKKE_GG_API_METHODS.CHARACTERS);
     
     return res;
 }
 
-async function getCharacterByName(name) {
+export async function getCharacterByName(name) {
     var res = await fetchNikkeGGApi(NIKKE_GG_API_ENDPOINTS.CHARACTER + `/${name}`, NIKKE_GG_API_METHODS.CHARACTER);
 
     return res;
