@@ -3,7 +3,7 @@ import { PermissionFlagsBits } from 'discord.js';
 import { createEmbed, errorEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
-import { getUserGameInfo, getUserProfileBasicInfo, getUserProfileOutpostInfo, getUserDailyContentsProgress, searchUser, getUserProfile, getUserCharacters, safeJSON } from '../../../services/nikke.js';
+import { getMyGuildInfo, getUserGameInfo, getUserProfileBasicInfo, getUserProfileOutpostInfo, getUserDailyContentsProgress, searchUser, getUserProfile, getUserCharacters, safeJSON } from '../../../services/nikke.js';
 
 export async function handleSearchUser(interaction, client) {
     const guild = interaction.guild;
