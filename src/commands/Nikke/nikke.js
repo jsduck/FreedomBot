@@ -10,6 +10,7 @@ import { handleLogin, handleCheckLogin } from './modules/nikke_login.js';
 import { handleFetchApi } from './modules/nikke_api.js';
 
 import { handleCharacterByName } from './modules/nikke_gg.js';
+import { handleUserCharacter } from './modules/nikke_character.js';
 
 export default {
     data: new SlashCommandBuilder()
