@@ -54,6 +54,22 @@ export default {
                         .setDescription("Nikke name, no spaces")
                         .setRequired(true)   
                 ))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName("user-character")
+                .setDescription("Get character info from Nikke API for a specific user")
+                .addStringOption(option =>
+                    option
+                        .setName("intl_open_id")
+                        .setDescription("OpenID of the user to fetch character info for")
+                        .setRequired(true)
+                )
+                .addStringOption(option =>
+                    option
+                        .setName("name_codes")
+                        .setDescription("Nikke name codes")
+                        .setRequired(true)   
+                ))
         ,
         async execute(interaction, client) {
             const subcommand = interaction.options.getSubcommand();
@@ -71,6 +87,9 @@ export default {
                         break;
                     case "character":
                         await handleCharacterByName(interaction, client);
+                        break;
+                    case "user-character":
+                        await handleUserCharacter(interaction, client);
                         break;
                     default:
                         await InteractionHelper.safeReply(interaction, {

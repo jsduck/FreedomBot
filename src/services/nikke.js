@@ -1241,7 +1241,7 @@ function getNameCodeByName(name) {
     return unit ? unit.name_code : null;
 }
 
-async function getUserCharacterDetails(intl_open_id, name_codes) {
+export async function getUserCharacterDetails(intl_open_id, name_codes) {
     var res = await fetchNikkeApi(NIKKE_API_ENDPOINTS.GET_CHARACTER_DETAILS, NIKKE_API_METHODS.GET_CHARACTER_DETAILS, {
         intl_open_id: intl_open_id,
         name_codes: name_codes,
