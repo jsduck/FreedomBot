@@ -62,6 +62,53 @@ function extractEffect(arr, eff, id) {
     return eff.find(e => e.id == arr[id]);
 }
 
+function formatFunctionDetails(details) {
+    switch (details) {
+        case "StatAtk":
+            return "Attack";
+        case "IncElementDmg":
+            return "EleDmg";
+        case "StatChargeTime":
+            return "ChrgSpd";
+        case "StatChargeDamage":
+            return "ChrgDmg";
+        case "StatCriticalDamage":
+            return "CritDmg";
+        case "StatCritical":
+            return "CritRate";
+        case "StatAmmoLoad":
+            return "Ammo";
+        case "StatDef":
+            return "Def";
+        case "StatAccuracyCircle":
+            return "Hit:";
+        default:
+            return "";
+    }
+}
+
+function formatEquipLine(label, level, units, effects, lines) {
+  const parts = lines.map(lineIndex => {
+    const eff = extractEffect(units[0], effects, lineIndex)?.function_details?.[0];
+
+    if (!eff) {
+      return `N/A`;
+    }
+
+    const type = formatFunctionDetails(eff.function_type) || "N/A";
+    const lvl = eff.level || 0;
+
+    // Convert raw value → percentage
+    const raw = eff.function_value || 0;
+    const percent = (raw / 100).toFixed(2) + "%";
+
+    return `${type}(${lvl}): ${percent}`;
+  });
+
+  return `**${label} Lv${level}:** ${parts.join(" | ")}`;
+}
+
+
 export async function handleUserCharacter(interaction, client) {
     const guild = interaction.guild;
         // Defer reply immediately to ensure interaction is acknowledged
@@ -122,8 +169,14 @@ export async function handleUserCharacter(interaction, client) {
                 console.log("Gear:", gear);
                 console.log('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n');
                 const OLarray = Object.entries(OLdict).map(
-                    ([key, value]) => `**${key}**: ${value}`
+                    ([key, value]) => `**${key}**: ${value}%`
                 );
+
+                const armLine = formatEquipLine("Arm", units[0].arm_equip_lv, units, effects, [lines[0], lines[1], lines[2]]);
+                const headLine = formatEquipLine("Head", units[0].head_equip_lv, units, effects, [lines[3], lines[4], lines[5]]);
+                const legLine = formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]);
+                const torsoLine = formatEquipLine("Torso", units[0].torso_equip_lv, units, effects, [lines[9], lines[10], lines[11]]);
+
     
                 const preview = safeJSON(data, 2).slice(0, 1000); // fits in embed
                 const embed = createEmbed({
@@ -159,20 +212,15 @@ export async function handleUserCharacter(interaction, client) {
                             {
                                 name: "Overload Info",
                                 value: [
-                                    ` **Arm Lv${units[0].arm_equip_lv}:** ${extractEffect(units[0], effects, lines[0])?.function_details[0].function_type || "N/A"}(${extractEffect(units[0], effects, lines[0])?.function_details[0].level}): ${extractEffect(units[0], effects, lines[0])?.function_details[0].function_value || 0} | ${extractEffect(units[0], effects, lines[1])?.function_details[0].function_type || "N/A"}(${extractEffect(units[0], effects, lines[1])?.function_details[0].level}): ${extractEffect(units[0], effects, lines[1])?.function_details[0].function_value || 0} | ${extractEffect(units[0], effects, lines[2])?.function_details[0].function_type || "N/A"}(${extractEffect(units[0], effects, lines[2])?.function_details[0].level}): ${extractEffect(units[0], effects, lines[2])?.function_details[0].function_value || 0}`,
-                                    ` **Head Lv${units[0].head_equip_lv}:** ${extractEffect(units[0], effects, lines[3])?.function_details[0].function_type || "N/A"}(${extractEffect(units[0], effects, lines[3])?.function_details[0].level}): ${extractEffect(units[0], effects, lines[3])?.function_details[0].function_value || 0} | ${extractEffect(units[0], effects, lines[4])?.function_details[0].function_type || "N/A"}(${extractEffect(units[0], effects, lines[4])?.function_details[0].level}): ${extractEffect(units[0], effects, lines[4])?.function_details[0].function_value || 0} | ${extractEffect(units[0], effects, lines[5])?.function_details[0].function_type || "N/A"}(${extractEffect(units[0], effects, lines[5])?.function_details[0].level}): ${extractEffect(units[0], effects, lines[5])?.function_details[0].function_value || 0}`,
-                                    ` **Leg Lv${units[0].leg_equip_lv}:** ${extractEffect(units[0], effects, lines[6])?.function_details[0].function_type || "N/A"}(${extractEffect(units[0], effects, lines[6])?.function_details[0].level}): ${extractEffect(units[0], effects, lines[6])?.function_details[0].function_value || 0} | ${extractEffect(units[0], effects, lines[7])?.function_details[0].function_type || "N/A"}(${extractEffect(units[0], effects, lines[7])?.function_details[0].level}): ${extractEffect(units[0], effects, lines[7])?.function_details[0].function_value || 0} | ${extractEffect(units[0], effects, lines[8])?.function_details[0].function_type || "N/A"}(${extractEffect(units[0], effects, lines[8])?.function_details[0].level}): ${extractEffect(units[0], effects, lines[8])?.function_details[0].function_value || 0}`,
-                                    ` **Torso Lv${units[0].torso_equip_lv}:** ${extractEffect(units[0], effects, lines[9])?.function_details[0].function_type || "N/A"}(${extractEffect(units[0], effects, lines[9])?.function_details[0].level}): ${extractEffect(units[0], effects, lines[9])?.function_details[0].function_value || 0} | ${extractEffect(units[0], effects, lines[10])?.function_details[0].function_type || "N/A"}(${extractEffect(units[0], effects, lines[10])?.function_details[0].level}): ${extractEffect(units[0], effects, lines[10])?.function_details[0].function_value || 0} | ${extractEffect(units[0], effects, lines[11])?.function_details[0].function_type || "N/A"}(${extractEffect(units[0], effects, lines[11])?.function_details[0].level}): ${extractEffect(units[0], effects, lines[11])?.function_details[0].function_value || 0}`,
+                                    armLine,
+                                    headLine,
+                                    legLine,
+                                    torsoLine
                                 ].join("\n"),
                                 inline: false
                             }
                         );
-                            
 
-                
-
-
-                
                 if (length > 1000) {
                     await InteractionHelper.safeEditReply(interaction, {
                         embeds: [embed],
