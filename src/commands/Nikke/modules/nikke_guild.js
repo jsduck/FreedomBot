@@ -226,11 +226,8 @@ export async function handleUnionRaidLevelData(interaction, client) {
                     title: "✅ API Call Successful",
                     description: `Successfully called Nikke API endpoint \`getUnionRaidLevelData\`.`,
                     color: getColor('success')
-                }).addFields(
-                    { 
-                        name: "Level", value: json.data.level_info
-                    }
-                );
+                });
+
             if (level_info) {
                 console.log(level_info);
                 for (const item of level_info.boss_info) {
@@ -239,7 +236,7 @@ export async function handleUnionRaidLevelData(interaction, client) {
                     embed.addFields(
                         { 
                             name: `${item.name_localvalues.en}`, 
-                            value: `HP: ${Number(item.current_hp).toLocaleString("en-US")} / MAX_HP: ${Number(item.max_hp).toLocaleString("en-US")}` 
+                            value: `HP: ${BigInt(item.current_hp).toLocaleString("en-US")} / MAX_HP: ${BigInt(item.max_hp).toLocaleString("en-US")}` 
                         }
                     );
                 }
@@ -261,10 +258,6 @@ export async function handleUnionRaidLevelData(interaction, client) {
                 }).catch(logger.error);
             }
         }
-
-
-
-
     } catch (error) {
         logger.error("Error checking union raid level data:", error);
         await InteractionHelper.safeEditReply(interaction, {
