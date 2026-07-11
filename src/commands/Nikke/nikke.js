@@ -206,6 +206,17 @@ export default {
                         .addChoices(
                             { name: "global", value: 84 }
                         )
+                )
+                .addIntegerOption(option =>
+                    option
+                        .setName("level")
+                        .setDescription("ID of the season to fetch union raid level data for")
+                        .setRequired(true)
+                        .addChoices(
+                            { name: "Level 1", value: 1 },
+                            { name: "Level 2", value: 2 },
+                            { name: "Level 3", value: 3 }
+                        )
                 ))
         .addSubcommand(subcommand =>
             subcommand

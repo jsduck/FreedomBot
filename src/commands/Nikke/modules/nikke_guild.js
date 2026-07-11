@@ -186,6 +186,10 @@ export async function handleUnionRaidData(interaction, client) {
     }
 }
 
+function getInfoFromLevel(json, level) {
+    return json.data.level_info.find(info => info.level === level);
+}
+
 export async function handleUnionRaidLevelData(interaction, client) {
     const guild = interaction.guild;
     // Defer reply immediately to ensure interaction is acknowledged
@@ -207,6 +211,7 @@ export async function handleUnionRaidLevelData(interaction, client) {
     const guild_id = interaction.options.getInteger("guild_id");
     const intl_open_id = interaction.options.getString("intl_open_id");
     const nikke_area_id = interaction.options.getInteger("nikke_area_id");
+    const level = interaction.options.getInteger("level") || 1; 
     try {
         const res = await getUnionRaidLevelData(guild_id, intl_open_id, nikke_area_id);
         if (res.ok) {
@@ -214,14 +219,31 @@ export async function handleUnionRaidLevelData(interaction, client) {
             const json = safeJSON(data, 2);
             const length = json.length;
 
+            const level_info = getInfoFromLevel(data, level);
+
             const preview = safeJSON(data, 2).slice(0, 1000); // fits in embed
             const embed = createEmbed({
                     title: "✅ API Call Successful",
                     description: `Successfully called Nikke API endpoint \`getUnionRaidLevelData\`.`,
                     color: getColor('success')
                 }).addFields(
-                    { name: "Response Preview", value: `\`\`\`json\n${preview}\n\`\`\`` }
+                    { 
+                        name: "Level", value: json.data.level_info
+                    }
                 );
+            if (level_info) {
+                console.log(level_info);
+                for (const item of level_info.boss_info) {
+                    console.log(item);
+
+                    embed.addFields(
+                        { 
+                            name: `${item.name_localvalues.en}`, 
+                            value: `HP: ${Number(item.current_hp).toLocaleString("en-US")} / MAX_HP: ${Number(item.max_hp).toLocaleString("en-US")}` 
+                        }
+                    );
+                }
+            }
             
             if (length > 1000) {
                 await InteractionHelper.safeEditReply(interaction, {
@@ -239,6 +261,10 @@ export async function handleUnionRaidLevelData(interaction, client) {
                 }).catch(logger.error);
             }
         }
+
+
+
+
     } catch (error) {
         logger.error("Error checking union raid level data:", error);
         await InteractionHelper.safeEditReply(interaction, {
