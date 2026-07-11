@@ -88,11 +88,15 @@ function formatFunctionDetails(details) {
 }
 
 function formatEquipLine(label, level, units, effects, lines) {
-  const parts = lines.map(lineIndex => {
+  const rows = lines.map(lineIndex => {
     const eff = extractEffect(units[0], effects, lineIndex)?.function_details?.[0];
 
     if (!eff) {
-      return `N/A`;
+      return {
+        type: "—",
+        lvl: "—",
+        val: "—"
+      };
     }
 
     const type = formatFunctionDetails(eff.function_type) || "N/A";
@@ -100,12 +104,26 @@ function formatEquipLine(label, level, units, effects, lines) {
 
     // Convert raw value → percentage
     const raw = eff.function_value || 0;
-    const percent = (raw / 100).toFixed(2) + "%";
+    const val = (raw / 100).toFixed(2) + "%";
 
-    return `${type}(${lvl}): ${percent}`;
+    return { type, lvl, val };
   });
 
-  return `**${label} Lv${level}:** ${parts.join(" | ")}`;
+  // Build table text
+  const header = `**${label} Lv${level}**\n\`Type               Lv     Value`;
+  const body = rows
+    .map(r => `${r.type.padEnd(18)} ${String(r.lvl).padEnd(6)} ${r.val}`)
+    .join("\n");
+
+  return `${header}\n${body}\``;
+}
+
+function formatTable(title, rows) {
+  const header = `**${title}**\n\`Field             Value`;
+  const body = rows
+    .map(([field, value]) => `${field.padEnd(16)} ${value}`)
+    .join("\n");
+  return `${header}\n${body}\``;
 }
 
 
@@ -169,7 +187,7 @@ export async function handleUserCharacter(interaction, client) {
                 console.log("Gear:", gear);
                 console.log('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n');
                 const OLarray = Object.entries(OLdict).map(
-                    ([key, value]) => `**${key}**: ${value}%`
+                    ([key, value]) => `**${formatFunctionDetails(key)}**: ${value}%`
                 );
 
                 const armLine = formatEquipLine("Arm", units[0].arm_equip_lv, units, effects, [lines[0], lines[1], lines[2]]);
@@ -187,26 +205,26 @@ export async function handleUserCharacter(interaction, client) {
                         .addFields(
                             { 
                                 name: "Basic Info", 
-                                value: [
-                                    ` **Synchro-Level:** ${units[0].lv}`,
-                                    ` **Combat Power:** ${units[0].combat}`,
-                                    ` **Bond:** ${units[0].attractive_lv}`,
-                                    ` **Limit Break:** ${getDups(units[0].grade+units[0].core)}`,
-                                    ` **Skills:** ${units[0].skill1_lv} / ${units[0].skill2_lv} / ${units[0].ulti_skill_lv}`,
-                                ].join("\n"),
+                                value: formatTable("Basic Info", [
+                                    ["Synchro-Level", units[0].lv],
+                                    ["Combat Power", Number(units[0].combat).toLocaleString("en-US")],
+                                    ["Bond", units[0].attractive_lv],
+                                    ["Limit Break", getDups(units[0].grade + units[0].core)],
+                                    ["Skills", `${units[0].skill1_lv} / ${units[0].skill2_lv} / ${units[0].ulti_skill_lv}`]
+                                ]),
                                 inline: false 
                             },
                             {
                                 name: "Cube & Doll",
-                                value: [
-                                    ` **Cube:** ${units[0].harmony_cube_tid} (Lv. ${units[0].harmony_cube_lv})`,
-                                    ` **Doll:** ${getDollStats(units[0])}`,
-                                ].join("\n"),
+                                value: formatTable("Cube & Doll", [
+                                    ["Cube", `${units[0].harmony_cube_tid} (Lv. ${units[0].harmony_cube_lv})`],
+                                    ["Doll", getDollStats(units[0])]
+                                ]),
                                 inline: false
                             },
                             {
                                 name: "Stats",
-                                value: OLarray.join("\n"),
+                                value: formatTable("Stats", OLarray.map(([k, v]) => [k, `${v.toFixed(2)}%`])),
                                 inline: false
                             },
                             {
