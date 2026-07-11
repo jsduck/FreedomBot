@@ -187,7 +187,7 @@ export async function handleUserCharacter(interaction, client) {
                 console.log("Gear:", gear);
                 console.log('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n');
                 const OLarray = Object.entries(OLdict).map(
-                    ([key, value]) => `**${formatFunctionDetails(key)}**: ${value}%`
+                    ([key, value]) => `**${formatFunctionDetails(key)}**: ${value}`
                 );
 
                 const armLine = formatEquipLine("Arm", units[0].arm_equip_lv, units, effects, [lines[0], lines[1], lines[2]]);
