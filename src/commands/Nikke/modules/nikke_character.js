@@ -198,8 +198,6 @@ export async function handleUserCharacter(interaction, client) {
                 });
                 var OLdict = {};
                 extractOLvalue(gear, OLdict);
-                console.log("Gear:", gear);
-                console.log('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n');
                 const OLarray = Object.entries(OLdict).map(([key, value]) => {
                 const num = Number(value);
                 const formatted = isNaN(num) ? String(value) : `${num.toFixed(2)}%`;
@@ -218,6 +216,7 @@ export async function handleUserCharacter(interaction, client) {
                 const preview = safeJSON(data, 2).slice(0, 1000); // fits in embed
 
                 const name = getChoiceName(interaction, "intl_open_id", intl_open_id);
+                console.log("User selected:", name, intl_open_id);
 
                 const embed = createEmbed({
                         title: `${name}'s ${getNameByCode(units[0].name_code)} Character Details`,
