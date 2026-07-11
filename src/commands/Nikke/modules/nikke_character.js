@@ -46,6 +46,15 @@ function getDollStats(rawNikke) {
     }
 }
 
+function getChoiceName(interaction, optionName, value) {
+  const option = interaction.command.options.find(opt => opt.name === optionName);
+  if (!option || !option.choices) return null;
+
+  const choice = option.choices.find(c => c.value === value);
+  return choice ? choice.name : null;
+}
+
+
 function extractOLvalue(gear, dict) {
     gear?.forEach(g => {
         var type = g.function_details[0].function_type,
@@ -207,9 +216,12 @@ export async function handleUserCharacter(interaction, client) {
 
                     ${armLine}    ${legLine}`;
                 const preview = safeJSON(data, 2).slice(0, 1000); // fits in embed
+
+                const name = getChoiceName(interaction, "intl_open_id", intl_open_id);
+
                 const embed = createEmbed({
-                        title: `${getNameByCode(units[0].name_code)} Character Details`,
-                        description: `Successfully called Nikke API endpoint getUserCharacterDetails\`.`,
+                        title: `${name}'s ${getNameByCode(units[0].name_code)} Character Details`,
+                        description: ``,
                         color: getColor('success')
                     }).setThumbnail("https://static.dotgg.gg/nikke/characters/" + char_json.img + ".webp")
                         .addFields(
