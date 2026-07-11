@@ -58,7 +58,7 @@ const accchoice = [
 ]
 
 function getChoiceNameFromValue(value) {
-  return accountChoices.find(c => c.value === value)?.name ?? null;
+  return accchoice.find(c => c.value === value)?.name ?? null;
 }
 
 
