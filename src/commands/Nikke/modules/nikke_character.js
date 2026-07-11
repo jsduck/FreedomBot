@@ -115,7 +115,7 @@ function formatEquipLine(label, level, units, effects, lines) {
     .map(r => `${r.type.padEnd(18)} ${String(r.lvl).padEnd(6)} ${r.val}`)
     .join("\n");
 
-  return `${header}\n${body}\``;
+  return `${body}\``;
 }
 
 function formatTable(title, rows) {
@@ -123,7 +123,7 @@ function formatTable(title, rows) {
   const body = rows
     .map(([field, value]) => `${field.padEnd(16)} ${value}`)
     .join("\n");
-  return `${header}\n${body}\``;
+  return `${body}\``;
 }
 
 
@@ -186,9 +186,11 @@ export async function handleUserCharacter(interaction, client) {
                 extractOLvalue(gear, OLdict);
                 console.log("Gear:", gear);
                 console.log('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n');
-                const OLarray = Object.entries(OLdict).map(
-                    ([key, value]) => `**${formatFunctionDetails(key)}**: ${value}`
-                );
+                const OLarray = Object.entries(OLdict).map(([key, value]) => {
+                const num = Number(value);
+                const formatted = isNaN(num) ? String(value) : `${num.toFixed(2)}%`;
+                return [formatFunctionDetails(key), formatted];
+                });
 
                 const armLine = formatEquipLine("Arm", units[0].arm_equip_lv, units, effects, [lines[0], lines[1], lines[2]]);
                 const headLine = formatEquipLine("Head", units[0].head_equip_lv, units, effects, [lines[3], lines[4], lines[5]]);
@@ -204,7 +206,7 @@ export async function handleUserCharacter(interaction, client) {
                     }).setThumbnail("https://static.dotgg.gg/nikke/characters/" + char_json.img + ".webp")
                         .addFields(
                             { 
-                                name: "Basic Info", 
+                                name: "\u200B", // invisible header 
                                 value: formatTable("Basic Info", [
                                     ["Synchro-Level", units[0].lv],
                                     ["Combat Power", Number(units[0].combat).toLocaleString("en-US")],
@@ -215,7 +217,7 @@ export async function handleUserCharacter(interaction, client) {
                                 inline: false 
                             },
                             {
-                                name: "Cube & Doll",
+                                name: "\u200B", // invisible header
                                 value: formatTable("Cube & Doll", [
                                     ["Cube", `${units[0].harmony_cube_tid} (Lv. ${units[0].harmony_cube_lv})`],
                                     ["Doll", getDollStats(units[0])]
@@ -223,15 +225,8 @@ export async function handleUserCharacter(interaction, client) {
                                 inline: false
                             },
                             {
-                                name: "Stats",
-                                value: formatTable(
-                                "Stats",
-                                OLarray.map(([k, v]) => {
-                                    const num = Number(v);
-                                    const formatted = isNaN(num) ? String(v) : `${num.toFixed(2)}%`;
-                                    return [k, formatted];
-                                })
-                                ),
+                                name: "\u200B", // invisible header
+                                value: formatTable("Stats", OLarray),
                                 inline: false
                             },
                             {
@@ -246,21 +241,9 @@ export async function handleUserCharacter(interaction, client) {
                             }
                         );
 
-                if (length > 1000) {
-                    await InteractionHelper.safeEditReply(interaction, {
-                        embeds: [embed],
-                        files: [
-                            {
-                                attachment: Buffer.from(json),
-                                name: "response.json"
-                            }
-                        ]
-                    }).catch(logger.error);
-                } else {
-                    await InteractionHelper.safeEditReply(interaction, {
-                        embeds: [embed]
-                    }).catch(logger.error);
-                }
+                await InteractionHelper.safeEditReply(interaction, {
+                    embeds: [embed]
+                }).catch(logger.error);
             }
         } catch (error) {
             logger.error("Error checking login status:", error);
