@@ -114,11 +114,11 @@ function formatEquipLine(label, level, units, effects, lines) {
 }
 
 function formatTable(title, rows) {
-  const header = `**${title}**\``; // no "Field Value" row
+  const header = `**${title}**`; // no "Field Value" row
   const body = rows
     .map(([field, value]) => `${field.padEnd(16)} ${value}`)
     .join("\n");
-  return `${header}\n${body}\``;
+  return `${header}\n\'${body}\``;
 }
 
 
@@ -228,9 +228,9 @@ export async function handleUserCharacter(interaction, client) {
                                 inline: false
                             },
                             {
-                                name: "Overload Info",
-                                value: "\u200B",   // empty line so the header shows cleanly
-                                inline: false
+                            name: "**Overload Info**",
+                            value: "\u200B",
+                            inline: true
                             },
                             {
                                 name: "Arm",
@@ -241,6 +241,12 @@ export async function handleUserCharacter(interaction, client) {
                                 name: "Head",
                                 value: formatEquipLine("Head", units[0].head_equip_lv, units, effects, [lines[3], lines[4], lines[5]]),
                                 inline: true
+                            },
+                            // *** ROW BREAK ***
+                            {
+                                name: "\u200B",
+                                value: "\u200B",
+                                inline: false
                             },
                             {
                                 name: "Leg",
