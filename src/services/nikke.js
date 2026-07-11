@@ -306,7 +306,9 @@ const NIKKE_UNITS = [
     { id: 586101, name_code: 5165, name: "Takina", getol: true},
     { id: 301701, name_code: 5169, name: "Anis", getol: true },
     { id: 101801, name_code: 5170, name: "Neon", getol: true },
-    { id: 360001, name_code: 5172, name: "Mint", getol: true }
+    { id: 360001, name_code: 5172, name: "Mint", getol: true },
+    { id: 0, name_code: 5175, name: "Cinderella: Crystal Wave", getol: true },
+    { id: 0, name_code: 5176, name: "Marciana: Marine Study", getol: true },
 ]
 
 const GETUSERGAMEPLAYERINFO_PREVIEW = {

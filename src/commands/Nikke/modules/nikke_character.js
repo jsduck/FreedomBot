@@ -46,12 +46,19 @@ function getDollStats(rawNikke) {
     }
 }
 
-function getChoiceName(interaction, optionName, value) {
-  const option = interaction.command.options.find(opt => opt.name === optionName);
-  if (!option || !option.choices) return null;
+const accchoice = [
+    { name: "Kaarako", value: "3166452414820481224" },
+    { name: "Demi", value: "16338490109246680481" },
+    { name: "Shaito", value: "12167197956671690221" },
+    { name: "Fizix", value: "5877343215992272387" },
+    { name: "Jae", value: "15097183441877165889" },
+    { name: "Effelon", value: "16338490109246680481" },
+    { name: "Fesha", value: "12816795455667592937" },
+    { name: "Nelex", value: "1175532717634698043" } 
+]
 
-  const choice = option.choices.find(c => c.value === value);
-  return choice ? choice.name : null;
+function getChoiceNameFromValue(value) {
+  return accountChoices.find(c => c.value === value)?.name ?? null;
 }
 
 
@@ -215,11 +222,10 @@ export async function handleUserCharacter(interaction, client) {
                     ${armLine}    ${legLine}`;
                 const preview = safeJSON(data, 2).slice(0, 1000); // fits in embed
 
-                const name = getChoiceName(interaction, "intl_open_id", intl_open_id);
-                console.log("User selected:", name, intl_open_id);
+                const name  = getChoiceNameFromValue(value);
 
                 const embed = createEmbed({
-                        title: `${name}'s ${getNameByCode(units[0].name_code)} Character Details`,
+                        title: `${name}'s ${getNameByCode(units[0].name_code)} Chara Details`,
                         description: ``,
                         color: getColor('success')
                     }).setThumbnail("https://static.dotgg.gg/nikke/characters/" + char_json.img + ".webp")
