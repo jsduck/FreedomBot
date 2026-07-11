@@ -109,16 +109,18 @@ function formatEquipLine(label, level, units, effects, lines) {
     .map(r => `${r.type.padEnd(16)} ${r.val}`)
     .join("\n");
 
-  return `Lv${level}\n\`${body}\``;
+  return `\`${body}\``;
 }
 
 function formatTable(title, rows) {
-  const header = `**${title}**`; // no "Field Value" row
+  const header = `**${title}**`;
   const body = rows
     .map(([field, value]) => `${field.padEnd(16)} ${value}`)
     .join("\n");
+
   return `${header}\n\`\n${body}\n\``;
 }
+
 
 
 export async function handleUserCharacter(interaction, client) {
@@ -209,17 +211,10 @@ export async function handleUserCharacter(interaction, client) {
                                     ["Combat Power", Number(units[0].combat).toLocaleString("en-US")],
                                     ["Bond", units[0].attractive_lv],
                                     ["Limit Break", getDups(units[0].grade + units[0].core)],
+                                    ["Doll", getDollStats(units[0])],
                                     ["Skills", `${units[0].skill1_lv} / ${units[0].skill2_lv} / ${units[0].ulti_skill_lv}`]
                                 ]),
                                 inline: false 
-                            },
-                            {
-                                name: "\u200B", // invisible header
-                                value: formatTable("Cube & Doll", [
-                                    ["Cube", `${units[0].harmony_cube_tid} (Lv. ${units[0].harmony_cube_lv})`],
-                                    ["Doll", getDollStats(units[0])]
-                                ]),
-                                inline: false
                             },
                             {
                                 name: "\u200B", // invisible header
@@ -232,12 +227,12 @@ export async function handleUserCharacter(interaction, client) {
                                 inline: false
                             },
                             {
-                                name: "Arm",
+                                name: `Arm (${units[0].arm_equip_lv})`,
                                 value: formatEquipLine("Arm", units[0].arm_equip_lv, units, effects, [lines[0], lines[1], lines[2]]),
                                 inline: true
                             },
                             {
-                                name: "Head",
+                                name: `Head (${units[0].head_equip_lv})`,
                                 value: formatEquipLine("Head", units[0].head_equip_lv, units, effects, [lines[3], lines[4], lines[5]]),
                                 inline: true
                             },
@@ -248,12 +243,12 @@ export async function handleUserCharacter(interaction, client) {
                                 inline: false
                             },
                             {
-                                name: "Leg",
+                                name: `Leg (${units[0].leg_equip_lv})`,
                                 value: formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]),
                                 inline: true
                             },
                             {
-                                name: "Torso",
+                                name: `Torso (${units[0].torso_equip_lv})`,
                                 value: formatEquipLine("Torso", units[0].torso_equip_lv, units, effects, [lines[9], lines[10], lines[11]]),
                                 inline: true
                             }
