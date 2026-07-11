@@ -159,7 +159,7 @@ export async function handleUserCharacter(interaction, client) {
                             {
                                 name: "Overload Info",
                                 value: [
-                                    ` **Arm Lv${units[0].arm_equip_lv}:** ${extractEffect(units[0], effects, units[0].arm_equip_option1_id)?.function_details[0].function_type || "N/A"} + ${extractEffect(units[0], effects, units[0].arm_equip_option1_id)?.function_details[0].function_value || 0}`,
+                                    ` **Arm Lv${units[0].arm_equip_lv}:** ${extractEffect(units[0], effects, lines[0])?.function_details[0].function_type || "N/A"} + ${extractEffect(units[0], effects, lines[0])?.function_details[0].function_value || 0}`,
                                     ` **Head Lv${units[0].head_equip_lv}:** TODO`,
                                     ` **Leg Lv${units[0].leg_equip_lv}:** TODO`,
                                     ` **Torso Lv${units[0].torso_equip_lv}:** TODO`
