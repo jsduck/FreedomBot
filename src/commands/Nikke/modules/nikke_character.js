@@ -193,7 +193,10 @@ export async function handleUserCharacter(interaction, client) {
                 const legLine = formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]);
                 const torsoLine = formatEquipLine("Torso", units[0].torso_equip_lv, units, effects, [lines[9], lines[10], lines[11]]);
 
-    
+                const overload2x2 =
+                    `${headLine}    ${torsoLine}
+
+                    ${armLine}    ${legLine}`;
                 const preview = safeJSON(data, 2).slice(0, 1000); // fits in embed
                 const embed = createEmbed({
                         title: `${getNameByCode(units[0].name_code)} Character Details`,
@@ -227,12 +230,7 @@ export async function handleUserCharacter(interaction, client) {
                             },
                             {
                                 name: "Overload Info",
-                                value: [
-                                    armLine,
-                                    headLine,
-                                    legLine,
-                                    torsoLine
-                                ].join("\n"),
+                                value: overload2x2,
                                 inline: false
                             }
                         );
