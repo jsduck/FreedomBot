@@ -115,7 +115,7 @@ function formatEquipLine(label, level, units, effects, lines) {
     .map(r => `${r.type.padEnd(18)} ${String(r.lvl).padEnd(6)} ${r.val}`)
     .join("\n");
 
-  return `${body}\``;
+  return `${header}\n${body}\``;
 }
 
 function formatTable(title, rows) {
@@ -123,7 +123,7 @@ function formatTable(title, rows) {
   const body = rows
     .map(([field, value]) => `${field.padEnd(16)} ${value}`)
     .join("\n");
-  return `${body}\``;
+  return `${header}\n${body}\``;
 }
 
 
