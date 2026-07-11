@@ -106,7 +106,12 @@ function formatEquipLine(label, level, units, effects, lines) {
   });
 
   const body = rows
-    .map(r => `${r.type.padEnd(16)} ${r.val}`)
+    .map(r => {
+      const col1 = r.type.padEnd(10);      // Type
+      const col2 = `(${r.lvl})`.padEnd(6); // (Lvl)
+      const col3 = r.val;                  // Value
+      return `${col1}${col2}${col3}`;
+    })
     .join("\n");
 
   return `\`${body}\``;
@@ -210,7 +215,7 @@ export async function handleUserCharacter(interaction, client) {
                         .addFields(
                             { 
                                 name: "Basic Info", // invisible header 
-                                value: `\`\n${formatTable2([
+                                value: `\`${formatTable2([
                                     ["Synchro-Level", units[0].lv],
                                     ["Combat Power", Number(units[0].combat).toLocaleString("en-US")],
                                     ["Bond", units[0].attractive_lv],
@@ -222,7 +227,7 @@ export async function handleUserCharacter(interaction, client) {
                             },
                             {
                                 name: "Stats", // invisible header
-                                value: `\`\n${formatTable2(OLarray)}\n\``,
+                                value: `\`${formatTable2(OLarray)}\n\``,
                                 inline: false
                             },
                             {
