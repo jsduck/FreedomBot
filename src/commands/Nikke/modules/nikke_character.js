@@ -92,11 +92,7 @@ function formatEquipLine(label, level, units, effects, lines) {
     const eff = extractEffect(units[0], effects, lineIndex)?.function_details?.[0];
 
     if (!eff) {
-      return {
-        type: "—",
-        lvl: "—",
-        val: "—"
-      };
+      return { type: "—", lvl: "—", val: "—" };
     }
 
     const type = formatFunctionDetails(eff.function_type) || "N/A";
@@ -110,16 +106,16 @@ function formatEquipLine(label, level, units, effects, lines) {
   });
 
   // Build table text
-  const header = `**${label} Lv${level}**\n\`Type               Lv     Value`;
+  const header = `**${label} Lv${level}**\n\``;
   const body = rows
-    .map(r => `${r.type.padEnd(18)} ${String(r.lvl).padEnd(6)} ${r.val}`)
+    .map(r => `${r.type.padEnd(12)} ${String(r.lvl).padEnd(4)} ${r.val}`)
     .join("\n");
 
-  return `${header}\n${body}\``;
+  return `${header}${body}\``;
 }
 
 function formatTable(title, rows) {
-  const header = `**${title}**\n\`Field             Value`;
+  const header = `**${title}**\n\``; // no "Field Value" row
   const body = rows
     .map(([field, value]) => `${field.padEnd(16)} ${value}`)
     .join("\n");
