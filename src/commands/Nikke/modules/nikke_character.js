@@ -226,7 +226,7 @@ export async function handleUserCharacter(interaction, client) {
                                 name: "Stats",
                                 value: formatTable(
                                 "Stats",
-                                OArray.map(([k, v]) => {
+                                OLarray.map(([k, v]) => {
                                     const num = Number(v);
                                     const formatted = isNaN(num) ? String(v) : `${num.toFixed(2)}%`;
                                     return [k, formatted];
