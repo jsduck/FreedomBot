@@ -121,7 +121,11 @@ function formatTable(title, rows) {
   return `${header}\n\`\n${body}\n\``;
 }
 
-
+function formatTable2(rows) {
+  return rows
+    .map(([field, value]) => `${field.padEnd(16)} ${value}`)
+    .join("\n");
+}
 
 export async function handleUserCharacter(interaction, client) {
     const guild = interaction.guild;
@@ -205,20 +209,20 @@ export async function handleUserCharacter(interaction, client) {
                     }).setThumbnail("https://static.dotgg.gg/nikke/characters/" + char_json.img + ".webp")
                         .addFields(
                             { 
-                                name: "\u200B", // invisible header 
-                                value: formatTable("Basic Info", [
+                                name: "Basic Info", // invisible header 
+                                value: `\`\n${formatTable2([
                                     ["Synchro-Level", units[0].lv],
                                     ["Combat Power", Number(units[0].combat).toLocaleString("en-US")],
                                     ["Bond", units[0].attractive_lv],
                                     ["Limit Break", getDups(units[0].grade + units[0].core)],
                                     ["Doll", getDollStats(units[0])],
                                     ["Skills", `${units[0].skill1_lv} / ${units[0].skill2_lv} / ${units[0].ulti_skill_lv}`]
-                                ]),
+                                ])}\n\``,
                                 inline: false 
                             },
                             {
-                                name: "\u200B", // invisible header
-                                value: formatTable("Stats", OLarray),
+                                name: "Stats", // invisible header
+                                value: `\`\n${formatTable2(OLarray)}\n\``,
                                 inline: false
                             },
                             {
@@ -227,12 +231,12 @@ export async function handleUserCharacter(interaction, client) {
                                 inline: false
                             },
                             {
-                                name: `Arm (${units[0].arm_equip_lv})`,
+                                name: `Arm (Lv${units[0].arm_equip_lv})`,
                                 value: formatEquipLine("Arm", units[0].arm_equip_lv, units, effects, [lines[0], lines[1], lines[2]]),
                                 inline: true
                             },
                             {
-                                name: `Head (${units[0].head_equip_lv})`,
+                                name: `Head (Lv${units[0].head_equip_lv})`,
                                 value: formatEquipLine("Head", units[0].head_equip_lv, units, effects, [lines[3], lines[4], lines[5]]),
                                 inline: true
                             },
@@ -243,12 +247,12 @@ export async function handleUserCharacter(interaction, client) {
                                 inline: false
                             },
                             {
-                                name: `Leg (${units[0].leg_equip_lv})`,
+                                name: `Leg (Lv${units[0].leg_equip_lv})`,
                                 value: formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]),
                                 inline: true
                             },
                             {
-                                name: `Torso (${units[0].torso_equip_lv})`,
+                                name: `Torso (Lv${units[0].torso_equip_lv})`,
                                 value: formatEquipLine("Torso", units[0].torso_equip_lv, units, effects, [lines[9], lines[10], lines[11]]),
                                 inline: true
                             }
