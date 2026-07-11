@@ -57,6 +57,11 @@ function extractOLvalue(gear, dict) {
     });
 }
 
+function extractEffect(arr, eff, id) {
+    if (!arr[id]) return;
+    return eff.find(e => e.id == arr[id]);
+}
+
 export async function handleUserCharacter(interaction, client) {
     const guild = interaction.guild;
         // Defer reply immediately to ensure interaction is acknowledged
@@ -116,7 +121,9 @@ export async function handleUserCharacter(interaction, client) {
                 extractOLvalue(gear, OLdict);
                 console.log("Gear:", gear);
                 console.log('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n');
-                console.log("OLdict:", OLdict);
+                const OLarray = Object.entries(OLdict).map(
+                    ([key, value]) => `**${key}**: ${value}`
+                );
     
                 const preview = safeJSON(data, 2).slice(0, 1000); // fits in embed
                 const embed = createEmbed({
@@ -146,16 +153,13 @@ export async function handleUserCharacter(interaction, client) {
                             },
                             {
                                 name: "Stats",
-                                value: [
-                                    ` **HP:** ${units[0].hp}`,
-                                    ` **ATK:** ${units[0].atk}`
-                                ].join("\n"),
+                                value: OLarray.join("\n"),
                                 inline: false
                             },
                             {
                                 name: "Overload Info",
                                 value: [
-                                    ` **Arm Lv${units[0].arm_equip_lv}:** TODO`,
+                                    ` **Arm Lv${units[0].arm_equip_lv}:** ${extractEffect(units[0], effects, units[0].arm_equip_option1_id)?.function_details[0].function_type || "N/A"} + ${extractEffect(units[0], effects, units[0].arm_equip_option1_id)?.function_details[0].function_value || 0}`,
                                     ` **Head Lv${units[0].head_equip_lv}:** TODO`,
                                     ` **Leg Lv${units[0].leg_equip_lv}:** TODO`,
                                     ` **Torso Lv${units[0].torso_equip_lv}:** TODO`
