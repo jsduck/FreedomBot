@@ -211,7 +211,7 @@ export default {
                     option
                         .setName("level")
                         .setDescription("ID of the season to fetch union raid level data for")
-                        .setRequired(true)
+                        .setRequired(false)
                         .addChoices(
                             { name: "Level 1", value: 1 },
                             { name: "Level 2", value: 2 },
