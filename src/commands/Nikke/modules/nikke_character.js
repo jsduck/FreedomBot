@@ -114,7 +114,7 @@ function formatEquipLine(label, level, units, effects, lines) {
 }
 
 function formatTable(title, rows) {
-  const header = `**${title}**\n\``; // no "Field Value" row
+  const header = `**${title}**\``; // no "Field Value" row
   const body = rows
     .map(([field, value]) => `${field.padEnd(16)} ${value}`)
     .join("\n");
