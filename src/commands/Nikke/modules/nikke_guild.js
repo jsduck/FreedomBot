@@ -231,7 +231,7 @@ export async function handleUnionRaidLevelData(interaction, client) {
             if (level_info) {
                 //console.log(level_info);
                 for (const item of level_info.boss_info) {
-                    console.log(item);
+                    //console.log(item);
 
                     embed.addFields(
                         { 
