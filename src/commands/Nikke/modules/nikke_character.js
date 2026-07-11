@@ -222,7 +222,7 @@ export async function handleUserCharacter(interaction, client) {
                     ${armLine}    ${legLine}`;
                 const preview = safeJSON(data, 2).slice(0, 1000); // fits in embed
 
-                const name  = getChoiceNameFromValue(value);
+                const name  = getChoiceNameFromValue(intl_open_id);
 
                 const embed = createEmbed({
                         title: `${name}'s ${getNameByCode(units[0].name_code)} Chara Details`,
