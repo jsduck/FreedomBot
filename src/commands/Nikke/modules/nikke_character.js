@@ -108,8 +108,8 @@ export async function handleUserCharacter(interaction, client) {
 
                 const gear = [];
                 lines.forEach(line => {
-                    if (!nikke[line]) return;
-                    const effect = effects.find(e => e.id == nikke[line]);
+                    if (!units[0][line]) return;
+                    const effect = effects.find(e => e.id == units[0][line]);
                     if (effect) gear.push(effect);
                 });
                 var OLdict = {};
