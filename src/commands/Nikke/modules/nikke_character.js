@@ -49,8 +49,11 @@ export async function handleUserCharacter(interaction, client) {
                 const data = await res.json();
                 const json = safeJSON(data, 2);
                 const length = json.length;
+                console.log(data);
+                console.log('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n');
 
                 const char_details = data.character_details;
+                console.log(char_details);
     
                 const preview = safeJSON(data, 2).slice(0, 1000); // fits in embed
                 const embed = createEmbed({
