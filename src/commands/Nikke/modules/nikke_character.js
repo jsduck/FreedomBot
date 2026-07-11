@@ -106,12 +106,11 @@ function formatEquipLine(label, level, units, effects, lines) {
   });
 
   // Build table text
-  const header = `**${label} Lv${level}**\n\``;
   const body = rows
     .map(r => `${r.type.padEnd(12)} ${String(r.lvl).padEnd(4)} ${r.val}`)
     .join("\n");
 
-  return `${header}${body}\``;
+  return `Lv${level}\n\`${body}\``;
 }
 
 function formatTable(title, rows) {
@@ -230,8 +229,28 @@ export async function handleUserCharacter(interaction, client) {
                             },
                             {
                                 name: "Overload Info",
-                                value: overload2x2,
+                                value: "\u200B",   // empty line so the header shows cleanly
                                 inline: false
+                            },
+                            {
+                                name: "Arm",
+                                value: formatEquipLine("Arm", units[0].arm_equip_lv, units, effects, [lines[0], lines[1], lines[2]]),
+                                inline: true
+                            },
+                            {
+                                name: "Head",
+                                value: formatEquipLine("Head", units[0].head_equip_lv, units, effects, [lines[3], lines[4], lines[5]]),
+                                inline: true
+                            },
+                            {
+                                name: "Leg",
+                                value: formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]),
+                                inline: true
+                            },
+                            {
+                                name: "Torso",
+                                value: formatEquipLine("Torso", units[0].torso_equip_lv, units, effects, [lines[9], lines[10], lines[11]]),
+                                inline: true
                             }
                         );
 
