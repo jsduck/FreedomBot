@@ -102,12 +102,11 @@ function formatEquipLine(label, level, units, effects, lines) {
     const raw = eff.function_value || 0;
     const val = (raw / 100).toFixed(2) + "%";
 
-    return { type, lvl, val };
+    return { type: `${type} (${lvl})`, val };
   });
 
-  // Build table text
   const body = rows
-    .map(r => `${r.type.padEnd(12)} ${String(r.lvl).padEnd(4)} ${r.val}`)
+    .map(r => `${r.type.padEnd(16)} ${r.val}`)
     .join("\n");
 
   return `Lv${level}\n\`${body}\``;
@@ -229,8 +228,8 @@ export async function handleUserCharacter(interaction, client) {
                             },
                             {
                             name: "**Overload Info**",
-                            value: "\u200B",
-                            inline: true
+                            value: "",
+                            inline: false
                             },
                             {
                                 name: "Arm",
