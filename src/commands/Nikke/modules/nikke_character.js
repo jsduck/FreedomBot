@@ -102,7 +102,7 @@ function formatEquipLine(label, level, units, effects, lines) {
     const raw = eff.function_value || 0;
     const val = (raw / 100).toFixed(2) + "%";
 
-    return { type: `${type.padEnd(4)} (${lvl})`, val };
+    return { type, lvl, val };
   });
 
   const body = rows
