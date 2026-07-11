@@ -52,7 +52,7 @@ export async function handleUserCharacter(interaction, client) {
                 console.log(data);
                 console.log('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n');
 
-                const char_details = data.character_details;
+                const char_details = data.data.character_details;
                 console.log(char_details);
     
                 const preview = safeJSON(data, 2).slice(0, 1000); // fits in embed
