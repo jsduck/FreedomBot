@@ -17,12 +17,12 @@ export async function handleLogin(interaction, client) {
     }
 
     // Check permissions after deferring
-    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-        await InteractionHelper.safeEditReply(interaction, { 
-            embeds: [errorEmbed("You need **Administrator** permission to login.")]
-        }).catch(logger.error);
-        return;
-    }
+    //if (!interaction.member.permissions.has(PermissionFlagsBits.//Administrator)) {
+    //    await InteractionHelper.safeEditReply(interaction, { 
+    //        embeds: [errorEmbed("You need **Administrator** permission to //login.")]
+    //    }).catch(logger.error);
+    //    return;
+    //}
 
     try {
         const res = await login();
@@ -55,12 +55,12 @@ export async function handleCheckLogin(interaction, client) {
     }
 
     // Check permissions after deferring
-    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-        await InteractionHelper.safeEditReply(interaction, { 
-            embeds: [errorEmbed("You need **Administrator** permission to check login status.")]
-        }).catch(logger.error);
-        return;
-    }
+    //if (!interaction.member.permissions.has(PermissionFlagsBits.//Administrator)) {
+    //    await InteractionHelper.safeEditReply(interaction, { 
+    //        embeds: [errorEmbed("You need **Administrator** permission to //check login status.")]
+    //    }).catch(logger.error);
+    //    return;
+    //}
 
     try {
         const res = await checkLogin();

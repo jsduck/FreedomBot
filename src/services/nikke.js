@@ -1024,7 +1024,7 @@ const GETUSERCHARACTERS_PREVIEW ={
 
         { combat: 322754, core: 0, costume_id: 0, grade: 3, lv: 573, name_code: 5175 }
     ],
-
+    
     is_banned: false
 };
 

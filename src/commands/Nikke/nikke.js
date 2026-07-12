@@ -76,7 +76,7 @@ export default {
                             { name: "Shaito", value: "12167197956671690221" },
                             { name: "Fizix", value: "5877343215992272387" },
                             { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16338490109246680481" },
+                            { name: "Effelon", value: "16262646283866114091" },
                             { name: "Fesha", value: "12816795455667592937" },
                             { name: "Nelex", value: "1175532717634698043" }                 
                         )
@@ -155,7 +155,7 @@ export default {
                             { name: "Shaito", value: "12167197956671690221" },
                             { name: "Fizix", value: "5877343215992272387" },
                             { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16338490109246680481" },
+                            { name: "Effelon", value: "16262646283866114091" },
                             { name: "Fesha", value: "12816795455667592937" },
                             { name: "Nelex", value: "1175532717634698043" }                 
                         )
@@ -193,7 +193,7 @@ export default {
                             { name: "Shaito", value: "12167197956671690221" },
                             { name: "Fizix", value: "5877343215992272387" },
                             { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16338490109246680481" },
+                            { name: "Effelon", value: "16262646283866114091" },
                             { name: "Fesha", value: "12816795455667592937" },
                             { name: "Nelex", value: "1175532717634698043" }                 
                         )
@@ -343,7 +343,7 @@ export default {
                             { name: "Shaito", value: "12167197956671690221" },
                             { name: "Fizix", value: "5877343215992272387" },
                             { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16338490109246680481" },
+                            { name: "Effelon", value: "16262646283866114091" },
                             { name: "Fesha", value: "12816795455667592937" },
                             { name: "Nelex", value: "1175532717634698043" }                 
                         )
@@ -372,7 +372,7 @@ export default {
                             { name: "Shaito", value: "12167197956671690221" },
                             { name: "Fizix", value: "5877343215992272387" },
                             { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16338490109246680481" },
+                            { name: "Effelon", value: "16262646283866114091" },
                             { name: "Fesha", value: "12816795455667592937" },
                             { name: "Nelex", value: "1175532717634698043" }                 
                         )
@@ -401,7 +401,7 @@ export default {
                             { name: "Shaito", value: "12167197956671690221" },
                             { name: "Fizix", value: "5877343215992272387" },
                             { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16338490109246680481" },
+                            { name: "Effelon", value: "16262646283866114091" },
                             { name: "Fesha", value: "12816795455667592937" },
                             { name: "Nelex", value: "1175532717634698043" }                 
                         )
@@ -430,7 +430,7 @@ export default {
                             { name: "Shaito", value: "12167197956671690221" },
                             { name: "Fizix", value: "5877343215992272387" },
                             { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16338490109246680481" },
+                            { name: "Effelon", value: "16262646283866114091" },
                             { name: "Fesha", value: "12816795455667592937" },
                             { name: "Nelex", value: "1175532717634698043" }                 
                         )
@@ -459,7 +459,7 @@ export default {
                             { name: "Shaito", value: "12167197956671690221" },
                             { name: "Fizix", value: "5877343215992272387" },
                             { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16338490109246680481" },
+                            { name: "Effelon", value: "16262646283866114091" },
                             { name: "Fesha", value: "12816795455667592937" },
                             { name: "Nelex", value: "1175532717634698043" }                 
                         )
@@ -479,7 +479,7 @@ export default {
                             { name: "Shaito", value: "12167197956671690221" },
                             { name: "Fizix", value: "5877343215992272387" },
                             { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16338490109246680481" },
+                            { name: "Effelon", value: "16262646283866114091" },
                             { name: "Fesha", value: "12816795455667592937" },
                             { name: "Nelex", value: "1175532717634698043" }                 
                         )
@@ -508,7 +508,7 @@ export default {
                             { name: "Shaito", value: "12167197956671690221" },
                             { name: "Fizix", value: "5877343215992272387" },
                             { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16338490109246680481" },
+                            { name: "Effelon", value: "16262646283866114091" },
                             { name: "Fesha", value: "12816795455667592937" },
                             { name: "Nelex", value: "1175532717634698043" }                 
                         )

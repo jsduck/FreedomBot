@@ -159,12 +159,12 @@ export async function handleUserCharacter(interaction, client) {
         }
     
         // Check permissions after deferring
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-            await InteractionHelper.safeEditReply(interaction, { 
-                embeds: [errorEmbed("You need **Administrator** permission to check login status.")]
-            }).catch(logger.error);
-            return;
-        }
+        //if (!interaction.member.permissions.has(PermissionFlagsBits.//Administrator)) {
+        //    await InteractionHelper.safeEditReply(interaction, { 
+        //        embeds: [errorEmbed("You need **Administrator** permission //to check login status.")]
+        //    }).catch(logger.error);
+        //    return;
+        //}
     
         const intl_open_id = interaction.options.getString("intl_open_id");
         const name_codes = interaction.options.getString("name_codes");//split(",").map(v => Number(v.trim()));
