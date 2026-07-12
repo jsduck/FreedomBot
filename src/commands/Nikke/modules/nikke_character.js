@@ -52,7 +52,7 @@ const accchoice = [
     { name: "Shaito", value: "12167197956671690221" },
     { name: "Fizix", value: "5877343215992272387" },
     { name: "Jae", value: "15097183441877165889" },
-    { name: "Effelon", value: "16338490109246680481" },
+    { name: "Effelon", value: "16262646283866114091" },
     { name: "Fesha", value: "12816795455667592937" },
     { name: "Nelex", value: "1175532717634698043" } 
 ]
@@ -253,24 +253,8 @@ export async function handleUserCharacter(interaction, client) {
                                 inline: false
                             },
                             {
-                                name: `Arm (Lv${units[0].arm_equip_lv})`,
-                                value: formatEquipLine("Arm", units[0].arm_equip_lv, units, effects, [lines[0], lines[1], lines[2]]),
-                                inline: true
-                            },
-                            {
                                 name: `Head (Lv${units[0].head_equip_lv})`,
                                 value: formatEquipLine("Head", units[0].head_equip_lv, units, effects, [lines[3], lines[4], lines[5]]),
-                                inline: true
-                            },
-                            // *** ROW BREAK ***
-                            {
-                                name: "",
-                                value: "",
-                                inline: false
-                            },
-                            {
-                                name: `Leg (Lv${units[0].leg_equip_lv})`,
-                                value: formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]),
                                 inline: true
                             },
                             {
@@ -278,6 +262,23 @@ export async function handleUserCharacter(interaction, client) {
                                 value: formatEquipLine("Torso", units[0].torso_equip_lv, units, effects, [lines[9], lines[10], lines[11]]),
                                 inline: true
                             }
+                            // *** ROW BREAK ***
+                            {
+                                name: "",
+                                value: "",
+                                inline: false
+                            },
+                            {
+                                name: `Arm (Lv${units[0].arm_equip_lv})`,
+                                value: formatEquipLine("Arm", units[0].arm_equip_lv, units, effects, [lines[0], lines[1], lines[2]]),
+                                inline: true
+                            },
+                            {
+                                name: `Leg (Lv${units[0].leg_equip_lv})`,
+                                value: formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]),
+                                inline: true
+                            },
+                            
                         );
 
                 await InteractionHelper.safeEditReply(interaction, {
