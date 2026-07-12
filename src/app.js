@@ -6,28 +6,21 @@ import cron from 'node-cron';
 
 import config from './config/application.js';
 import { initializeDatabase } from './utils/database.js';
-import { getGuildConfig } from './services/guildConfig.js';
-import { getServerCounters, saveServerCounters, updateCounter } from './services/serverstatsService.js';
 import { logger, startupLog, shutdownLog } from './utils/logger.js';
-import { checkBirthdays } from './services/birthdayService.js';
-import { checkGiveaways } from './services/giveawayService.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/commandLoader.js';
 
-class TitanBot extends Client {
+class Sasook extends Client {
   constructor() {
     super({
       intents: [
-        
         GatewayIntentBits.Guilds,                        
         GatewayIntentBits.GuildMembers,                 
-        
         
         GatewayIntentBits.GuildMessages,                
         GatewayIntentBits.GuildMessageReactions,        
         GatewayIntentBits.MessageContent,               
         
         GatewayIntentBits.GuildVoiceStates,             
-        
         
         GatewayIntentBits.GuildBans,                    
       ],
@@ -46,7 +39,7 @@ class TitanBot extends Client {
 
   async start() {
     try {
-      startupLog('Starting TitanBot...');
+      startupLog('Starting Sasook...');
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       startupLog('Initializing database...');
@@ -184,8 +177,8 @@ class TitanBot extends Client {
 
     app.get('/', (req, res) => {
       res.status(200).json({ 
-        message: 'TitanBot System Online',
-        version: '2.0.0',
+        message: 'Sasook System Online',
+        version: '1.0.0',
         timestamp: new Date().toISOString()
       });
     });
@@ -196,8 +189,8 @@ class TitanBot extends Client {
         hasStartedListening = true;
         this.webServer = server;
         startupLog(`✅ Web Server running on ${host}:${port}`);
-        startupLog(`Health endpoint: http://localhost:${port}/health`);
-        startupLog(`Ready endpoint: http://localhost:${port}/ready`);
+        startupLog(`Health endpoint: http://${host}:${port}/health`);
+        startupLog(`Ready endpoint: http://${host}:${port}/ready`);
       });
 
       server.on('error', (error) => {
@@ -228,11 +221,12 @@ class TitanBot extends Client {
   }
 
   setupCronJobs() {
-    cron.schedule('0 6 * * *', () => checkBirthdays(this));
-    cron.schedule('* * * * *', () => checkGiveaways(this));
-    cron.schedule('*/15 * * * *', () => this.updateAllCounters());
+    //cron.schedule('0 6 * * *', () => checkBirthdays(this));
+    //cron.schedule('* * * * *', () => checkGiveaways(this));
+    //cron.schedule('*/15 * * * *', () => this.updateAllCounters());
   }
 
+  /*
   async updateAllCounters() {
     if (!this.db) {
       logger.warn('Database not available for counter updates');
@@ -268,7 +262,7 @@ class TitanBot extends Client {
       }
     }
   }
-
+  */
   async loadHandlers() {
     const handlers = [
       { path: 'events', type: 'default', required: true },
@@ -316,7 +310,7 @@ class TitanBot extends Client {
     try {
       
       logger.info('Stopping cron jobs...');
-      cron.getTasks().forEach(task => task.stop());
+      //cron.getTasks().forEach(task => task.stop());
       logger.info('✅ Cron jobs stopped');
 
       // Close database connection
@@ -356,7 +350,7 @@ class TitanBot extends Client {
 }
 
 try {
-  const bot = new TitanBot();
+  const bot = new Sasook();
   
   const setupShutdown = () => {
     process.on('SIGTERM', () => bot.shutdown('SIGTERM'));
@@ -380,4 +374,4 @@ try {
   process.exit(1);
 }
 
-export default TitanBot;
+export default Sasook;

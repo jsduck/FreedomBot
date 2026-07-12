@@ -15,9 +15,9 @@ function getDups(dups) {
         case 0:
         case 1:
         case 2:
-            return `LB ${dups}`;
+            return `⭐`.repeat(dups);
         case 3:
-            return "MLB";
+            return `⭐⭐⭐`;
         default:
             return `CORE ${dups-3}`;
     }
