@@ -261,7 +261,7 @@ export async function handleUserCharacter(interaction, client) {
                                 name: `Torso (Lv${units[0].torso_equip_lv})`,
                                 value: formatEquipLine("Torso", units[0].torso_equip_lv, units, effects, [lines[9], lines[10], lines[11]]),
                                 inline: true
-                            }
+                            },
                             // *** ROW BREAK ***
                             {
                                 name: "",
