@@ -7,7 +7,6 @@ import {
 } from '../utils/database.js';
 import { logger } from '../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../utils/errorHandler.js';
-import { logEvent, EVENT_TYPES } from './loggingService.js';
 import { ChannelType, PermissionFlagsBits } from 'discord.js';
 
 import fetch from "node-fetch";

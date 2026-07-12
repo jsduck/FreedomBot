@@ -265,7 +265,7 @@ class Sasook extends Client {
   */
   async loadHandlers() {
     const handlers = [
-      { path: 'events', type: 'default', required: true },
+      { path: 'events', type: 'default', required: false },
       { path: 'interactions', type: 'default', required: true }
     ];
 
