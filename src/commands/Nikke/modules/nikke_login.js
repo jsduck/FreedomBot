@@ -26,6 +26,7 @@ export async function handleLogin(interaction, client) {
 
     try {
         const res = await login();
+        console.log("Login result:", res);
         if (res.ok) {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [createEmbed({
