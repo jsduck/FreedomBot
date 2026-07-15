@@ -7,8 +7,7 @@ export const SLASH_ONLY_COMMANDS = new Set([
   'configwizard',
   'help',
   'embedbuilder',
-  'wipedata',
-  'apply',
+  'wipedata'
 ]);
 
 /** Subcommands blocked for every command when invoked via prefix. */
