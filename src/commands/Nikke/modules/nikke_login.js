@@ -8,7 +8,6 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 export async function handleLogin(interaction, client) {
     const guild = interaction.guild;
     
-    console.log("COCK1:", res);
     // Defer reply immediately to ensure interaction is acknowledged
     try {
         await InteractionHelper.safeDefer(interaction);
@@ -16,7 +15,6 @@ export async function handleLogin(interaction, client) {
         logger.error("Failed to defer reply:", error);
         return;
     }
-    console.log("COCK2:", res);
     // Check permissions after deferring
     //if (!interaction.member.permissions.has(PermissionFlagsBits.//Administrator)) {
     //    await InteractionHelper.safeEditReply(interaction, { 

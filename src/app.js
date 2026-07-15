@@ -88,10 +88,6 @@ class Sasook extends Client {
       startupLog(
         `ONLINE ✅ | ${this.commands.size} commands loaded | ${handlerSummary} | Database: ${databaseMode}`
       );
-
-      this.on("interactionCreate", () => {
-        console.log("Interaction received");
-      });
       
       this.setupCronJobs();
     } catch (error) {
