@@ -203,7 +203,7 @@ const NIKKE_API_RESPONSE_CODES = {
 const NIKKE_PAYLOAD_LOGIN = {
     game_openid: "3166452414820481224",
     game_channelid: 131,
-    game_token: "e1247000b845dc653b0531f1194887f201a8d3b1",
+    game_token: "5a0acb16c2a5b8007943fcfac715a56901ce071c",
     game_id: "29080",
     game_expire_time: 1786208463,
     game_uid: "54150814256118",
