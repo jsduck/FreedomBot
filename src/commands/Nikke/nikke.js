@@ -535,7 +535,7 @@ export default {
                         .setRequired(false)
                 )
             )
-        , async execute(interaction, client) {
+        , async execute(interaction, guildConfig, client) {
             const subcommand = interaction.options.getSubcommand();
             
             try {
