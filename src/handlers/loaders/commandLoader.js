@@ -263,11 +263,37 @@ async function registerGlobalCommands(client, clientId, commands, totalSubcomman
     logger.info('Global commands may take up to an hour to appear in all servers on first deploy');
 }
 
+async function registerGuildCommands(client, clientId, guildId, commands) {
+    if (!guildId) {
+        return;
+    }
+
+    if (!clientId) {
+        throw new Error('CLIENT_ID is required for guild slash command registration');
+    }
+
+    if (!client.rest) {
+        throw new Error('Discord REST client is not available for guild slash command registration');
+    }
+
+    const commandsToRegister = prepareCommandsForRegistration(commands);
+
+    if (botConfig.commands?.deleteCommands) {
+        logger.info(`Clearing existing guild commands for guild ${guildId} before registration...`);
+        await client.rest.put(`/applications/${clientId}/guilds/${guildId}/commands`, { body: [] });
+    }
+
+    logger.info(`Registering ${commandsToRegister.length} guild commands for guild ${guildId}...`);
+    await client.rest.put(`/applications/${clientId}/guilds/${guildId}/commands`, { body: commandsToRegister });
+    logger.info(`Successfully registered ${commandsToRegister.length} guild commands for guild ${guildId}`);
+}
+
 export async function registerCommands(client, options = {}) {
-    const { clientId = null } = options;
+    const { clientId = null, guildId = null } = options;
 
     try {
         const { commands, totalSubcommands } = collectCommandPayloads(client);
+        await registerGuildCommands(client, clientId, guildId, commands);
         await registerGlobalCommands(client, clientId, commands, totalSubcommands);
     } catch (error) {
         logger.error('Error registering commands:', error);
