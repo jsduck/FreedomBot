@@ -15,6 +15,7 @@ import { loadCommands, registerCommands as registerSlashCommands } from './handl
 import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.js';
 import { initializeMusic } from './services/music/riffySetup.js';
 import { shutdownMusic } from './services/music/playerHandler.js';
+import { runUnionDailyMissionCounterCheck, runUnionOutpostStorageCounterCheck } from './services/nikkeUnionCounterService.js';
 import pkg from '../package.json' with { type: 'json' };
 import { EXPECTED_SCHEMA_VERSION, EXPECTED_SCHEMA_LABEL } from './config/database/schemaVersion.js';
 
@@ -251,6 +252,8 @@ class TitanBot extends Client {
     cron.schedule('0 6 * * *', runSafeTask('birthday_check', () => checkBirthdays(this)));
     cron.schedule('* * * * *', runSafeTask('giveaway_check', () => checkGiveaways(this)));
     cron.schedule('*/15 * * * *', runSafeTask('counter_update', () => this.updateAllCounters()));
+    cron.schedule('0 * * * *', runSafeTask('nikke_union_outpost_counter_check', () => runUnionOutpostStorageCounterCheck(this)));
+    cron.schedule('*/30 * * * *', runSafeTask('nikke_union_daily_mission_counter_check', () => runUnionDailyMissionCounterCheck(this)));
   }
 
   async updateAllCounters() {

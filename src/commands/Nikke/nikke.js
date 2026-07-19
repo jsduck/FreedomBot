@@ -14,7 +14,7 @@ import { handleGuildDetails, handleGuildMembers } from './modules/nikke_guild.js
 import { handleUnionRaidData, handleUnionRaidLevelData, handleUnionRaidDataOfGuildSeason, handleUnionRaidLevelDataOfGuildSeason } from './modules/nikke_guild.js';
 import { handleQueryGuildCardList } from './modules/nikke_guild.js';
 import { handleAccountProfile, handleGetMyGuildInfo, handleGetUserDailyContentsProgress, handleGetUserProfileOutpostInfo, handleGetUserProfileBasicInfo, handleGetUserCharacters, handleGetUserProfile, handleSearchUser } from './modules/nikke_user.js';
-import { addNikkeAccount, deleteNikkeAccount, getNikkeAccountChoices, getNikkeAreaChoices, getNikkeUnionChoices, getNikkeUnionGuildChoices, syncNikkeAccountProfile, updateNikkeAccountUnionId } from '../../utils/database.js';
+import { addNikkeAccount, deleteNikkeAccount, getNikkeAccountChoices, getNikkeAreaChoices, getNikkeUnionChoices, getNikkeUnionGuildChoices, setNikkeUnionCounterChannel, setNikkeUnionCounterDisabled, setNikkeUnionCounterEnabled, syncNikkeAccountProfile, updateNikkeAccountUnionId } from '../../utils/database.js';
 
 async function handleAccountAdd(interaction, client) {
     try {
@@ -34,11 +34,13 @@ async function handleAccountAdd(interaction, client) {
     const name = interaction.options.getString('name', true).trim();
     const intlOpenId = interaction.options.getString('intl_open_id', true).trim();
     const unionId = interaction.options.getString('union_id', true).trim();
+    const discordTag = interaction.options.getString('discord_tag', false)?.trim() || null;
 
     const result = await addNikkeAccount(client, {
         name,
         intl_open_id: intlOpenId,
         union_id: unionId,
+        discord_tag: discordTag,
     });
 
     if (!result.success) {
@@ -73,7 +75,136 @@ async function handleAccountAdd(interaction, client) {
     await InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(
             'Account Added',
-            `Stored ${result.account.name} with open id ${result.account.intl_open_id}${result.account.union_id ? ` and union id ${result.account.union_id}` : ''}.${profileSyncMessage}`
+            `Stored ${result.account.name} with open id ${result.account.intl_open_id}${result.account.union_id ? ` and union id ${result.account.union_id}` : ''}${result.account.discord_tag ? ` and Discord tag ${result.account.discord_tag}` : ''}.${profileSyncMessage}`
+        )],
+    }).catch(logger.error);
+}
+
+async function handleUnionCounterEnable(interaction, client) {
+    try {
+        await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    } catch (error) {
+        logger.error('Failed to defer union counter enable interaction:', error);
+        return;
+    }
+
+    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed('You need **Administrator** permission to enable union counters.')],
+        }).catch(logger.error);
+        return;
+    }
+
+    const unionId = interaction.options.getString('union_id', true).trim();
+    const result = await setNikkeUnionCounterEnabled(client, unionId, interaction.user.id);
+
+    if (!result.success) {
+        if (result.reason === 'union_not_found') {
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [errorEmbed('Union Not Found', `No Nikke union exists for union id ${unionId}.`)],
+            }).catch(logger.error);
+            return;
+        }
+
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed('Database Error', 'Unable to enable the union counter right now.')],
+        }).catch(logger.error);
+        return;
+    }
+
+    await InteractionHelper.safeEditReply(interaction, {
+        embeds: [successEmbed(
+            'Union Counter Enabled',
+            `Enabled reminders for union ${result.union.name} (${result.union.union_id}).\nTracked members from nikke_accounts: ${result.member_count}.\nHourly outpost fullness and evening daily mission checks are now active.`
+        )],
+    }).catch(logger.error);
+}
+
+async function handleUnionCounterDisable(interaction, client) {
+    try {
+        await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    } catch (error) {
+        logger.error('Failed to defer union counter disable interaction:', error);
+        return;
+    }
+
+    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed('You need **Administrator** permission to disable union counters.')],
+        }).catch(logger.error);
+        return;
+    }
+
+    const unionId = interaction.options.getString('union_id', true).trim();
+    const result = await setNikkeUnionCounterDisabled(client, unionId, interaction.user.id);
+
+    if (!result.success) {
+        if (result.reason === 'union_not_found') {
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [errorEmbed('Union Not Found', `No Nikke union exists for union id ${unionId}.`)],
+            }).catch(logger.error);
+            return;
+        }
+
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed('Database Error', 'Unable to disable the union counter right now.')],
+        }).catch(logger.error);
+        return;
+    }
+
+    await InteractionHelper.safeEditReply(interaction, {
+        embeds: [successEmbed(
+            'Union Counter Disabled',
+            `Disabled reminders for union ${result.union.name} (${result.union.union_id}).`
+        )],
+    }).catch(logger.error);
+}
+
+async function handleUnionSetCounterChannel(interaction, client) {
+    try {
+        await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    } catch (error) {
+        logger.error('Failed to defer union set-counter-channel interaction:', error);
+        return;
+    }
+
+    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed('You need **Administrator** permission to set union counter channels.')],
+        }).catch(logger.error);
+        return;
+    }
+
+    const unionId = interaction.options.getString('union_id', true).trim();
+    const channel = interaction.options.getChannel('channel', true);
+
+    if (![ChannelType.GuildText, ChannelType.GuildAnnouncement].includes(channel.type)) {
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed('Invalid Channel', 'Please choose a text or announcement channel.')],
+        }).catch(logger.error);
+        return;
+    }
+
+    const result = await setNikkeUnionCounterChannel(client, unionId, channel.id, interaction.user.id);
+
+    if (!result.success) {
+        if (result.reason === 'union_not_found') {
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [errorEmbed('Union Not Found', `No Nikke union exists for union id ${unionId}.`)],
+            }).catch(logger.error);
+            return;
+        }
+
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed('Database Error', 'Unable to set the union counter channel right now.')],
+        }).catch(logger.error);
+        return;
+    }
+
+    await InteractionHelper.safeEditReply(interaction, {
+        embeds: [successEmbed(
+            'Union Counter Channel Set',
+            `Set reminder channel for union ${result.union.name} (${result.union.union_id}) to ${channel}.`
         )],
     }).catch(logger.error);
 }
@@ -201,6 +332,12 @@ export default {
                                 .setRequired(true)
                                 .addChoices(...unionChoices)
                         )
+                        .addStringOption(option =>
+                            option
+                                .setName('discord_tag')
+                                .setDescription('Discord mention, user ID, or tag for reminder pings (optional)')
+                                .setRequired(false)
+                        )
                 )
                 .addSubcommand(subcommand =>
                     subcommand
@@ -248,6 +385,54 @@ export default {
                                 .setDescription('Nikke area ID')
                                 .setRequired(false)
                                 .addChoices(...areaChoices)
+                        )
+                )
+        )
+        .addSubcommandGroup(group =>
+            group
+                .setName('union')
+                .setDescription('Union automation commands')
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('counter-enable')
+                        .setDescription('Enable reminder checks for a union')
+                        .addStringOption(option =>
+                            option
+                                .setName('union_id')
+                                .setDescription('Union to monitor')
+                                .setRequired(true)
+                                .addChoices(...unionChoices)
+                        )
+                        )
+                        .addSubcommand(subcommand =>
+                            subcommand
+                            .setName('counter-disable')
+                            .setDescription('Disable reminder checks for a union')
+                            .addStringOption(option =>
+                                option
+                                .setName('union_id')
+                                .setDescription('Union to stop monitoring')
+                                .setRequired(true)
+                                .addChoices(...unionChoices)
+                            )
+                )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('set-counter-channel')
+                        .setDescription('Set the channel where union reminder pings are sent')
+                        .addStringOption(option =>
+                            option
+                                .setName('union_id')
+                                .setDescription('Union to configure')
+                                .setRequired(true)
+                                .addChoices(...unionChoices)
+                        )
+                        .addChannelOption(option =>
+                            option
+                                .setName('channel')
+                                .setDescription('Channel to send reminder pings in')
+                                .setRequired(true)
+                                .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                         )
                 )
         )
@@ -656,6 +841,26 @@ export default {
                             await InteractionHelper.safeReply(interaction, {
                                 embeds: [errorEmbed('Unknown account subcommand.')],
                                 flags: MessageFlags.Ephemeral
+                            }).catch(logger.error);
+                    }
+                    return;
+                }
+
+                if (subcommandGroup === 'union') {
+                    switch (subcommand) {
+                        case 'counter-enable':
+                            await handleUnionCounterEnable(interaction, client);
+                            break;
+                        case 'counter-disable':
+                            await handleUnionCounterDisable(interaction, client);
+                            break;
+                        case 'set-counter-channel':
+                            await handleUnionSetCounterChannel(interaction, client);
+                            break;
+                        default:
+                            await InteractionHelper.safeReply(interaction, {
+                                embeds: [errorEmbed('Unknown union subcommand.')],
+                                flags: MessageFlags.Ephemeral,
                             }).catch(logger.error);
                     }
                     return;

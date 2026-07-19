@@ -32,6 +32,8 @@ export const tableStatements = [
         intl_open_id VARCHAR(20) PRIMARY KEY,
         name VARCHAR(100) NOT NULL UNIQUE,
         union_id VARCHAR(20),
+        discord_tag VARCHAR(64),
+        ping_count INTEGER DEFAULT 0,
         basic_info JSONB,
         outpost_info JSONB,
         daily_progress JSONB,
@@ -40,6 +42,8 @@ export const tableStatements = [
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
 
+    `ALTER TABLE ${t.nikke_accounts} ADD COLUMN IF NOT EXISTS discord_tag VARCHAR(64)`,
+    `ALTER TABLE ${t.nikke_accounts} ADD COLUMN IF NOT EXISTS ping_count INTEGER DEFAULT 0`,
     `ALTER TABLE ${t.nikke_accounts} ADD COLUMN IF NOT EXISTS basic_info JSONB`,
     `ALTER TABLE ${t.nikke_accounts} ADD COLUMN IF NOT EXISTS outpost_info JSONB`,
     `ALTER TABLE ${t.nikke_accounts} ADD COLUMN IF NOT EXISTS daily_progress JSONB`,
@@ -49,9 +53,12 @@ export const tableStatements = [
         union_id VARCHAR(20) PRIMARY KEY,
         name VARCHAR(100) NOT NULL UNIQUE,
         area_id INTEGER,
+        members JSONB DEFAULT '[]',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
+
+    `ALTER TABLE ${t.nikke_unions} ADD COLUMN IF NOT EXISTS members JSONB DEFAULT '[]'`,
 
     `CREATE TABLE IF NOT EXISTS ${t.nikke_user_character_cache} (
         intl_open_id VARCHAR(20) NOT NULL,
