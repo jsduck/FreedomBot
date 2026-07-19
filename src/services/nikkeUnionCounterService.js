@@ -66,20 +66,29 @@ async function sendUnionPing(client, union, account, message) {
             return false;
         }
 
-        const channelId = union?.members?.counter_channel_id;
-        if (!channelId) {
+        const channelId = union?.counter_channel_id;
+        let delivered = false;
+
+        if (channelId) {
+            const channel = await client.channels.fetch(channelId).catch(() => null);
+            if (channel && typeof channel.send === 'function') {
+                await channel.send({
+                    content: `<@${user.id}> ${message}`,
+                    allowedMentions: { users: [user.id] },
+                });
+                delivered = true;
+            }
+        }
+
+        if (!delivered) {
+            await user.send(`[${union?.name || union?.union_id || 'Union'}] ${message}`);
+            delivered = true;
+        }
+
+        if (!delivered) {
             return false;
         }
 
-        const channel = await client.channels.fetch(channelId).catch(() => null);
-        if (!channel || typeof channel.send !== 'function') {
-            return false;
-        }
-
-        await channel.send({
-            content: `<@${user.id}> ${message}`,
-            allowedMentions: { users: [user.id] },
-        });
         await incrementNikkeAccountPingCount(client, account.intl_open_id);
         return true;
     } catch (error) {

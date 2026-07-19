@@ -53,12 +53,19 @@ export const tableStatements = [
         union_id VARCHAR(20) PRIMARY KEY,
         name VARCHAR(100) NOT NULL UNIQUE,
         area_id INTEGER,
+        counter_channel_id VARCHAR(20),
         members JSONB DEFAULT '[]',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
 
+    `ALTER TABLE ${t.nikke_unions} ADD COLUMN IF NOT EXISTS counter_channel_id VARCHAR(20)`,
     `ALTER TABLE ${t.nikke_unions} ADD COLUMN IF NOT EXISTS members JSONB DEFAULT '[]'`,
+        `UPDATE ${t.nikke_unions}
+         SET counter_channel_id = members ->> 'counter_channel_id'
+         WHERE counter_channel_id IS NULL
+             AND jsonb_typeof(members) = 'object'
+             AND members ? 'counter_channel_id'`,
 
     `CREATE TABLE IF NOT EXISTS ${t.nikke_user_character_cache} (
         intl_open_id VARCHAR(20) NOT NULL,

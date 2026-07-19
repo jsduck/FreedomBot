@@ -58,6 +58,7 @@ function normalizeUnionRow(row) {
         name: row.name ?? null,
         union_id: String(row.union_id ?? ''),
         area_id: row.area_id ?? null,
+        counter_channel_id: row.counter_channel_id ?? null,
         members: row.members ?? [],
         created_at: row.created_at ?? null,
         updated_at: row.updated_at ?? null,
@@ -340,7 +341,7 @@ export async function getNikkeUnions(client) {
 
         if (isPostgresSqlReady(wrapper)) {
             let result = await wrapper.db.pool.query(
-                `SELECT name, union_id, area_id, members, created_at, updated_at
+                `SELECT name, union_id, area_id, counter_channel_id, members, created_at, updated_at
                  FROM ${pgConfig.tables.nikke_unions}
                  ORDER BY name ASC`,
             );
@@ -348,7 +349,7 @@ export async function getNikkeUnions(client) {
             if (result.rows.length === 0) {
                 await seedDefaultUnions(wrapper);
                 result = await wrapper.db.pool.query(
-                    `SELECT name, union_id, area_id, members, created_at, updated_at
+                    `SELECT name, union_id, area_id, counter_channel_id, members, created_at, updated_at
                      FROM ${pgConfig.tables.nikke_unions}
                      ORDER BY name ASC`,
                 );
@@ -750,7 +751,7 @@ export async function setNikkeUnionCounterEnabled(client, union_id, enabledBy = 
 
         const normalizedUnionId = String(union_id || '').trim();
         const unionResult = await wrapper.db.pool.query(
-            `SELECT union_id, name, area_id
+            `SELECT union_id, name, area_id, counter_channel_id, members
              FROM ${pgConfig.tables.nikke_unions}
              WHERE union_id = $1
              LIMIT 1`,
@@ -812,7 +813,7 @@ export async function getEnabledNikkeUnionCounters(client) {
         }
 
         const result = await wrapper.db.pool.query(
-            `SELECT union_id, name, area_id, members, created_at, updated_at
+            `SELECT union_id, name, area_id, counter_channel_id, members, created_at, updated_at
              FROM ${pgConfig.tables.nikke_unions}
              WHERE COALESCE((members ->> 'counter_enabled')::boolean, false) = true
              ORDER BY name ASC`,
@@ -834,7 +835,7 @@ export async function setNikkeUnionCounterDisabled(client, union_id, disabledBy 
 
         const normalizedUnionId = String(union_id || '').trim();
         const unionResult = await wrapper.db.pool.query(
-            `SELECT union_id, name, area_id, members
+            `SELECT union_id, name, area_id, counter_channel_id, members
              FROM ${pgConfig.tables.nikke_unions}
              WHERE union_id = $1
              LIMIT 1`,
@@ -885,7 +886,7 @@ export async function setNikkeUnionCounterChannel(client, union_id, channel_id, 
         const normalizedChannelId = String(channel_id || '').trim();
 
         const unionResult = await wrapper.db.pool.query(
-            `SELECT union_id, name, area_id, members
+            `SELECT union_id, name, area_id, counter_channel_id, members
              FROM ${pgConfig.tables.nikke_unions}
              WHERE union_id = $1
              LIMIT 1`,
@@ -900,24 +901,17 @@ export async function setNikkeUnionCounterChannel(client, union_id, channel_id, 
             ? unionResult.rows[0].members
             : {};
 
-        const membersPayload = {
-            ...existingMembers,
-            counter_channel_id: normalizedChannelId,
-            counter_channel_set_at: new Date().toISOString(),
-            counter_channel_set_by: updatedBy || null,
-        };
-
         await wrapper.db.pool.query(
             `UPDATE ${pgConfig.tables.nikke_unions}
-             SET members = $2::jsonb,
+             SET counter_channel_id = $2,
                  updated_at = NOW()
              WHERE union_id = $1`,
-            [normalizedUnionId, JSON.stringify(membersPayload)],
+            [normalizedUnionId, normalizedChannelId],
         );
 
         return {
             success: true,
-            union: normalizeUnionRow({ ...unionResult.rows[0], members: membersPayload }),
+            union: normalizeUnionRow({ ...unionResult.rows[0], members: existingMembers, counter_channel_id: normalizedChannelId }),
             channel_id: normalizedChannelId,
         };
     } catch (error) {
