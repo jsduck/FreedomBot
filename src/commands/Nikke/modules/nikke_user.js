@@ -271,7 +271,7 @@ export async function handleAccountProfile(interaction, client) {
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
             components: response.components,
-            files: response.file ? [response.file] : [],
+            // files: response.file ? [response.file] : [],
         }).catch(logger.error);
     } catch (error) {
         logger.error('Error getting account profile:', error);
