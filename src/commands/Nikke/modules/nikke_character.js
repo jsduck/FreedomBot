@@ -119,11 +119,10 @@ function formatEquipLine(label, level, units, effects, lines) {
   });
 
     const width = rows.reduce((max, row) => Math.max(max, `${row.type} (${row.lvl})`.length), 0);
-    const body = rows
-        .map((r) => `${`${r.type} (${r.lvl})`.padEnd(width)} ${r.val}`)
-        .join("\n");
 
-    return `\`\`\`\n${body}\n\`\`\``;
+    return rows
+        .map((r) => `${`${r.type} (${r.lvl})`.padEnd(width)}: \`${r.val}\``)
+        .join("\n");
 }
 
 function formatTable(title, rows) {
@@ -164,11 +163,9 @@ function formatDataSource(source) {
 
 function formatAlignedRows(rows) {
     const width = rows.reduce((max, [field]) => Math.max(max, String(field).length), 0);
-    const body = rows
-        .map(([field, value]) => `${String(field).padEnd(width)} ${value}`)
+    return rows
+        .map(([field, value]) => `${String(field).padEnd(width)}: \`${value}\``)
         .join("\n");
-
-    return `\`\`\`\n${body}\n\`\`\``;
 }
 
 function getStatsMarker(field, value) {
@@ -200,11 +197,9 @@ function getStatsMarker(field, value) {
 
 function formatStatsRows(rows) {
     const width = rows.reduce((max, [field]) => Math.max(max, String(field).length), 0);
-    const body = rows
-        .map(([field, value]) => `${String(field).padEnd(width)} ${getStatsMarker(field, value)} ${value}`)
+    return rows
+    .map(([field, value]) => `${String(field).padEnd(width)}  ${getStatsMarker(field, value)} \`${value}\``)
         .join("\n");
-
-    return `\`\`\`\n${body}\n\`\`\``;
 }
 
 function resolveSynchroLevelFromOutpost(account, fallbackLevel) {
