@@ -150,6 +150,26 @@ function formatTable2(rows) {
     .join("\n");
 }
 
+function formatCacheTimestamp(value) {
+    if (!value) {
+        return 'unknown';
+    }
+
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return 'unknown';
+    }
+
+    return new Intl.DateTimeFormat('en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    }).format(date);
+}
+
+function formatDataSource(source) {
+    return source || 'unknown';
+}
+
 const USER_CHARACTER_UPDATE_BUTTON_ID = 'nikke_user_character_update';
 
 function slug(value) {
@@ -188,12 +208,15 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
     const charJson = await characterResponse.json();
 
     let payload = null;
+    let cacheRecord = null;
+    let dataSource = refresh ? 'Live API (forced refresh)' : 'Database cache';
     if (!refresh) {
-        const cached = await getUserCharacterCache(client, intlOpenId, nameCode);
-        payload = cached?.data ?? cached;
+        cacheRecord = await getUserCharacterCache(client, intlOpenId, nameCode);
+        payload = cacheRecord?.data ?? cacheRecord;
     }
 
     if (!payload) {
+        dataSource = 'Live API';
         const response = await getUserCharacterDetails(intlOpenId, [nameCode]);
         if (!response.ok) {
             throw createError(
@@ -205,6 +228,7 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
 
         payload = await response.json();
         await upsertUserCharacterCache(client, intlOpenId, nameCode, payload);
+        cacheRecord = await getUserCharacterCache(client, intlOpenId, nameCode);
     }
 
     const units = payload.data.character_details;
@@ -236,6 +260,9 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
             description: '',
             color: getColor('success')
         }).setThumbnail("https://static.dotgg.gg/nikke/characters/" + charJson.img + ".webp")
+            .setFooter({
+                text: `Source: ${formatDataSource(dataSource)} | Fetched at: ${formatCacheTimestamp(cacheRecord?.fetched_at)} | Updated at: ${formatCacheTimestamp(cacheRecord?.updated_at)}`,
+            })
             .addFields(
                 { 
                     name: "Basic Info",
