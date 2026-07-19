@@ -42,8 +42,8 @@ export const botConfig = {
     defaultCooldown: 3,
 
     // If true, old commands are removed before re-registering.
-    // Keep this false for normal boots to avoid stale command ID issues in clients.
-    deleteCommands: process.env.DELETE_COMMANDS === "true",
+    // Enabled by default so slash-command endpoints are regenerated on startup.
+    deleteCommands: process.env.DELETE_COMMANDS !== "false",
 
     // Optional server ID retained for tutorial compatibility; not used for command registration.
     testGuildId: process.env.TEST_GUILD_ID,
