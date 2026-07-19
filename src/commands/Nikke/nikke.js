@@ -13,7 +13,7 @@ import { handleUnionRaidData, handleUnionRaidLevelData, handleUnionRaidDataOfGui
 import { handleQueryGuildCardList } from './modules/nikke_guild.js';
 import { handleAccountAdd, handleAccountDelete, handleAccountUpdate } from './modules/nikke_account.js';
 import { handleUnionCounterDisable, handleUnionCounterEnable, handleUnionSetCounterChannel } from './modules/nikke_union_counter.js';
-import { handleAccountProfile, handleGetMyGuildInfo, handleGetUserCharacters, handleGetUserDailyContentsProgress, handleGetUserProfile, handleGetUserProfileBasicInfo, handleGetUserProfileOutpostInfo, handleSearchUser } from './modules/nikke_user.js';
+import { handleGetMyGuildInfo, handleGetUserCharacters, handleGetUserDailyContentsProgress, handleGetUserProfile, handleGetUserProfileBasicInfo, handleGetUserProfileOutpostInfo, handleSearchUser } from './modules/nikke_user.js';
 import { getNikkeAccountChoices, getNikkeAreaChoices, getNikkeUnionChoices, getNikkeUnionGuildChoices } from '../../utils/database.js';
 
 export default {
@@ -82,66 +82,61 @@ export default {
                                     .setRequired(true)
                             )
                     )
-                    .addSubcommandGroup(group =>
-                        group
-                            .setName('profile')
-                            .setDescription('View Nikke profile data')
-                            .addSubcommand(subcommand =>
-                                subcommand
-                                    .setName('basic')
-                                    .setDescription('Get user profile basic info from Nikke API')
-                                    .addStringOption(option =>
-                                        option
-                                            .setName('intl_open_id')
-                                            .setDescription('OpenID of the user to fetch profile basic info for')
-                                            .setRequired(true)
-                                            .addChoices(...accountChoices)
-                                    )
-                                    .addIntegerOption(option =>
-                                        option
-                                            .setName('nikke_area_id')
-                                            .setDescription('Nikke area ID')
-                                            .setRequired(false)
-                                            .addChoices(...areaChoices)
-                                    )
+                    .addSubcommand(subcommand =>
+                        subcommand
+                            .setName('basic')
+                            .setDescription('Get user profile basic info from Nikke API')
+                            .addStringOption(option =>
+                                option
+                                    .setName('intl_open_id')
+                                    .setDescription('OpenID of the user to fetch profile basic info for')
+                                    .setRequired(true)
+                                    .addChoices(...accountChoices)
                             )
-                            .addSubcommand(subcommand =>
-                                subcommand
-                                    .setName('outpost')
-                                    .setDescription('Get user profile outpost info from Nikke API')
-                                    .addStringOption(option =>
-                                        option
-                                            .setName('intl_open_id')
-                                            .setDescription('OpenID of the user to fetch profile outpost info for')
-                                            .setRequired(true)
-                                            .addChoices(...accountChoices)
-                                    )
-                                    .addIntegerOption(option =>
-                                        option
-                                            .setName('nikke_area_id')
-                                            .setDescription('Nikke area ID')
-                                            .setRequired(false)
-                                            .addChoices(...areaChoices)
-                                    )
+                            .addIntegerOption(option =>
+                                option
+                                    .setName('nikke_area_id')
+                                    .setDescription('Nikke area ID')
+                                    .setRequired(false)
+                                    .addChoices(...areaChoices)
                             )
-                            .addSubcommand(subcommand =>
-                                subcommand
-                                    .setName('daily')
-                                    .setDescription('Get user daily contents progress from Nikke API')
-                                    .addStringOption(option =>
-                                        option
-                                            .setName('intl_open_id')
-                                            .setDescription('OpenID of the user to fetch daily contents progress for')
-                                            .setRequired(true)
-                                            .addChoices(...accountChoices)
-                                    )
-                                    .addIntegerOption(option =>
-                                        option
-                                            .setName('nikke_area_id')
-                                            .setDescription('Nikke area ID')
-                                            .setRequired(false)
-                                            .addChoices(...areaChoices)
-                                    )
+                    )
+                    .addSubcommand(subcommand =>
+                        subcommand
+                            .setName('outpost')
+                            .setDescription('Get user profile outpost info from Nikke API')
+                            .addStringOption(option =>
+                                option
+                                    .setName('intl_open_id')
+                                    .setDescription('OpenID of the user to fetch profile outpost info for')
+                                    .setRequired(true)
+                                    .addChoices(...accountChoices)
+                            )
+                            .addIntegerOption(option =>
+                                option
+                                    .setName('nikke_area_id')
+                                    .setDescription('Nikke area ID')
+                                    .setRequired(false)
+                                    .addChoices(...areaChoices)
+                            )
+                    )
+                    .addSubcommand(subcommand =>
+                        subcommand
+                            .setName('daily')
+                            .setDescription('Get user daily contents progress from Nikke API')
+                            .addStringOption(option =>
+                                option
+                                    .setName('intl_open_id')
+                                    .setDescription('OpenID of the user to fetch daily contents progress for')
+                                    .setRequired(true)
+                                    .addChoices(...accountChoices)
+                            )
+                            .addIntegerOption(option =>
+                                option
+                                    .setName('nikke_area_id')
+                                    .setDescription('Nikke area ID')
+                                    .setRequired(false)
+                                    .addChoices(...areaChoices)
                             )
                     )
             )
@@ -582,26 +577,6 @@ export default {
                 return;
             }
 
-            if (subcommandGroup === 'profile') {
-                switch (subcommand) {
-                    case 'basic':
-                        await handleGetUserProfileBasicInfo(interaction, client);
-                        break;
-                    case 'outpost':
-                        await handleGetUserProfileOutpostInfo(interaction, client);
-                        break;
-                    case 'daily':
-                        await handleGetUserDailyContentsProgress(interaction, client);
-                        break;
-                    default:
-                        await InteractionHelper.safeReply(interaction, {
-                            embeds: [errorEmbed('Unknown profile subcommand.')],
-                            flags: MessageFlags.Ephemeral,
-                        }).catch(logger.error);
-                }
-                return;
-            }
-
             switch (subcommand) {
                 case 'login':
                     await handleLogin(interaction, client);
@@ -641,6 +616,15 @@ export default {
                     break;
                 case 'my-guild-info':
                     await handleGetMyGuildInfo(interaction, client);
+                    break;
+                case 'basic':
+                    await handleGetUserProfileBasicInfo(interaction, client);
+                    break;
+                case 'outpost':
+                    await handleGetUserProfileOutpostInfo(interaction, client);
+                    break;
+                case 'daily':
+                    await handleGetUserDailyContentsProgress(interaction, client);
                     break;
                 case 'get-user-characters':
                     await handleGetUserCharacters(interaction, client);
