@@ -6,7 +6,7 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { getMyGuildInfo, getUserGameInfo, searchUser, getUserProfile, getUserCharacters, safeJSON } from '../../../services/nikke.js';
 import { getNikkeAccountProfileSection } from '../../../utils/database.js';
 
-//import { getNikkeUnionById } from '../../../utils/database.js';
+import { getNikkeUnionById } from '../../../utils/database.js';
 
 export const USER_PROFILE_BASIC_INFO_UPDATE_BUTTON_ID = 'nikke_user_profile_basic_info_update';
 export const USER_PROFILE_OUTPOST_INFO_UPDATE_BUTTON_ID = 'nikke_user_profile_outpost_info_update';
@@ -50,45 +50,45 @@ function buildAccountProfileEmbedPreset(sectionKey, data, sectionLabel) {
     if (sectionKey === 'basic_info') {
         const commanderName = data?.nickname || 'Unknown';
         const commanderLevel = data?.lv ?? 'Unknown';
-        //const union = await getNikkeUnionById(client, account?.union_id);
+        const union = await getNikkeUnionById(client, account?.union_id);
         const unionName = union?.name || 'UNION';
 
         return createEmbed({
             title: `[NIGGA] ${commanderName} • Profile • Basic Info`,
             description: ``,
             color: getColor('success'),
-        });//.addFields(
-        //    {
-        //        name: 'Section 1',
-        //        value: [
-        //            `Commander Name: **${commanderName}**`,
-        //            `Commander Level: **${commanderLevel}**`,
-        //            `Character Count: **${data?.character_count ?? 'Unknown'}**`,
-        //            `Costume Count: **${data?.character_costume_count ?? 'Unknown'}**`,
-        //            `Created at: **${data?.created_at ?? 'Unknown'}**`,
-        //            `Last action at: **${data?.last_action_at ?? 'Unknown'}**`,
-        //            `Union: **${unionName}**`,
-        //            `Banned: **${data?.is_banned ? 'Yes' : 'No'}**`,
-        //        ].join('\n'),
-        //        inline: false,
-        //    },
-        //    {
-        //        name: 'Section 2',
-        //        value: data?.currencies ? Object.entries(data.currencies).map(([key, value]) => `${key}: **${value}**`).join('\n') : 'Unknown',
-        //        inline: false,
-        //    },
-        //    {
-        //        name: 'Section 3',
-        //        value: [
-        //            `Team Combat Power: **${data?.team_combat ?? 'Unknown'}**`,
-        //            `Normal Mode Progress: **${data?.progress_normal_campaign ?? 'Unknown'}**`,
-        //            `Hard Mode Progress: **${data?.progress_hard_campaign ?? 'Unknown'}**`,
-        //            `Tribal Tower: **${data?.progress_tribe_tower ?? 'Unknown'}**`,
-        //            `Simulation Overclock: **${data?.sim_room_overclock_latest_season_high_score ?? 'Unknown'}**`,
-        //        ].join('\n'),
-        //        inline: false,
-        //    },
-        //);
+        }).addFields(
+            {
+                name: 'Section 1',
+                value: [
+                    `Commander Name: **${commanderName}**`,
+                    `Commander Level: **${commanderLevel}**`,
+                    `Character Count: **${data?.character_count ?? 'Unknown'}**`,
+                    `Costume Count: **${data?.character_costume_count ?? 'Unknown'}**`,
+                    `Created at: **${data?.created_at ?? 'Unknown'}**`,
+                    `Last action at: **${data?.last_action_at ?? 'Unknown'}**`,
+                    `Union: **${unionName}**`,
+                    `Banned: **${data?.is_banned ? 'Yes' : 'No'}**`,
+                ].join('\n'),
+                inline: false,
+            },
+            {
+                name: 'Section 2',
+                value: data?.currencies ? Object.entries(data.currencies).map(([key, value]) => `${key}: **${value}**`).join('\n') : 'Unknown',
+                inline: false,
+            },
+            {
+                name: 'Section 3',
+                value: [
+                    `Team Combat Power: **${data?.team_combat ?? 'Unknown'}**`,
+                    `Normal Mode Progress: **${data?.progress_normal_campaign ?? 'Unknown'}**`,
+                    `Hard Mode Progress: **${data?.progress_hard_campaign ?? 'Unknown'}**`,
+                    `Tribal Tower: **${data?.progress_tribe_tower ?? 'Unknown'}**`,
+                    `Simulation Overclock: **${data?.sim_room_overclock_latest_season_high_score ?? 'Unknown'}**`,
+                ].join('\n'),
+                inline: false,
+            },
+        );
     }
 
     if (sectionKey === 'outpost_info') {
