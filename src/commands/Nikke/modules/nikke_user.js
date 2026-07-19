@@ -289,7 +289,6 @@ export async function buildAccountProfileView(
 ) {
     const normalizedIndex = normalizeProfileViewIndex(viewIndex);
     const section = ACCOUNT_PROFILE_SECTIONS[normalizedIndex];
-    const responseFieldName = ACCOUNT_PROFILE_RESPONSE_FIELD_NAMES[section.key] || 'Response Preview';
     const resolvedAreaId = resolveAreaId(areaId);
 
     const result = await getNikkeAccountProfileSection(client, {
@@ -312,7 +311,7 @@ export async function buildAccountProfileView(
     const effectiveAreaId = Number.isInteger(Number.parseInt(String(result.area_id), 10))
         ? Number.parseInt(String(result.area_id), 10)
         : resolvedAreaId;
-    const embedPreset = buildAccountProfileEmbedPreset(section.key, result.data, section.label);
+    const embedPreset = await buildAccountProfileEmbedPreset(section.key, result.data, section.label);
 
     const embed = EmbedBuilder.from(embedPreset).addFields(
         {
