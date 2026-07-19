@@ -240,6 +240,71 @@ function formatCampaignProgress(value) {
     return `${chapter}-${String(stage).padStart(2, '0')}`;
 }
 
+function formatRecycleRoomResearches(researches) {
+    if (!Array.isArray(researches) || researches.length === 0) {
+        return [];
+    }
+
+    return researches
+        .filter((entry) => entry && (entry.tid !== undefined || entry.lv !== undefined))
+        .sort((a, b) => {
+            const tidA = Number.parseInt(String(a?.tid ?? 0), 10);
+            const tidB = Number.parseInt(String(b?.tid ?? 0), 10);
+            return tidA - tidB;
+        })
+        .map((entry) => {
+            const tid = entry?.tid ?? 'Unknown';
+            const level = entry?.lv ?? 'Unknown';
+            return `Recycle ${tid}: **Lv ${level}**`;
+        });
+}
+
+function formatSimpleValue(value) {
+    if (value === null || value === undefined || value === '') {
+        return 'Unknown';
+    }
+
+    if (typeof value === 'number') {
+        return new Intl.NumberFormat('en-US').format(value);
+    }
+
+    return String(value);
+}
+
+function formatPercent(value) {
+    const numeric = typeof value === 'number' ? value : Number.parseFloat(String(value));
+    if (!Number.isFinite(numeric)) {
+        return formatSimpleValue(value);
+    }
+
+    return `${(numeric * 100).toFixed(2)}%`;
+}
+
+function formatRewardList(rewards) {
+    if (!Array.isArray(rewards) || rewards.length === 0) {
+        return 'None';
+    }
+
+    return rewards.join(', ');
+}
+
+function formatTowerDailyInfoList(list) {
+    if (!Array.isArray(list) || list.length === 0) {
+        return 'None';
+    }
+
+    return list
+        .slice()
+        .sort((a, b) => Number(a?.type ?? 0) - Number(b?.type ?? 0))
+        .map((entry) => {
+            const towerType = entry?.type ?? '?';
+            const opened = entry?.is_opened ? 'Open' : 'Closed';
+            const remaining = formatSimpleValue(entry?.remaining_count);
+            return `Tower ${towerType}: ${opened}, Remaining **${remaining}**`;
+        })
+        .join(' | ');
+}
+
 async function buildAccountProfileEmbedPreset(client, sectionKey, data, sectionLabel) {
     if (sectionKey === 'basic_info') {
         const commanderName = data?.nickname || 'Unknown';
@@ -287,22 +352,68 @@ async function buildAccountProfileEmbedPreset(client, sectionKey, data, sectionL
     }
 
     if (sectionKey === 'outpost_info') {
-        const synchroLevel = data?.synchro_level ?? data?.synchro?.level ?? 'Unknown';
-        const outpostLevel = data?.outpost_level ?? data?.outpost?.level ?? 'Unknown';
+        const synchroLevel = data?.synchro_level ?? 'Unknown';
+        const outpostLevel = data?.outpost_battle_level ?? 'Unknown';
         return createEmbed({
-            title: '✅ Account Profile • Outpost Info',
-            description: `Synchro Level: **${synchroLevel}** | Outpost Level: **${outpostLevel}**`,
+            title: '[NIGGA] TEST • Outpost Info',
+            description: ``,
             color: getColor('success'),
-        });
+        }).addFields(
+            {
+                name: 'Outpost Info',
+                value: [
+                    `Synchro Level: **${synchroLevel}**`, 
+                    `Outpost Level: **${outpostLevel}**`
+                ].join('\n'),
+                inline: true,
+            },
+            {
+                name: 'Infrastructure',
+                value: [
+                    `Core Lv: **${data?.infra_core_level ?? 'Unknown'}**`,
+                    ...formatRecycleRoomResearches(data?.recycle_room_researches),
+                ].join('\n'),
+                inline: true,
+            }
+        );
     }
 
     if (sectionKey === 'daily_progress') {
-        const summary = summarizeSectionData(data);
+        const simChapter = data?.sim_room_daily_best_record?.chapter;
+        const simDifficulty = data?.sim_room_daily_best_record?.difficulty;
+        const simRecord = (simChapter !== undefined && simDifficulty !== undefined)
+            ? `Chapter ${simChapter}, Difficulty ${simDifficulty}`
+            : 'Unknown';
+
         return createEmbed({
-            title: '✅ Account Profile • Daily Contents Progress',
-            description: `Daily progress snapshot contains **${summary}**.`,
+            title: '[NIGGA] TEST • Daily Contents Progress',
+            description: ``,
             color: getColor('success'),
-        });
+        }).addFields(
+            {
+                name: 'Daily Progress',
+                value: [
+                    `Advise Remaining: **${formatSimpleValue(data?.counsel_remaining_count)}**`,
+                    `Daily Mission Receivable: **${formatSimpleValue(data?.daily_mission_receivable_points)}**`,
+                    `Daily Mission Received: **${formatSimpleValue(data?.daily_mission_received_points)}**`,
+                    `Daily Mission Rewards: **${formatRewardList(data?.daily_mission_received_rewards)}**`,
+                    `Dispatch Completed: **${formatSimpleValue(data?.dispatch_completed_count)}**`,
+                    `Dispatch In Progress: **${formatSimpleValue(data?.dispatch_in_progress_count)}**`,
+                    `Intercept Remaining: **${formatSimpleValue(data?.intercept_remaining_tickets)}**`,
+                    `Outpost Battle Efficiency: **${formatSimpleValue(data?.outpost_battle_efficiency)}**`,
+                    `Outpost Storage Excess: **${formatSimpleValue(data?.outpost_battle_storage_excess)}**`,
+                    `Outpost Storage Fullness: **${formatPercent(data?.outpost_battle_storage_fullness)}**`,
+                    `Rookie Arena Remaining: **${formatSimpleValue(data?.rookie_arena_remaining_count)}**`,
+                    `Special Arena Remaining: **${formatSimpleValue(data?.special_arena_remaining_count)}**`,
+                    `Sim Room Best: **${simRecord}**`,
+                    `Tower Daily: ${formatTowerDailyInfoList(data?.tower_daily_info_list)}`,
+                    `Weekly Mission Receivable: **${formatSimpleValue(data?.weekly_mission_receivable_points)}**`,
+                    `Weekly Mission Received: **${formatSimpleValue(data?.weekly_mission_received_points)}**`,
+                    `Weekly Mission Rewards: **${formatRewardList(data?.weekly_mission_received_rewards)}**`,
+                ].join('\n'),
+                inline: false,
+            }
+        );
     }
 
     return createEmbed({
