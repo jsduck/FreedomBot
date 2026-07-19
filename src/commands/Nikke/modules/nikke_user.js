@@ -4,7 +4,7 @@ import { createEmbed, errorEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { getMyGuildInfo, getUserGameInfo, searchUser, getUserProfile, getUserCharacters, safeJSON } from '../../../services/nikke.js';
-import { getNikkeAccountProfileSection, getNikkeUnionById } from '../../../utils/database.js';
+import { getNikkeAccountByOpenId, getNikkeAccountProfileSection, getNikkeUnionById } from '../../../utils/database.js';
 
 export const USER_PROFILE_BASIC_INFO_UPDATE_BUTTON_ID = 'nikke_user_profile_basic_info_update';
 export const USER_PROFILE_OUTPOST_INFO_UPDATE_BUTTON_ID = 'nikke_user_profile_outpost_info_update';
@@ -305,16 +305,20 @@ function formatTowerDailyInfoList(list) {
         .join(' | ');
 }
 
-async function buildAccountProfileEmbedPreset(client, sectionKey, data, sectionLabel) {
+async function buildAccountProfileEmbedPreset(client, intlOpenId, sectionKey, data, sectionLabel) {
+    const account = await getNikkeAccountByOpenId(client, intlOpenId);
+    const accountName = account?.name || data?.nickname || 'Unknown';
+    const resolvedUnionId = account?.union_id ?? data?.gsn ?? null;
+    const resolvedUnion = resolvedUnionId ? await getNikkeUnionById(client, resolvedUnionId) : null;
+    const resolvedUnionName = resolvedUnion?.name || 'UNION';
+
     if (sectionKey === 'basic_info') {
         const commanderName = data?.nickname || 'Unknown';
         const commanderLevel = data?.lv ?? 'Unknown';
-        const unionId = data?.gsn ?? null;
-        const union = unionId ? await getNikkeUnionById(client, unionId) : null;
-        const unionName = union?.name || 'UNION';
+        const unionName = resolvedUnionName;
 
         return createEmbed({
-            title: `[${unionName}] ${commanderName} • Profile • Basic Info`,
+            title: `[${unionName}] ${accountName} • Profile • Basic Info`,
             description: ``,
             color: getColor('success'),
         }).addFields(
@@ -355,7 +359,7 @@ async function buildAccountProfileEmbedPreset(client, sectionKey, data, sectionL
         const synchroLevel = data?.synchro_level ?? 'Unknown';
         const outpostLevel = data?.outpost_battle_level ?? 'Unknown';
         return createEmbed({
-            title: '[NIGGA] TEST • Outpost Info',
+            title: `[${resolvedUnionName}] ${accountName} • Outpost Info`,
             description: ``,
             color: getColor('success'),
         }).addFields(
@@ -386,7 +390,7 @@ async function buildAccountProfileEmbedPreset(client, sectionKey, data, sectionL
             : 'Unknown';
 
         return createEmbed({
-            title: '[NIGGA] TEST • Daily Contents Progress',
+            title: `[${resolvedUnionName}] ${accountName} • Daily Contents Progress`,
             description: ``,
             color: getColor('success'),
         }).addFields(
@@ -617,7 +621,7 @@ export async function buildAccountProfileView(
     const effectiveAreaId = Number.isInteger(Number.parseInt(String(result.area_id), 10))
         ? Number.parseInt(String(result.area_id), 10)
         : resolvedAreaId;
-    const embedPreset = await buildAccountProfileEmbedPreset(client, section.key, result.data, section.label);
+    const embedPreset = await buildAccountProfileEmbedPreset(client, intlOpenId, section.key, result.data, section.label);
 
     const embed = EmbedBuilder.from(embedPreset).addFields(
         {
