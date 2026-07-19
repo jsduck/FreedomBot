@@ -23,7 +23,7 @@ function extractIntlOpenIdFromInput(input) {
     }
 
     try {
-        const temp = raw.split('openid=')[1]?.split('&')[0]?.replaceAll('%3D', '=');
+        const temp = raw.split('id=')[1]?.split('&')[0]?.replaceAll('%3D', '=');
         if (!temp) {
             return null;
         }
