@@ -2,14 +2,18 @@ import { pgConfig } from '../../config/database/postgres.js';
 import { logger } from '../logger.js';
 
 const DEFAULT_NIKKE_ACCOUNTS = Object.freeze([
-    { name: 'Kaarako', intl_open_id: '3166452414820481224', union_id: null },
-    { name: 'Demi', intl_open_id: '16338490109246680481', union_id: null },
-    { name: 'Shaito', intl_open_id: '12167197956671690221', union_id: null },
-    { name: 'Fizix', intl_open_id: '5877343215992272387', union_id: null },
-    { name: 'Jae', intl_open_id: '15097183441877165889', union_id: null },
-    { name: 'Effelon', intl_open_id: '16262646283866114091', union_id: null },
-    { name: 'Fesha', intl_open_id: '12816795455667592937', union_id: null },
-    { name: 'Nelex', intl_open_id: '1175532717634698043', union_id: null },
+    { name: 'Kaarako', intl_open_id: '3166452414820481224', union_id: '25471' },
+    { name: 'Demi', intl_open_id: '16338490109246680481', union_id: '25471' },
+    { name: 'Shaito', intl_open_id: '12167197956671690221', union_id: '25471' },
+    { name: 'Fizix', intl_open_id: '5877343215992272387', union_id: '25471' },
+    { name: 'Jae', intl_open_id: '15097183441877165889', union_id: '25471' },
+    { name: 'Effelon', intl_open_id: '16262646283866114091', union_id: '25471' },
+    { name: 'Fesha', intl_open_id: '12816795455667592937', union_id: '25471' },
+    { name: 'Nelex', intl_open_id: '1175532717634698043', union_id: '25471' },
+]);
+
+const DEFAULT_NIKKE_UNIONS = Object.freeze([
+    { name: 'Avaricia', union_id: '25471', area_id: 84 },
 ]);
 
 function isPostgresSqlReady(wrapper) {
@@ -83,6 +87,41 @@ async function seedDefaultAccounts(wrapper) {
     return true;
 }
 
+async function seedDefaultUnions(wrapper) {
+    if (!isPostgresSqlReady(wrapper)) {
+        return false;
+    }
+
+    const values = DEFAULT_NIKKE_UNIONS.map((union) => [
+        union.name,
+        union.union_id,
+        union.area_id,
+    ]);
+
+    if (values.length === 0) {
+        return false;
+    }
+
+    const placeholders = values.map((_, index) => {
+        const offset = index * 3;
+        return `($${offset + 1}, $${offset + 2}, $${offset + 3})`;
+    }).join(', ');
+
+    const flattened = values.flat();
+    await wrapper.db.pool.query(
+        `INSERT INTO ${pgConfig.tables.nikke_unions} (name, union_id, area_id)
+         VALUES ${placeholders}
+         ON CONFLICT (union_id)
+         DO UPDATE SET
+             name = EXCLUDED.name,
+             area_id = EXCLUDED.area_id,
+             updated_at = NOW()`,
+        flattened,
+    );
+
+    return true;
+}
+
 export async function getNikkeAccounts(client, { seedDefaults = true } = {}) {
     try {
         const wrapper = client?.db;
@@ -135,11 +174,20 @@ export async function getNikkeUnions(client) {
         }
 
         if (isPostgresSqlReady(wrapper)) {
-            const result = await wrapper.db.pool.query(
+            let result = await wrapper.db.pool.query(
                 `SELECT name, union_id, area_id, created_at, updated_at
                  FROM ${pgConfig.tables.nikke_unions}
                  ORDER BY name ASC`,
             );
+
+            if (result.rows.length === 0) {
+                await seedDefaultUnions(wrapper);
+                result = await wrapper.db.pool.query(
+                    `SELECT name, union_id, area_id, created_at, updated_at
+                     FROM ${pgConfig.tables.nikke_unions}
+                     ORDER BY name ASC`,
+                );
+            }
 
             return result.rows.map(normalizeUnionRow).filter(Boolean);
         }
