@@ -22,7 +22,7 @@ export default {
         .addSubcommand(subcommand =>
             subcommand
                 .setName("login")
-                .setDescription("Generate login token for Nikke API")
+                .setDescription("Generate login token for Nikke API test")
             )
         .addSubcommand(subcommand =>
             subcommand
