@@ -13,7 +13,7 @@ import { handleUserCharacter } from './modules/nikke_character.js';
 import { handleGuildDetails, handleGuildMembers } from './modules/nikke_guild.js';
 import { handleUnionRaidData, handleUnionRaidLevelData, handleUnionRaidDataOfGuildSeason, handleUnionRaidLevelDataOfGuildSeason } from './modules/nikke_guild.js';
 import { handleQueryGuildCardList } from './modules/nikke_guild.js';
-import { handleGetMyGuildInfo, handleGetUserDailyContentsProgress, handleGetUserProfileOutpostInfo, handleGetUserProfileBasicInfo, handleGetUserGameInfo, handleGetUserCharacters, handleGetUserProfile, handleSearchUser } from './modules/nikke_user.js';
+import { handleGetMyGuildInfo, handleGetUserDailyContentsProgress, handleGetUserProfileOutpostInfo, handleGetUserProfileBasicInfo, handleGetUserCharacters, handleGetUserProfile, handleSearchUser } from './modules/nikke_user.js';
 import { addNikkeAccount, deleteNikkeAccount, getNikkeAccountChoices, getNikkeAreaChoices, getNikkeUnionChoices, getNikkeUnionGuildChoices, updateNikkeAccountUnionId } from '../../utils/database.js';
 
 async function handleAccountAdd(interaction, client) {
@@ -553,17 +553,6 @@ export default {
                 ))
         .addSubcommand(subcommand =>
             subcommand
-                .setName("get-user-game-info")
-                .setDescription("Get user game info from Nikke API")
-                .addStringOption(option =>
-                    option
-                        .setName("intl_open_id")
-                        .setDescription("OpenID of the user to fetch game info for")
-                        .setRequired(true)
-                        .addChoices(...accountChoices)
-                ))
-        .addSubcommand(subcommand =>
-            subcommand
                 .setName("get-user-characters")
                 .setDescription("Get user characters from Nikke API")
                 .addStringOption(option =>
@@ -689,9 +678,6 @@ export default {
                         break;
                     case "get-user-profile-basic-info":
                         await handleGetUserProfileBasicInfo(interaction, client);
-                        break;
-                    case "get-user-game-info":
-                        await handleGetUserGameInfo(interaction, client);
                         break;
                     case "get-user-characters":
                         await handleGetUserCharacters(interaction, client);

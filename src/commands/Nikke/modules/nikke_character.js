@@ -3,7 +3,7 @@ import { createEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { createError, ErrorTypes } from '../../../utils/errorHandler.js';
-import { getUserCharacterCache, upsertUserCharacterCache, getNikkeAccountByOpenId } from '../../../utils/database.js';
+import { getUserCharacterCache, upsertUserCharacterCache, getNikkeAccountByOpenId, getNikkeUnionById } from '../../../utils/database.js';
 import { getUserCharacterDetails, getCharacterByName, getNameCodeByName, getNameByCode } from '../../../services/nikke.js';
 import { ButtonStyle, ActionRowBuilder, ButtonBuilder } from 'discord.js';
 
@@ -249,10 +249,12 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
     const headLine = formatEquipLine("Head", units[0].head_equip_lv, units, effects, [lines[3], lines[4], lines[5]]);
     const legLine = formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]);
     const torsoLine = formatEquipLine("Torso", units[0].torso_equip_lv, units, effects, [lines[9], lines[10], lines[11]]);
-        const account = await getNikkeAccountByOpenId(client, intlOpenId);
+    const account = await getNikkeAccountByOpenId(client, intlOpenId);
+    const union = await getNikkeUnionById(client, account?.union_id);
+    const unionName = union?.name || 'UNION';
 
     const embed = createEmbed({
-            title: `[UNION] ${account?.name ?? intlOpenId}'s ${getNameByCode(units[0].name_code)}`,
+            title: `[${unionName}] ${account?.name ?? intlOpenId}'s ${getNameByCode(units[0].name_code)}`,
             description: '',
             color: getColor('success')
         }).setThumbnail("https://static.dotgg.gg/nikke/characters/" + charJson.img + ".webp");
@@ -274,11 +276,6 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
                 {
                     name: "Stats",
                     value: `\`${formatTable2(OLarray)}\n\``,
-                    inline: false
-                },
-                {
-                    name: "Data Source",
-                    value: `Source: ${formatDataSource(dataSource)}\nFetched at: ${formatCacheTimestamp(cacheRecord?.fetched_at)}\nUpdated at: ${formatCacheTimestamp(cacheRecord?.updated_at)}`,
                     inline: false
                 },
                 {
@@ -311,6 +308,11 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
                     value: formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]),
                     inline: true
                 },
+                {
+                    name: "Data Source",
+                    value: `Source: ${formatDataSource(dataSource)}\nFetched at: ${formatCacheTimestamp(cacheRecord?.fetched_at)}\nUpdated at: ${formatCacheTimestamp(cacheRecord?.updated_at)}`,
+                    inline: false
+                }
             );
 
     return {

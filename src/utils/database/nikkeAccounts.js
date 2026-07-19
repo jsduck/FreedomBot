@@ -182,6 +182,15 @@ export async function getNikkeUnionGuildChoices(client) {
         .slice(0, 25);
 }
 
+export async function getNikkeUnionById(client, unionId) {
+    if (unionId === null || unionId === undefined || unionId === '') {
+        return null;
+    }
+
+    const unions = await getNikkeUnions(client);
+    return unions.find((union) => String(union.union_id) === String(unionId)) || null;
+}
+
 export async function getNikkeAreaChoices(client) {
     try {
         const wrapper = client?.db;
