@@ -1,5 +1,5 @@
 import { getColor } from '../../../config/bot.js';
-import { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import { createEmbed, errorEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
@@ -32,21 +32,27 @@ const ACCOUNT_PROFILE_SECTIONS = Object.freeze([
 ]);
 
 const ACCOUNT_PROFILE_EMBED_PRESETS = Object.freeze({
-    basic_info: {
+    basic_info: createEmbed({
         title: '✅ Account Profile • Basic Info',
         description: 'Identity and progression summary fetched from Nikke profile cache/API.',
-        responseFieldName: 'Basic Info Payload',
-    },
-    outpost_info: {
+        color: getColor('success'),
+    }),
+    outpost_info: createEmbed({
         title: '✅ Account Profile • Outpost Info',
         description: 'Outpost production and storage details fetched from Nikke profile cache/API.',
-        responseFieldName: 'Outpost Payload',
-    },
-    daily_progress: {
+        color: getColor('success'),
+    }),
+    daily_progress: createEmbed({
         title: '✅ Account Profile • Daily Contents Progress',
         description: 'Daily task and activity progress fetched from Nikke profile cache/API.',
-        responseFieldName: 'Daily Progress Payload',
-    },
+        color: getColor('success'),
+    }),
+});
+
+const ACCOUNT_PROFILE_RESPONSE_FIELD_NAMES = Object.freeze({
+    basic_info: 'Basic Info Payload',
+    outpost_info: 'Outpost Payload',
+    daily_progress: 'Daily Progress Payload',
 });
 
 function formatCacheTimestamp(value) {
@@ -211,11 +217,13 @@ export async function buildAccountProfileView(
 ) {
     const normalizedIndex = normalizeProfileViewIndex(viewIndex);
     const section = ACCOUNT_PROFILE_SECTIONS[normalizedIndex];
-    const embedPreset = ACCOUNT_PROFILE_EMBED_PRESETS[section.key] || {
-        title: `✅ Account Profile • ${section.label}`,
-        description: `Successfully called Nikke API endpoint \`${section.endpoint}\`.`,
-        responseFieldName: 'Response Preview',
-    };
+    const embedPreset = ACCOUNT_PROFILE_EMBED_PRESETS[section.key]
+        || createEmbed({
+            title: `✅ Account Profile • ${section.label}`,
+            description: `Successfully called Nikke API endpoint \`${section.endpoint}\`.`,
+            color: getColor('success'),
+        });
+    const responseFieldName = ACCOUNT_PROFILE_RESPONSE_FIELD_NAMES[section.key] || 'Response Preview';
     const resolvedAreaId = resolveAreaId(areaId);
 
     const result = await getNikkeAccountProfileSection(client, {
@@ -239,13 +247,9 @@ export async function buildAccountProfileView(
         ? Number.parseInt(String(result.area_id), 10)
         : resolvedAreaId;
 
-    const embed = createEmbed({
-        title: embedPreset.title,
-        description: embedPreset.description,
-        color: getColor('success'),
-    }).addFields(
+    const embed = EmbedBuilder.from(embedPreset).addFields(
         {
-            name: embedPreset.responseFieldName,
+            name: responseFieldName,
             value: `\`\`\`json\n${preview}\n\`\`\``,
         },
         {
