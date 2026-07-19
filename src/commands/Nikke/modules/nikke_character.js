@@ -118,16 +118,9 @@ function formatEquipLine(label, level, units, effects, lines) {
     return { type, lvl, val };
   });
 
-  const body = rows
-    .map(r => {
-      const col1 = r.type.padEnd(10);      // Type
-      const col2 = `(${r.lvl})`.padEnd(6); // (Lvl)
-      const col3 = r.val;                  // Value
-      return `${col1}${col2}${col3}`;
-    })
-    .join("\n");
-
-  return `\`${body}\``;
+    return rows
+        .map((r) => `${r.type} (${r.lvl}): \`${r.val}\``)
+        .join("\n");
 }
 
 function formatTable(title, rows) {
