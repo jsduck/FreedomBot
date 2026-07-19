@@ -17,7 +17,7 @@ import { handleGetMyGuildInfo, handleGetUserCharacters, handleGetUserDailyConten
 import { getNikkeAccountChoices, getNikkeAreaChoices, getNikkeUnionChoices, getNikkeUnionGuildChoices } from '../../utils/database.js';
 
 export default {
-    async buildData(client) {
+    async data(client) {
         const accountChoices = await getNikkeAccountChoices(client);
         const unionChoices = await getNikkeUnionChoices(client);
         const guildChoices = await getNikkeUnionGuildChoices(client);

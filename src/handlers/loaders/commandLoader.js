@@ -71,7 +71,9 @@ export async function loadCommands(client) {
             const commandModule = await import(`file://${filePath}`);
             const command = commandModule.default || commandModule;
 
-            if ((!command.data || typeof command.data.toJSON !== 'function') && typeof command.buildData === 'function') {
+            if (typeof command.data === 'function') {
+                command.data = await command.data(client);
+            } else if ((!command.data || typeof command.data.toJSON !== 'function') && typeof command.buildData === 'function') {
                 command.data = await command.buildData(client);
             }
             
