@@ -71,6 +71,8 @@ export {
     getNikkeAccountByOpenId,
     getNikkeAccountByName,
     addNikkeAccount,
+    syncNikkeAccountProfile,
+    getNikkeAccountProfileSection,
     updateNikkeAccountUnionId,
     deleteNikkeAccount,
     DEFAULT_NIKKE_ACCOUNTS,

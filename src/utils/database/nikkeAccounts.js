@@ -1,5 +1,10 @@
 import { pgConfig } from '../../config/database/postgres.js';
 import { logger } from '../logger.js';
+import {
+    getUserDailyContentsProgress,
+    getUserProfileBasicInfo,
+    getUserProfileOutpostInfo,
+} from '../../services/nikke.js';
 
 const DEFAULT_NIKKE_ACCOUNTS = Object.freeze([
     { name: 'Kaarako', intl_open_id: '3166452414820481224', union_id: '25471' },
@@ -33,6 +38,10 @@ function normalizeAccountRow(row) {
         name: row.name ?? null,
         intl_open_id: String(row.intl_open_id ?? ''),
         union_id: row.union_id ?? null,
+        basic_info: row.basic_info ?? null,
+        outpost_info: row.outpost_info ?? null,
+        daily_progress: row.daily_progress ?? null,
+        profile_fetched_at: row.profile_fetched_at ?? null,
         created_at: row.created_at ?? null,
         updated_at: row.updated_at ?? null,
     };
@@ -49,6 +58,156 @@ function normalizeUnionRow(row) {
         area_id: row.area_id ?? null,
         created_at: row.created_at ?? null,
         updated_at: row.updated_at ?? null,
+    };
+}
+
+async function resolveAccountAreaId(wrapper, unionId) {
+    const normalizedUnionId = unionId === null || unionId === undefined || unionId === ''
+        ? null
+        : String(unionId).trim();
+
+    if (!normalizedUnionId) {
+        return 84;
+    }
+
+    const result = await wrapper.db.pool.query(
+        `SELECT area_id
+         FROM ${pgConfig.tables.nikke_unions}
+         WHERE union_id = $1
+         LIMIT 1`,
+        [normalizedUnionId],
+    );
+
+    if (result.rows.length === 0) {
+        return 84;
+    }
+
+    const areaId = Number.parseInt(String(result.rows[0].area_id), 10);
+    return Number.isInteger(areaId) ? areaId : 84;
+}
+
+async function readNikkePayload(response, endpointName) {
+    if (!response?.ok) {
+        throw new Error(`${endpointName} request failed with status ${response?.status ?? 'unknown'}`);
+    }
+
+    const payload = await response.json();
+    if (!payload || typeof payload !== 'object') {
+        throw new Error(`${endpointName} returned an invalid response body`);
+    }
+
+    return payload;
+}
+
+async function upsertAccountProfileRow(wrapper, {
+    intl_open_id,
+    basic_info,
+    outpost_info,
+    daily_progress,
+}) {
+    const normalizedOpenId = String(intl_open_id || '').trim();
+
+    const result = await wrapper.db.pool.query(
+        `UPDATE ${pgConfig.tables.nikke_accounts}
+         SET basic_info = $2::jsonb,
+             outpost_info = $3::jsonb,
+             daily_progress = $4::jsonb,
+             profile_fetched_at = NOW(),
+             updated_at = NOW()
+         WHERE intl_open_id = $1`,
+        [
+            normalizedOpenId,
+            JSON.stringify(basic_info ?? {}),
+            JSON.stringify(outpost_info ?? {}),
+            JSON.stringify(daily_progress ?? []),
+        ],
+    );
+
+    if (result.rowCount === 0) {
+        throw new Error(`Unable to update profile payloads for intl_open_id ${normalizedOpenId}`);
+    }
+}
+
+const PROFILE_SECTION_DEFINITIONS = Object.freeze({
+    basic_info: {
+        column: 'basic_info',
+        endpointName: 'getUserProfileBasicInfo',
+        fetcher: getUserProfileBasicInfo,
+        extractor: (payload) => payload?.data?.basic_info ?? {},
+    },
+    outpost_info: {
+        column: 'outpost_info',
+        endpointName: 'getUserProfileOutpostInfo',
+        fetcher: getUserProfileOutpostInfo,
+        extractor: (payload) => payload?.data?.outpost_info ?? {},
+    },
+    daily_progress: {
+        column: 'daily_progress',
+        endpointName: 'getUserDailyContentsProgress',
+        fetcher: getUserDailyContentsProgress,
+        extractor: (payload) => payload?.data?.daily_progress ?? [],
+    },
+});
+
+async function getAccountProfileSnapshot(wrapper, intlOpenId) {
+    const result = await wrapper.db.pool.query(
+        `SELECT intl_open_id, union_id, basic_info, outpost_info, daily_progress, profile_fetched_at, updated_at
+         FROM ${pgConfig.tables.nikke_accounts}
+         WHERE intl_open_id = $1
+         LIMIT 1`,
+        [String(intlOpenId || '').trim()],
+    );
+
+    return result.rows[0] || null;
+}
+
+function hasCachedProfileSection(snapshot, section) {
+    if (!snapshot) {
+        return false;
+    }
+
+    const definition = PROFILE_SECTION_DEFINITIONS[section];
+    if (!definition) {
+        return false;
+    }
+
+    return snapshot[definition.column] !== null && snapshot[definition.column] !== undefined;
+}
+
+async function refreshProfileSection(wrapper, intlOpenId, unionId, section, areaIdOverride = null) {
+    const definition = PROFILE_SECTION_DEFINITIONS[section];
+    if (!definition) {
+        throw new Error(`Unknown profile section: ${section}`);
+    }
+
+    const areaId = Number.isInteger(areaIdOverride)
+        ? areaIdOverride
+        : await resolveAccountAreaId(wrapper, unionId);
+    const normalizedOpenId = String(intlOpenId || '').trim();
+
+    const response = await definition.fetcher(normalizedOpenId, areaId);
+    const payload = await readNikkePayload(response, definition.endpointName);
+    const extracted = definition.extractor(payload);
+
+    const result = await wrapper.db.pool.query(
+        `UPDATE ${pgConfig.tables.nikke_accounts}
+         SET ${definition.column} = $2::jsonb,
+             profile_fetched_at = NOW(),
+             updated_at = NOW()
+         WHERE intl_open_id = $1
+         RETURNING profile_fetched_at, updated_at`,
+        [normalizedOpenId, JSON.stringify(extracted)],
+    );
+
+    if (result.rowCount === 0) {
+        throw new Error(`Unable to update ${definition.column} for intl_open_id ${normalizedOpenId}`);
+    }
+
+    return {
+        data: extracted,
+        area_id: areaId,
+        fetched_at: result.rows[0].profile_fetched_at ?? null,
+        updated_at: result.rows[0].updated_at ?? null,
     };
 }
 
@@ -361,6 +520,117 @@ export async function addNikkeAccount(client, { name, intl_open_id, union_id = n
         };
     } catch (error) {
         logger.error('Error adding Nikke account:', error);
+        return {
+            success: false,
+            reason: 'error',
+            error,
+        };
+    }
+}
+
+export async function syncNikkeAccountProfile(client, { intl_open_id, union_id = null }) {
+    try {
+        const wrapper = client?.db;
+
+        if (!isPostgresSqlReady(wrapper)) {
+            return {
+                success: false,
+                reason: 'database_unavailable',
+            };
+        }
+
+        const normalizedOpenId = String(intl_open_id || '').trim();
+        const areaId = await resolveAccountAreaId(wrapper, union_id);
+
+        const [basicRes, outpostRes, dailyRes] = await Promise.all([
+            getUserProfileBasicInfo(normalizedOpenId, areaId),
+            getUserProfileOutpostInfo(normalizedOpenId, areaId),
+            getUserDailyContentsProgress(normalizedOpenId, areaId),
+        ]);
+
+        const basicPayload = await readNikkePayload(basicRes, 'getUserProfileBasicInfo');
+        const outpostPayload = await readNikkePayload(outpostRes, 'getUserProfileOutpostInfo');
+        const dailyPayload = await readNikkePayload(dailyRes, 'getUserDailyContentsProgress');
+
+        await upsertAccountProfileRow(wrapper, {
+            intl_open_id: normalizedOpenId,
+            basic_info: basicPayload.data?.basic_info ?? {},
+            outpost_info: outpostPayload.data?.outpost_info ?? {},
+            daily_progress: dailyPayload.data?.daily_progress ?? [],
+        });
+
+        return {
+            success: true,
+            intl_open_id: normalizedOpenId,
+            area_id: areaId,
+        };
+    } catch (error) {
+        logger.error('Error syncing Nikke account profile:', error);
+        return {
+            success: false,
+            reason: 'error',
+            error,
+        };
+    }
+}
+
+export async function getNikkeAccountProfileSection(
+    client,
+    { intl_open_id, section, refresh = false, area_id = null },
+) {
+    try {
+        const wrapper = client?.db;
+
+        if (!isPostgresSqlReady(wrapper)) {
+            return {
+                success: false,
+                reason: 'database_unavailable',
+            };
+        }
+
+        const normalizedOpenId = String(intl_open_id || '').trim();
+        const snapshot = await getAccountProfileSnapshot(wrapper, normalizedOpenId);
+
+        if (!snapshot) {
+            return {
+                success: false,
+                reason: 'account_not_found',
+            };
+        }
+
+        if (!refresh && hasCachedProfileSection(snapshot, section)) {
+            const definition = PROFILE_SECTION_DEFINITIONS[section];
+            return {
+                success: true,
+                source: 'Database cache',
+                section,
+                data: snapshot[definition.column],
+                fetched_at: snapshot.profile_fetched_at ?? null,
+                updated_at: snapshot.updated_at ?? null,
+                area_id: Number.parseInt(String(area_id), 10) || null,
+            };
+        }
+
+        const parsedAreaId = Number.parseInt(String(area_id), 10);
+        const refreshed = await refreshProfileSection(
+            wrapper,
+            normalizedOpenId,
+            snapshot.union_id,
+            section,
+            Number.isInteger(parsedAreaId) ? parsedAreaId : null,
+        );
+
+        return {
+            success: true,
+            source: refresh ? 'Live API (forced refresh)' : 'Live API',
+            section,
+            data: refreshed.data,
+            fetched_at: refreshed.fetched_at,
+            updated_at: refreshed.updated_at,
+            area_id: refreshed.area_id,
+        };
+    } catch (error) {
+        logger.error(`Error retrieving Nikke account profile section ${section}:`, error);
         return {
             success: false,
             reason: 'error',

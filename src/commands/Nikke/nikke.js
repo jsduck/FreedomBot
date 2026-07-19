@@ -13,8 +13,8 @@ import { handleUserCharacter } from './modules/nikke_character.js';
 import { handleGuildDetails, handleGuildMembers } from './modules/nikke_guild.js';
 import { handleUnionRaidData, handleUnionRaidLevelData, handleUnionRaidDataOfGuildSeason, handleUnionRaidLevelDataOfGuildSeason } from './modules/nikke_guild.js';
 import { handleQueryGuildCardList } from './modules/nikke_guild.js';
-import { handleGetMyGuildInfo, handleGetUserDailyContentsProgress, handleGetUserProfileOutpostInfo, handleGetUserProfileBasicInfo, handleGetUserCharacters, handleGetUserProfile, handleSearchUser } from './modules/nikke_user.js';
-import { addNikkeAccount, deleteNikkeAccount, getNikkeAccountChoices, getNikkeAreaChoices, getNikkeUnionChoices, getNikkeUnionGuildChoices, updateNikkeAccountUnionId } from '../../utils/database.js';
+import { handleAccountProfile, handleGetMyGuildInfo, handleGetUserDailyContentsProgress, handleGetUserProfileOutpostInfo, handleGetUserProfileBasicInfo, handleGetUserCharacters, handleGetUserProfile, handleSearchUser } from './modules/nikke_user.js';
+import { addNikkeAccount, deleteNikkeAccount, getNikkeAccountChoices, getNikkeAreaChoices, getNikkeUnionChoices, getNikkeUnionGuildChoices, syncNikkeAccountProfile, updateNikkeAccountUnionId } from '../../utils/database.js';
 
 async function handleAccountAdd(interaction, client) {
     try {
@@ -61,10 +61,19 @@ async function handleAccountAdd(interaction, client) {
         return;
     }
 
+    const profileSyncResult = await syncNikkeAccountProfile(client, {
+        intl_open_id: result.account.intl_open_id,
+        union_id: result.account.union_id,
+    });
+
+    const profileSyncMessage = profileSyncResult.success
+        ? `\nSaved profile payloads (basic_info, outpost_info, daily_progress) in nikke_accounts for area ${profileSyncResult.area_id}.`
+        : '\nAccount profile payload sync failed. You can retry by re-adding or updating this account later.';
+
     await InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(
             'Account Added',
-            `Stored ${result.account.name} with open id ${result.account.intl_open_id}${result.account.union_id ? ` and union id ${result.account.union_id}` : ''}.`
+            `Stored ${result.account.name} with open id ${result.account.intl_open_id}${result.account.union_id ? ` and union id ${result.account.union_id}` : ''}.${profileSyncMessage}`
         )],
     }).catch(logger.error);
 }
@@ -220,6 +229,25 @@ export default {
                                 .setName("intl_open_id")
                                 .setDescription("Account open id")
                                 .setRequired(true)
+                        )
+                )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('profile')
+                        .setDescription('View basic, outpost, and daily profile data in a paged embed')
+                        .addStringOption(option =>
+                            option
+                                .setName('intl_open_id')
+                                .setDescription('Account open id')
+                                .setRequired(true)
+                                .addChoices(...accountChoices)
+                        )
+                        .addIntegerOption(option =>
+                            option
+                                .setName('nikke_area_id')
+                                .setDescription('Nikke area ID')
+                                .setRequired(false)
+                                .addChoices(...areaChoices)
                         )
                 )
         )
@@ -620,6 +648,9 @@ export default {
                             break;
                         case 'delete':
                             await handleAccountDelete(interaction, client);
+                            break;
+                        case 'profile':
+                            await handleAccountProfile(interaction, client);
                             break;
                         default:
                             await InteractionHelper.safeReply(interaction, {
