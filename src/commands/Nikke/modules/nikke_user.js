@@ -44,6 +44,72 @@ function summarizeSectionData(data) {
     return 'no structured data';
 }
 
+const CURRENCY_TYPE_LABELS = Object.freeze({
+    98: 'Gems',
+    99: 'Credits',
+    1000: 'Battle Data',
+    2000: 'Core Dust',
+    3000: 'Re-Energy',
+    5100: 'Recruit Voucher',
+    5200: 'Advanced Recruit Voucher',
+    11000: 'Silver Mileage Ticket',
+    12000: 'Gold Mileage Ticket',
+});
+
+const CURRENCY_DISPLAY_ORDER = Object.freeze([
+    98,
+    99,
+    1000,
+    2000,
+    3000,
+    5100,
+    5200,
+    11000,
+    12000,
+]);
+
+function formatCurrencyValue(value) {
+    const numeric = typeof value === 'number'
+        ? value
+        : Number.parseFloat(String(value).replace(/,/g, ''));
+
+    if (!Number.isFinite(numeric)) {
+        return String(value ?? 'Unknown');
+    }
+
+    return new Intl.NumberFormat('en-US').format(numeric);
+}
+
+function getCurrencyLabel(type) {
+    const normalizedType = Number.parseInt(String(type), 10);
+    if (Number.isInteger(normalizedType) && CURRENCY_TYPE_LABELS[normalizedType]) {
+        return CURRENCY_TYPE_LABELS[normalizedType];
+    }
+
+    return `Type ${type}`;
+}
+
+function sortCurrencyEntries(entries) {
+    return [...entries].sort((a, b) => {
+        const typeA = Number.parseInt(String(a.type), 10);
+        const typeB = Number.parseInt(String(b.type), 10);
+        const orderA = CURRENCY_DISPLAY_ORDER.indexOf(typeA);
+        const orderB = CURRENCY_DISPLAY_ORDER.indexOf(typeB);
+
+        if (orderA !== -1 || orderB !== -1) {
+            if (orderA === -1) {
+                return 1;
+            }
+            if (orderB === -1) {
+                return -1;
+            }
+            return orderA - orderB;
+        }
+
+        return typeA - typeB;
+    });
+}
+
 function formatCurrencies(currencies) {
     if (!currencies) {
         return 'Unknown';
@@ -54,10 +120,15 @@ function formatCurrencies(currencies) {
             return 'Unknown';
         }
 
-        return currencies.map((entry, index) => {
-            const type = entry?.type ?? index;
-            const value = entry?.value ?? 'Unknown';
-            return `Type ${type}: **${value}**`;
+        const normalizedEntries = currencies.map((entry, index) => ({
+            type: entry?.type ?? index,
+            value: entry?.value ?? 'Unknown',
+        }));
+
+        return sortCurrencyEntries(normalizedEntries).map((entry) => {
+            const label = getCurrencyLabel(entry.type);
+            const value = formatCurrencyValue(entry.value);
+            return `${label}: **${value}**`;
         }).join('\n');
     }
 
@@ -67,7 +138,16 @@ function formatCurrencies(currencies) {
             return 'Unknown';
         }
 
-        return entries.map(([key, value]) => `${key}: **${value}**`).join('\n');
+        const normalizedEntries = entries.map(([key, value]) => ({
+            type: key,
+            value,
+        }));
+
+        return sortCurrencyEntries(normalizedEntries).map((entry) => {
+            const label = getCurrencyLabel(entry.type);
+            const value = formatCurrencyValue(entry.value);
+            return `${label}: **${value}**`;
+        }).join('\n');
     }
 
     return String(currencies);
