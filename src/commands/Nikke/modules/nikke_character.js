@@ -7,11 +7,6 @@ import { getUserCharacterCache, upsertUserCharacterCache, getNikkeAccountByOpenI
 import { getUserCharacterDetails, getCharacterByName, getNameCodeByName, getNameByCode } from '../../../services/nikke.js';
 import { ButtonStyle, ActionRowBuilder, ButtonBuilder } from 'discord.js';
 
-function getFunctionDetailsById(json, id) {
-  const effect = json.state_effects.find(e => String(e.id) === String(id));
-  return effect ? effect.function_details : null;
-}
-
 function getDups(dups) {
     switch (dups) {
         case 0:
@@ -100,7 +95,7 @@ function formatFunctionDetails(details) {
     }
 }
 
-function formatEquipLine(label, level, units, effects, lines) {
+function formatEquipLine(units, effects, lines) {
   const rows = lines.map(lineIndex => {
     const eff = extractEffect(units[0], effects, lineIndex)?.function_details?.[0];
 
@@ -123,15 +118,6 @@ function formatEquipLine(label, level, units, effects, lines) {
     return rows
         .map((r) => `${`${r.type} (${r.lvl})`.padEnd(width)}: \`${r.val}\``)
         .join("\n");
-}
-
-function formatTable(title, rows) {
-  const header = `**${title}**`;
-  const body = rows
-    .map(([field, value]) => `${field.padEnd(16)} ${value}`)
-    .join("\n");
-
-  return `${header}\n\`\n${body}\n\``;
 }
 
 function formatTable2(rows) {
@@ -285,10 +271,6 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
         return [formatFunctionDetails(key), formatted];
     });
 
-    const armLine = formatEquipLine("Arm", units[0].arm_equip_lv, units, effects, [lines[0], lines[1], lines[2]]);
-    const headLine = formatEquipLine("Head", units[0].head_equip_lv, units, effects, [lines[3], lines[4], lines[5]]);
-    const legLine = formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]);
-    const torsoLine = formatEquipLine("Torso", units[0].torso_equip_lv, units, effects, [lines[9], lines[10], lines[11]]);
     const account = await getNikkeAccountByOpenId(client, intlOpenId);
     const union = await getNikkeUnionById(client, account?.union_id);
     const unionName = union?.name || 'UNION';
@@ -326,12 +308,12 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
                 },
                 {
                     name: `Head (Lv${units[0].head_equip_lv})`,
-                    value: formatEquipLine("Head", units[0].head_equip_lv, units, effects, [lines[3], lines[4], lines[5]]),
+                    value: formatEquipLine(units, effects, [lines[3], lines[4], lines[5]]),
                     inline: true
                 },
                 {
                     name: `Torso (Lv${units[0].torso_equip_lv})`,
-                    value: formatEquipLine("Torso", units[0].torso_equip_lv, units, effects, [lines[9], lines[10], lines[11]]),
+                    value: formatEquipLine(units, effects, [lines[9], lines[10], lines[11]]),
                     inline: true
                 },
                 {
@@ -341,12 +323,12 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
                 },
                 {
                     name: `Arm (Lv${units[0].arm_equip_lv})`,
-                    value: formatEquipLine("Arm", units[0].arm_equip_lv, units, effects, [lines[0], lines[1], lines[2]]),
+                    value: formatEquipLine(units, effects, [lines[0], lines[1], lines[2]]),
                     inline: true
                 },
                 {
                     name: `Leg (Lv${units[0].leg_equip_lv})`,
-                    value: formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]),
+                    value: formatEquipLine(units, effects, [lines[6], lines[7], lines[8]]),
                     inline: true
                 },
                 {
