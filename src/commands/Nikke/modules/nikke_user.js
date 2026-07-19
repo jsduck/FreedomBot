@@ -6,7 +6,7 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { getMyGuildInfo, getUserGameInfo, searchUser, getUserProfile, getUserCharacters, safeJSON } from '../../../services/nikke.js';
 import { getNikkeAccountProfileSection } from '../../../utils/database.js';
 
-import { getNikkeUnionById } from '../../../utils/database.js';
+//import { getNikkeUnionById } from '../../../utils/database.js';
 
 export const USER_PROFILE_BASIC_INFO_UPDATE_BUTTON_ID = 'nikke_user_profile_basic_info_update';
 export const USER_PROFILE_OUTPOST_INFO_UPDATE_BUTTON_ID = 'nikke_user_profile_outpost_info_update';
@@ -46,12 +46,12 @@ function summarizeSectionData(data) {
     return 'no structured data';
 }
 
-function buildAccountProfileEmbedPreset(sectionKey, data, sectionLabel) {
+async function buildAccountProfileEmbedPreset(sectionKey, data, sectionLabel) {
     if (sectionKey === 'basic_info') {
         const commanderName = data?.nickname || 'Unknown';
         const commanderLevel = data?.lv ?? 'Unknown';
-        const union = await getNikkeUnionById(client, account?.union_id);
-        const unionName = union?.name || 'UNION';
+        //const union = await getNikkeUnionById(client, account?.union_id);
+        //const unionName = union?.name || 'UNION';
 
         return createEmbed({
             title: `[NIGGA] ${commanderName} • Profile • Basic Info`,
@@ -67,7 +67,7 @@ function buildAccountProfileEmbedPreset(sectionKey, data, sectionLabel) {
                     `Costume Count: **${data?.character_costume_count ?? 'Unknown'}**`,
                     `Created at: **${data?.created_at ?? 'Unknown'}**`,
                     `Last action at: **${data?.last_action_at ?? 'Unknown'}**`,
-                    `Union: **${unionName}**`,
+                    //`Union: **${unionName}**`,
                     `Banned: **${data?.is_banned ? 'Yes' : 'No'}**`,
                 ].join('\n'),
                 inline: false,
