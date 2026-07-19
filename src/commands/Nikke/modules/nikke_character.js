@@ -168,38 +168,43 @@ function formatAlignedRows(rows) {
         .join("\n");
 }
 
-function getStatsMarker(field, value) {
+function getStatsValueColor(field, value) {
     const normalizedField = String(field || '').toLowerCase();
     const normalizedValue = Number.parseFloat(String(value).replace('%', ''));
 
     if (normalizedField === 'eledmg') {
         if (Number.isFinite(normalizedValue) && normalizedValue < 45) {
-            return '🟥';
+            return '\u001b[31m';
         }
 
         if (Number.isFinite(normalizedValue) && normalizedValue > 90) {
-            return '🟩';
+            return '\u001b[32m';
         }
     }
 
     if (normalizedField === 'attack') {
         if (Number.isFinite(normalizedValue) && normalizedValue < 20) {
-            return '🟥';
+            return '\u001b[31m';
         }
 
         if (Number.isFinite(normalizedValue) && normalizedValue > 40) {
-            return '🟩';
+            return '\u001b[32m';
         }
     }
 
-    return '⬜';
+    return '\u001b[0m';
 }
 
 function formatStatsRows(rows) {
     const width = rows.reduce((max, [field]) => Math.max(max, String(field).length), 0);
-    return rows
-    .map(([field, value]) => `${String(field).padEnd(width)}  ${getStatsMarker(field, value)} \`${value}\``)
+    const body = rows
+        .map(([field, value]) => {
+            const color = getStatsValueColor(field, value);
+            return `${String(field).padEnd(width)}: ${color}${value}\u001b[0m`;
+        })
         .join("\n");
+
+    return `\`\`\`ansi\n${body}\n\`\`\``;
 }
 
 function resolveSynchroLevelFromOutpost(account, fallbackLevel) {
