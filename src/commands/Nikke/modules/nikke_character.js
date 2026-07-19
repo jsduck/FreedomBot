@@ -3,7 +3,7 @@ import { createEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { createError, ErrorTypes } from '../../../utils/errorHandler.js';
-import { getUserCharacterCache, upsertUserCharacterCache } from '../../../utils/database.js';
+import { getUserCharacterCache, upsertUserCharacterCache, getNikkeAccountByOpenId } from '../../../utils/database.js';
 import { getUserCharacterDetails, getCharacterByName, getNameCodeByName, getNameByCode } from '../../../services/nikke.js';
 import { ButtonStyle, ActionRowBuilder, ButtonBuilder } from 'discord.js';
 
@@ -47,22 +47,6 @@ function getDollStats(rawNikke) {
             return `SSR ${rawNikke.favorite_item_lv+1}`;
     }
 }
-
-const accchoice = [
-    { name: "Kaarako", value: "3166452414820481224" },
-    { name: "Demi", value: "16338490109246680481" },
-    { name: "Shaito", value: "12167197956671690221" },
-    { name: "Fizix", value: "5877343215992272387" },
-    { name: "Jae", value: "15097183441877165889" },
-    { name: "Effelon", value: "16262646283866114091" },
-    { name: "Fesha", value: "12816795455667592937" },
-    { name: "Nelex", value: "1175532717634698043" } 
-]
-
-function getChoiceNameFromValue(value) {
-  return accchoice.find(c => c.value === value)?.name ?? null;
-}
-
 
 function extractOLvalue(gear, dict) {
     gear?.forEach(g => {
@@ -254,9 +238,10 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
     const headLine = formatEquipLine("Head", units[0].head_equip_lv, units, effects, [lines[3], lines[4], lines[5]]);
     const legLine = formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]);
     const torsoLine = formatEquipLine("Torso", units[0].torso_equip_lv, units, effects, [lines[9], lines[10], lines[11]]);
+        const account = await getNikkeAccountByOpenId(client, intlOpenId);
 
     const embed = createEmbed({
-            title: `${getChoiceNameFromValue(intlOpenId) ?? intlOpenId}'s ${getNameByCode(units[0].name_code)} Chara Details`,
+            title: `${account?.name ?? intlOpenId}'s ${getNameByCode(units[0].name_code)} Chara Details`,
             description: '',
             color: getColor('success')
         }).setThumbnail("https://static.dotgg.gg/nikke/characters/" + charJson.img + ".webp")

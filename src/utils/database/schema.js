@@ -138,6 +138,14 @@ export const tableStatements = [
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
 
+    `CREATE TABLE IF NOT EXISTS ${t.nikke_accounts} (
+        intl_open_id VARCHAR(20) PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        union_id VARCHAR(20),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+
     `CREATE TABLE IF NOT EXISTS ${t.nikke_user_character_cache} (
         intl_open_id VARCHAR(20) NOT NULL,
         name_code INTEGER NOT NULL,
@@ -233,4 +241,5 @@ export const triggerDefinitions = [
     { name: 'update_giveaways_updated_at', table: t.giveaways },
     { name: 'update_tickets_updated_at', table: t.tickets },
     { name: 'update_afk_status_updated_at', table: t.afk_status },
+    { name: 'update_nikke_accounts_updated_at', table: t.nikke_accounts },
 ];

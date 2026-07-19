@@ -61,6 +61,17 @@ export {
 } from './database/tickets.js';
 
 export {
+    getNikkeAccounts,
+    getNikkeAccountChoices,
+    getNikkeAccountByOpenId,
+    getNikkeAccountByName,
+    addNikkeAccount,
+    updateNikkeAccountUnionId,
+    deleteNikkeAccount,
+    DEFAULT_NIKKE_ACCOUNTS,
+} from './database/nikkeAccounts.js';
+
+export {
     getUserCharacterCache,
     upsertUserCharacterCache,
 } from './database/nikkeCharacterCache.js';

@@ -14,11 +14,210 @@ import { handleGuildDetails, handleGuildMembers } from './modules/nikke_guild.js
 import { handleUnionRaidData, handleUnionRaidLevelData, handleUnionRaidDataOfGuildSeason, handleUnionRaidLevelDataOfGuildSeason } from './modules/nikke_guild.js';
 import { handleQueryGuildCardList } from './modules/nikke_guild.js';
 import { handleGetMyGuildInfo, handleGetUserDailyContentsProgress, handleGetUserProfileOutpostInfo, handleGetUserProfileBasicInfo, handleGetUserGameInfo, handleGetUserCharacters, handleGetUserProfile, handleSearchUser } from './modules/nikke_user.js';
+import { addNikkeAccount, deleteNikkeAccount, getNikkeAccountChoices, updateNikkeAccountUnionId } from '../../utils/database.js';
+
+async function handleAccountAdd(interaction, client) {
+    try {
+        await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    } catch (error) {
+        logger.error('Failed to defer account add interaction:', error);
+        return;
+    }
+
+    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed('You need **Administrator** permission to add Nikke accounts.')],
+        }).catch(logger.error);
+        return;
+    }
+
+    const name = interaction.options.getString('name', true).trim();
+    const intlOpenId = interaction.options.getString('intl_open_id', true).trim();
+    const unionId = interaction.options.getString('union_id', true).trim();
+
+    const result = await addNikkeAccount(client, {
+        name,
+        intl_open_id: intlOpenId,
+        union_id: unionId,
+    });
+
+    if (!result.success) {
+        if (result.reason === 'already_exists') {
+            const existing = result.account;
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [errorEmbed(
+                    'Account Already Exists',
+                    existing
+                        ? `${existing.name} is already stored for open id ${existing.intl_open_id}${existing.union_id ? ` and union id ${existing.union_id}` : ''}.`
+                        : 'That account is already stored in the database.'
+                )],
+            }).catch(logger.error);
+            return;
+        }
+
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed('Database Error', 'Unable to add the Nikke account right now.')],
+        }).catch(logger.error);
+        return;
+    }
+
+    await InteractionHelper.safeEditReply(interaction, {
+        embeds: [successEmbed(
+            'Account Added',
+            `Stored ${result.account.name} with open id ${result.account.intl_open_id}${result.account.union_id ? ` and union id ${result.account.union_id}` : ''}.`
+        )],
+    }).catch(logger.error);
+}
+
+async function handleAccountUpdate(interaction, client) {
+    try {
+        await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    } catch (error) {
+        logger.error('Failed to defer account update interaction:', error);
+        return;
+    }
+
+    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed('You need **Administrator** permission to update Nikke accounts.')],
+        }).catch(logger.error);
+        return;
+    }
+
+    const intlOpenId = interaction.options.getString('intl_open_id', true).trim();
+    const unionId = interaction.options.getString('union_id', true).trim();
+
+    const result = await updateNikkeAccountUnionId(client, {
+        intl_open_id: intlOpenId,
+        union_id: unionId,
+    });
+
+    if (!result.success) {
+        if (result.reason === 'not_found') {
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [errorEmbed('Account Not Found', `No Nikke account exists for open id ${intlOpenId}.`)],
+            }).catch(logger.error);
+            return;
+        }
+
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed('Database Error', 'Unable to update the Nikke account right now.')],
+        }).catch(logger.error);
+        return;
+    }
+
+    await InteractionHelper.safeEditReply(interaction, {
+        embeds: [successEmbed(
+            'Account Updated',
+            `Updated ${result.account.name} (${result.account.intl_open_id}) to union id ${result.account.union_id ?? 'none'}.`
+        )],
+    }).catch(logger.error);
+}
+
+async function handleAccountDelete(interaction, client) {
+    try {
+        await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    } catch (error) {
+        logger.error('Failed to defer account delete interaction:', error);
+        return;
+    }
+
+    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed('You need **Administrator** permission to delete Nikke accounts.')],
+        }).catch(logger.error);
+        return;
+    }
+
+    const intlOpenId = interaction.options.getString('intl_open_id', true).trim();
+
+    const result = await deleteNikkeAccount(client, intlOpenId);
+
+    if (!result.success) {
+        if (result.reason === 'not_found') {
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [errorEmbed('Account Not Found', `No Nikke account exists for open id ${intlOpenId}.`)],
+            }).catch(logger.error);
+            return;
+        }
+
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed('Database Error', 'Unable to delete the Nikke account right now.')],
+        }).catch(logger.error);
+        return;
+    }
+
+    await InteractionHelper.safeEditReply(interaction, {
+        embeds: [successEmbed(
+            'Account Deleted',
+            `Deleted ${result.account.name} (${result.account.intl_open_id}) from the database.`
+        )],
+    }).catch(logger.error);
+}
 
 export default {
-    data: new SlashCommandBuilder()
+    async buildData(client) {
+        const accountChoices = await getNikkeAccountChoices(client);
+
+        return new SlashCommandBuilder()
         .setName("nikke")
         .setDescription("Nikke commands.")
+        .addSubcommandGroup(group =>
+            group
+                .setName("account")
+                .setDescription("Manage Nikke accounts")
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName("add")
+                        .setDescription("Add a Nikke account if it does not already exist")
+                        .addStringOption(option =>
+                            option
+                                .setName("name")
+                                .setDescription("Display name for the account")
+                                .setRequired(true)
+                        )
+                        .addStringOption(option =>
+                            option
+                                .setName("intl_open_id")
+                                .setDescription("Account open id")
+                                .setRequired(true)
+                        )
+                        .addStringOption(option =>
+                            option
+                                .setName("union_id")
+                                .setDescription("Union id for the account")
+                                .setRequired(true)
+                        )
+                )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName("update")
+                        .setDescription("Update the union id for an existing Nikke account")
+                        .addStringOption(option =>
+                            option
+                                .setName("intl_open_id")
+                                .setDescription("Account open id")
+                                .setRequired(true)
+                        )
+                        .addStringOption(option =>
+                            option
+                                .setName("union_id")
+                                .setDescription("New union id for the account")
+                                .setRequired(true)
+                        )
+                )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName("delete")
+                        .setDescription("Delete a Nikke account from the database")
+                        .addStringOption(option =>
+                            option
+                                .setName("intl_open_id")
+                                .setDescription("Account open id")
+                                .setRequired(true)
+                        )
+                )
+        )
         .addSubcommand(subcommand =>
             subcommand
                 .setName("login")
@@ -69,16 +268,7 @@ export default {
                         .setName("intl_open_id")
                         .setDescription("OpenID of the user to fetch character info for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Kaarako", value: "3166452414820481224" },
-                            { name: "Demi", value: "16338490109246680481" },
-                            { name: "Shaito", value: "12167197956671690221" },
-                            { name: "Fizix", value: "5877343215992272387" },
-                            { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16262646283866114091" },
-                            { name: "Fesha", value: "12816795455667592937" },
-                            { name: "Nelex", value: "1175532717634698043" }                 
-                        )
+                        .addChoices(...accountChoices)
                 )
                 .addStringOption(option =>
                     option
@@ -148,16 +338,7 @@ export default {
                         .setName("intl_open_id")
                         .setDescription("OpenID of the user to fetch character info for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Kaarako", value: "3166452414820481224" },
-                            { name: "Demi", value: "16338490109246680481" },
-                            { name: "Shaito", value: "12167197956671690221" },
-                            { name: "Fizix", value: "5877343215992272387" },
-                            { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16262646283866114091" },
-                            { name: "Fesha", value: "12816795455667592937" },
-                            { name: "Nelex", value: "1175532717634698043" }                 
-                        )
+                        .addChoices(...accountChoices)
                 )
                 .addIntegerOption(option =>
                     option
@@ -186,16 +367,7 @@ export default {
                         .setName("intl_open_id")
                         .setDescription("OpenID of the user to fetch character info for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Kaarako", value: "3166452414820481224" },
-                            { name: "Demi", value: "16338490109246680481" },
-                            { name: "Shaito", value: "12167197956671690221" },
-                            { name: "Fizix", value: "5877343215992272387" },
-                            { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16262646283866114091" },
-                            { name: "Fesha", value: "12816795455667592937" },
-                            { name: "Nelex", value: "1175532717634698043" }                 
-                        )
+                        .addChoices(...accountChoices)
                 )
                 .addIntegerOption(option =>
                     option
@@ -336,16 +508,7 @@ export default {
                         .setName("intl_open_id")
                         .setDescription("OpenID of the user to fetch guild info for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Kaarako", value: "3166452414820481224" },
-                            { name: "Demi", value: "16338490109246680481" },
-                            { name: "Shaito", value: "12167197956671690221" },
-                            { name: "Fizix", value: "5877343215992272387" },
-                            { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16262646283866114091" },
-                            { name: "Fesha", value: "12816795455667592937" },
-                            { name: "Nelex", value: "1175532717634698043" }                 
-                        )
+                        .addChoices(...accountChoices)
                 )
                 .addIntegerOption(option =>
                     option
@@ -365,16 +528,7 @@ export default {
                         .setName("intl_open_id")
                         .setDescription("OpenID of the user to fetch daily contents progress for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Kaarako", value: "3166452414820481224" },
-                            { name: "Demi", value: "16338490109246680481" },
-                            { name: "Shaito", value: "12167197956671690221" },
-                            { name: "Fizix", value: "5877343215992272387" },
-                            { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16262646283866114091" },
-                            { name: "Fesha", value: "12816795455667592937" },
-                            { name: "Nelex", value: "1175532717634698043" }                 
-                        )
+                        .addChoices(...accountChoices)
                 )
                 .addIntegerOption(option =>
                     option
@@ -394,16 +548,7 @@ export default {
                         .setName("intl_open_id")
                         .setDescription("OpenID of the user to fetch profile outpost info for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Kaarako", value: "3166452414820481224" },
-                            { name: "Demi", value: "16338490109246680481" },
-                            { name: "Shaito", value: "12167197956671690221" },
-                            { name: "Fizix", value: "5877343215992272387" },
-                            { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16262646283866114091" },
-                            { name: "Fesha", value: "12816795455667592937" },
-                            { name: "Nelex", value: "1175532717634698043" }                 
-                        )
+                        .addChoices(...accountChoices)
                 )
                 .addIntegerOption(option =>
                     option
@@ -423,16 +568,7 @@ export default {
                         .setName("intl_open_id")
                         .setDescription("OpenID of the user to fetch profile basic info for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Kaarako", value: "3166452414820481224" },
-                            { name: "Demi", value: "16338490109246680481" },
-                            { name: "Shaito", value: "12167197956671690221" },
-                            { name: "Fizix", value: "5877343215992272387" },
-                            { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16262646283866114091" },
-                            { name: "Fesha", value: "12816795455667592937" },
-                            { name: "Nelex", value: "1175532717634698043" }                 
-                        )
+                        .addChoices(...accountChoices)
                 )
                 .addIntegerOption(option =>
                     option
@@ -452,16 +588,7 @@ export default {
                         .setName("intl_open_id")
                         .setDescription("OpenID of the user to fetch game info for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Kaarako", value: "3166452414820481224" },
-                            { name: "Demi", value: "16338490109246680481" },
-                            { name: "Shaito", value: "12167197956671690221" },
-                            { name: "Fizix", value: "5877343215992272387" },
-                            { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16262646283866114091" },
-                            { name: "Fesha", value: "12816795455667592937" },
-                            { name: "Nelex", value: "1175532717634698043" }                 
-                        )
+                        .addChoices(...accountChoices)
                 ))
         .addSubcommand(subcommand =>
             subcommand
@@ -472,16 +599,7 @@ export default {
                         .setName("intl_open_id")
                         .setDescription("OpenID of the user to fetch characters for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Kaarako", value: "3166452414820481224" },
-                            { name: "Demi", value: "16338490109246680481" },
-                            { name: "Shaito", value: "12167197956671690221" },
-                            { name: "Fizix", value: "5877343215992272387" },
-                            { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16262646283866114091" },
-                            { name: "Fesha", value: "12816795455667592937" },
-                            { name: "Nelex", value: "1175532717634698043" }                 
-                        )
+                        .addChoices(...accountChoices)
                 )
                 .addIntegerOption(option =>
                     option
@@ -501,16 +619,7 @@ export default {
                         .setName("intl_open_id")
                         .setDescription("OpenID of the user to fetch profile for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Kaarako", value: "3166452414820481224" },
-                            { name: "Demi", value: "16338490109246680481" },
-                            { name: "Shaito", value: "12167197956671690221" },
-                            { name: "Fizix", value: "5877343215992272387" },
-                            { name: "Jae", value: "15097183441877165889" },
-                            { name: "Effelon", value: "16262646283866114091" },
-                            { name: "Fesha", value: "12816795455667592937" },
-                            { name: "Nelex", value: "1175532717634698043" }                 
-                        )
+                        .addChoices(...accountChoices)
                 ))
         .addSubcommand(subcommand =>
             subcommand
@@ -535,10 +644,33 @@ export default {
                         .setRequired(false)
                 )
             )
-        , async execute(interaction, guildConfig, client) {
+    },
+
+    async execute(interaction, guildConfig, client) {
+            const subcommandGroup = interaction.options.getSubcommandGroup(false);
             const subcommand = interaction.options.getSubcommand();
             
             try {
+                if (subcommandGroup === 'account') {
+                    switch (subcommand) {
+                        case 'add':
+                            await handleAccountAdd(interaction, client);
+                            break;
+                        case 'update':
+                            await handleAccountUpdate(interaction, client);
+                            break;
+                        case 'delete':
+                            await handleAccountDelete(interaction, client);
+                            break;
+                        default:
+                            await InteractionHelper.safeReply(interaction, {
+                                embeds: [errorEmbed('Unknown account subcommand.')],
+                                flags: MessageFlags.Ephemeral
+                            }).catch(logger.error);
+                    }
+                    return;
+                }
+
                 switch (subcommand) {
                     case "login":
                         await handleLogin(interaction, client);
@@ -623,5 +755,4 @@ export default {
             }
                 
         }
-
-}
+    };
