@@ -24,7 +24,7 @@ export async function handleGuildDetails(interaction, client) {
     }
 
     const guild_id = interaction.options.getInteger("guild_id");
-    const nikke_area_id = interaction.options.getInteger("nikke_area_id");
+    const nikke_area_id = null;
     try {
         const res = await getGuildDetail(guild_id, nikke_area_id);
         if (res.ok) {
@@ -84,7 +84,7 @@ export async function handleGuildMembers(interaction, client) {
     }
 
     const guild_id = interaction.options.getInteger("guild_id");
-    const nikke_area_id = interaction.options.getInteger("nikke_area_id");
+    const nikke_area_id = null;
     try {
         const res = await getGuildMembers(guild_id, nikke_area_id);
         if (res.ok) {
@@ -145,7 +145,7 @@ export async function handleUnionRaidData(interaction, client) {
 
     const guild_id = interaction.options.getInteger("guild_id");
     const intl_open_id = interaction.options.getString("intl_open_id");
-    const nikke_area_id = interaction.options.getInteger("nikke_area_id");
+    const nikke_area_id = null;
     try {
         const res = await getUnionRaidData(guild_id, intl_open_id, nikke_area_id);
         if (res.ok) {
@@ -210,7 +210,7 @@ export async function handleUnionRaidLevelData(interaction, client) {
 
     const guild_id = interaction.options.getInteger("guild_id");
     const intl_open_id = interaction.options.getString("intl_open_id");
-    const nikke_area_id = interaction.options.getInteger("nikke_area_id");
+    const nikke_area_id = null;
     const level = interaction.options.getInteger("level") || 1; 
     try {
         const res = await getUnionRaidLevelData(guild_id, intl_open_id, nikke_area_id);
@@ -284,7 +284,7 @@ export async function handleUnionRaidDataOfGuildSeason(interaction, client) {
         return;
     }
 
-    const area_id = interaction.options.getInteger("area_id");
+    const area_id = null;
     const guild_id = interaction.options.getInteger("guild_id");
     const season_id = interaction.options.getInteger("season_id");
     try {
@@ -345,7 +345,7 @@ export async function handleUnionRaidLevelDataOfGuildSeason(interaction, client)
         return;
     }
 
-    const area_id = interaction.options.getInteger("area_id");
+    const area_id = null;
     const guild_id = interaction.options.getInteger("guild_id");
     const season_id = interaction.options.getInteger("season_id");
     try {
@@ -410,7 +410,7 @@ export async function handleQueryGuildCardList(interaction, client) {
     const guild_rank = interaction.options.getInteger("guild_rank");
     const guild_rank_num = interaction.options.getInteger("guild_rank_num");
     const keyword = interaction.options.getString("keyword");
-    const nikke_area_id = interaction.options.getInteger("nikke_area_id");
+    const nikke_area_id = null;
     const page_size = interaction.options.getInteger("page_size");
     try {
         const res = await queryGuildCardList(cursor, guild_rank, guild_rank_num, keyword, nikke_area_id, page_size);

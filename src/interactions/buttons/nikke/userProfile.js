@@ -11,7 +11,7 @@ import {
 
 function parseAreaId(value) {
     const parsed = Number.parseInt(String(value), 10);
-    return Number.isInteger(parsed) ? parsed : 84;
+    return Number.isInteger(parsed) ? parsed : null;
 }
 
 async function executeProfileRefresh(interaction, client, args, buildView, handlerId, handlerName) {

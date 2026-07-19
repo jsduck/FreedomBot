@@ -13,15 +13,14 @@ import { handleUnionRaidData, handleUnionRaidLevelData, handleUnionRaidDataOfGui
 import { handleQueryGuildCardList } from './modules/nikke_guild.js';
 import { handleAccountAdd, handleAccountDelete, handleAccountUpdate } from './modules/nikke_account.js';
 import { handleUnionCounterDisable, handleUnionCounterEnable, handleUnionSetCounterChannel } from './modules/nikke_union_counter.js';
-import { handleGetMyGuildInfo, handleGetUserCharacters, handleGetUserDailyContentsProgress, handleGetUserProfile, handleGetUserProfileBasicInfo, handleGetUserProfileOutpostInfo, handleSearchUser } from './modules/nikke_user.js';
-import { getNikkeAccountChoices, getNikkeAreaChoices, getNikkeUnionChoices, getNikkeUnionGuildChoices } from '../../utils/database.js';
+import { handleAccountProfile, handleGetMyGuildInfo, handleGetUserCharacters, handleGetUserDailyContentsProgress, handleGetUserProfile, handleGetUserProfileBasicInfo, handleGetUserProfileOutpostInfo, handleSearchUser } from './modules/nikke_user.js';
+import { getNikkeAccountChoices, getNikkeUnionChoices, getNikkeUnionGuildChoices } from '../../utils/database.js';
 
 export default {
     async data(client) {
         const accountChoices = await getNikkeAccountChoices(client);
         const unionChoices = await getNikkeUnionChoices(client);
         const guildChoices = await getNikkeUnionGuildChoices(client);
-        const areaChoices = await getNikkeAreaChoices(client);
 
         return new SlashCommandBuilder()
             .setName('nikke')
@@ -84,6 +83,18 @@ export default {
                     )
                     .addSubcommand(subcommand =>
                         subcommand
+                            .setName('profile')
+                            .setDescription('Get account profile from Nikke API')
+                            .addStringOption(option =>
+                                option
+                                    .setName('intl_open_id')
+                                    .setDescription('OpenID of the user to fetch profile for')
+                                    .setRequired(true)
+                                    .addChoices(...accountChoices)
+                            )
+                    )
+                    .addSubcommand(subcommand =>
+                        subcommand
                             .setName('basic')
                             .setDescription('Get user profile basic info from Nikke API')
                             .addStringOption(option =>
@@ -92,13 +103,6 @@ export default {
                                     .setDescription('OpenID of the user to fetch profile basic info for')
                                     .setRequired(true)
                                     .addChoices(...accountChoices)
-                            )
-                            .addIntegerOption(option =>
-                                option
-                                    .setName('nikke_area_id')
-                                    .setDescription('Nikke area ID')
-                                    .setRequired(false)
-                                    .addChoices(...areaChoices)
                             )
                     )
                     .addSubcommand(subcommand =>
@@ -112,13 +116,6 @@ export default {
                                     .setRequired(true)
                                     .addChoices(...accountChoices)
                             )
-                            .addIntegerOption(option =>
-                                option
-                                    .setName('nikke_area_id')
-                                    .setDescription('Nikke area ID')
-                                    .setRequired(false)
-                                    .addChoices(...areaChoices)
-                            )
                     )
                     .addSubcommand(subcommand =>
                         subcommand
@@ -130,13 +127,6 @@ export default {
                                     .setDescription('OpenID of the user to fetch daily contents progress for')
                                     .setRequired(true)
                                     .addChoices(...accountChoices)
-                            )
-                            .addIntegerOption(option =>
-                                option
-                                    .setName('nikke_area_id')
-                                    .setDescription('Nikke area ID')
-                                    .setRequired(false)
-                                    .addChoices(...areaChoices)
                             )
                     )
             )
@@ -260,13 +250,6 @@ export default {
                             .setRequired(true)
                             .addChoices(...guildChoices)
                     )
-                    .addIntegerOption(option =>
-                        option
-                            .setName('nikke_area_id')
-                            .setDescription('Nikke area ID')
-                            .setRequired(false)
-                            .addChoices(...areaChoices)
-                    )
             )
             .addSubcommand(subcommand =>
                 subcommand
@@ -278,13 +261,6 @@ export default {
                             .setDescription('ID of the guild to fetch details for')
                             .setRequired(true)
                             .addChoices(...guildChoices)
-                    )
-                    .addIntegerOption(option =>
-                        option
-                            .setName('nikke_area_id')
-                            .setDescription('Nikke area ID')
-                            .setRequired(false)
-                            .addChoices(...areaChoices)
                     )
             )
             .addSubcommand(subcommand =>
@@ -305,13 +281,6 @@ export default {
                             .setRequired(true)
                             .addChoices(...accountChoices)
                     )
-                    .addIntegerOption(option =>
-                        option
-                            .setName('nikke_area_id')
-                            .setDescription('Nikke area ID')
-                            .setRequired(false)
-                            .addChoices(...areaChoices)
-                    )
             )
             .addSubcommand(subcommand =>
                 subcommand
@@ -330,13 +299,6 @@ export default {
                             .setDescription('OpenID of the user to fetch character info for')
                             .setRequired(true)
                             .addChoices(...accountChoices)
-                    )
-                    .addIntegerOption(option =>
-                        option
-                            .setName('nikke_area_id')
-                            .setDescription('Nikke area ID')
-                            .setRequired(false)
-                            .addChoices(...areaChoices)
                     )
                     .addIntegerOption(option =>
                         option
@@ -373,13 +335,6 @@ export default {
                                 { name: 'Season 41', value: 1000041 },
                             )
                     )
-                    .addIntegerOption(option =>
-                        option
-                            .setName('area_id')
-                            .setDescription('Area ID')
-                            .setRequired(false)
-                            .addChoices(...areaChoices)
-                    )
             )
             .addSubcommand(subcommand =>
                 subcommand
@@ -403,13 +358,6 @@ export default {
                                 { name: 'Season 41', value: 1000041 },
                                 { name: 'Season 42', value: 1000042 },
                             )
-                    )
-                    .addIntegerOption(option =>
-                        option
-                            .setName('area_id')
-                            .setDescription('Area ID')
-                            .setRequired(false)
-                            .addChoices(...areaChoices)
                     )
             )
             .addSubcommand(subcommand =>
@@ -440,13 +388,6 @@ export default {
                             .setDescription('Keyword filter')
                             .setRequired(false)
                     )
-                    .addIntegerOption(option =>
-                        option
-                            .setName('nikke_area_id')
-                            .setDescription('Nikke area ID')
-                            .setRequired(false)
-                            .addChoices(...areaChoices)
-                    )
                     .addStringOption(option =>
                         option
                             .setName('page_size')
@@ -465,13 +406,6 @@ export default {
                             .setRequired(true)
                             .addChoices(...accountChoices)
                     )
-                    .addIntegerOption(option =>
-                        option
-                            .setName('nikke_area_id')
-                            .setDescription('Nikke area ID')
-                            .setRequired(false)
-                            .addChoices(...areaChoices)
-                    )
             )
             .addSubcommand(subcommand =>
                 subcommand
@@ -483,13 +417,6 @@ export default {
                             .setDescription('OpenID of the user to fetch characters for')
                             .setRequired(true)
                             .addChoices(...accountChoices)
-                    )
-                    .addIntegerOption(option =>
-                        option
-                            .setName('nikke_area_id')
-                            .setDescription('Nikke area ID')
-                            .setRequired(false)
-                            .addChoices(...areaChoices)
                     )
             )
             .addSubcommand(subcommand =>
@@ -547,6 +474,15 @@ export default {
                         break;
                     case 'profile':
                         await handleAccountProfile(interaction, client);
+                        break;
+                    case 'basic':
+                        await handleGetUserProfileBasicInfo(interaction, client);
+                        break;
+                    case 'outpost':
+                        await handleGetUserProfileOutpostInfo(interaction, client);
+                        break;
+                    case 'daily':
+                        await handleGetUserDailyContentsProgress(interaction, client);
                         break;
                     default:
                         await InteractionHelper.safeReply(interaction, {
@@ -616,15 +552,6 @@ export default {
                     break;
                 case 'my-guild-info':
                     await handleGetMyGuildInfo(interaction, client);
-                    break;
-                case 'basic':
-                    await handleGetUserProfileBasicInfo(interaction, client);
-                    break;
-                case 'outpost':
-                    await handleGetUserProfileOutpostInfo(interaction, client);
-                    break;
-                case 'daily':
-                    await handleGetUserDailyContentsProgress(interaction, client);
                     break;
                 case 'get-user-characters':
                     await handleGetUserCharacters(interaction, client);

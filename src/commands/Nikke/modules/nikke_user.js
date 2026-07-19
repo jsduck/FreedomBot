@@ -88,7 +88,7 @@ function buildAccountProfilePagerComponents(intlOpenId, areaId, viewIndex) {
 
 function resolveAreaId(value) {
     const parsed = Number.parseInt(String(value), 10);
-    return Number.isInteger(parsed) ? parsed : 84;
+    return Number.isInteger(parsed) ? parsed : null;
 }
 
 async function buildStoredProfileSectionView(client, {
@@ -264,7 +264,7 @@ export async function handleAccountProfile(interaction, client) {
     }
 
     const intl_open_id = interaction.options.getString('intl_open_id', true);
-    const nikke_area_id = interaction.options.getInteger('nikke_area_id') || 84;
+    const nikke_area_id = null;
 
     try {
         const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 0);
@@ -422,7 +422,7 @@ export async function handleGetUserCharacters(interaction, client) {
     }
 
     const intl_open_id = interaction.options.getString("intl_open_id");
-    const nikke_area_id = interaction.options.getInteger("nikke_area_id") || 84; // Default to global area ID
+    const nikke_area_id = null;
 
     try {
         const res = await getUserCharacters(intl_open_id, nikke_area_id);
@@ -543,7 +543,7 @@ export async function handleGetUserProfileBasicInfo(interaction, client) {
     }
 
     const intl_open_id = interaction.options.getString("intl_open_id");
-    const nikke_area_id = interaction.options.getInteger("nikke_area_id") || 84; // Default to global area ID
+    const nikke_area_id = null;
 
     try {
         const response = await buildUserProfileBasicInfoView(client, intl_open_id, nikke_area_id);
@@ -579,7 +579,7 @@ export async function handleGetUserProfileOutpostInfo(interaction, client) {
     }
 
     const intl_open_id = interaction.options.getString("intl_open_id");
-    const nikke_area_id = interaction.options.getInteger("nikke_area_id") || 84; // Default to global area ID
+    const nikke_area_id = null;
 
     try {
         const response = await buildUserProfileOutpostInfoView(client, intl_open_id, nikke_area_id);
@@ -615,7 +615,7 @@ export async function handleGetUserDailyContentsProgress(interaction, client) {
     }
 
     const intl_open_id = interaction.options.getString("intl_open_id");
-    const nikke_area_id = interaction.options.getInteger("nikke_area_id") || 84; // Default to global area ID
+    const nikke_area_id = null;
 
     try {
         const response = await buildUserDailyContentsProgressView(client, intl_open_id, nikke_area_id);
@@ -651,7 +651,7 @@ export async function handleGetMyGuildInfo(interaction, client) {
     }
 
     const intl_open_id = interaction.options.getString("intl_open_id");
-    const nikke_area_id = interaction.options.getInteger("nikke_area_id") || 84; // Default to global area ID
+    const nikke_area_id = null;
 
     try {
         const res = await getMyGuildInfo(intl_open_id, nikke_area_id);
