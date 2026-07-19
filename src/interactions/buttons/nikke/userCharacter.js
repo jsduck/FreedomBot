@@ -4,6 +4,7 @@ import { getNameByCode } from '../../../services/nikke.js';
 import { buildUserCharacterView, USER_CHARACTER_UPDATE_BUTTON_ID } from '../../../commands/Nikke/modules/nikke_character.js';
 
 export const userCharacterUpdateHandler = {
+    name: USER_CHARACTER_UPDATE_BUTTON_ID,
     customId: USER_CHARACTER_UPDATE_BUTTON_ID,
     async execute(interaction, client, args = []) {
         try {
