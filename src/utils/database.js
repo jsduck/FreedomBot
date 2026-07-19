@@ -65,6 +65,8 @@ export {
     getNikkeAccountChoices,
     getNikkeUnions,
     getNikkeUnionChoices,
+    getNikkeUnionGuildChoices,
+    getNikkeAreaChoices,
     getNikkeAccountByOpenId,
     getNikkeAccountByName,
     addNikkeAccount,

@@ -257,10 +257,6 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
             color: getColor('success')
         }).setThumbnail("https://static.dotgg.gg/nikke/characters/" + charJson.img + ".webp");
 
-    embed.data.footer = {
-        text: `Source: ${formatDataSource(dataSource)} | Fetched at: ${formatCacheTimestamp(cacheRecord?.fetched_at)} | Updated at: ${formatCacheTimestamp(cacheRecord?.updated_at)}`,
-    };
-
     embed.addFields(
                 { 
                     name: "Basic Info",
@@ -278,6 +274,11 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
                 {
                     name: "Stats",
                     value: `\`${formatTable2(OLarray)}\n\``,
+                    inline: false
+                },
+                {
+                    name: "Data Source",
+                    value: `Source: ${formatDataSource(dataSource)}\nFetched at: ${formatCacheTimestamp(cacheRecord?.fetched_at)}\nUpdated at: ${formatCacheTimestamp(cacheRecord?.updated_at)}`,
                     inline: false
                 },
                 {

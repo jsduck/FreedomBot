@@ -161,6 +161,68 @@ export async function getNikkeUnionChoices(client) {
     }));
 }
 
+export async function getNikkeUnionGuildChoices(client) {
+    const unions = await getNikkeUnions(client);
+
+    return unions
+        .map((union) => {
+            const numericUnionId = Number.parseInt(String(union.union_id), 10);
+            if (!Number.isInteger(numericUnionId)) {
+                return null;
+            }
+
+            return {
+                name: union.area_id !== null && union.area_id !== undefined
+                    ? `${union.name} (Area ${union.area_id})`
+                    : union.name,
+                value: numericUnionId,
+            };
+        })
+        .filter(Boolean)
+        .slice(0, 25);
+}
+
+export async function getNikkeAreaChoices(client) {
+    try {
+        const wrapper = client?.db;
+
+        if (!isPostgresSqlReady(wrapper)) {
+            return [{ name: 'global', value: 84 }];
+        }
+
+        const result = await wrapper.db.pool.query(
+            `SELECT DISTINCT area_id
+             FROM (
+                 SELECT u.area_id
+                 FROM ${pgConfig.tables.nikke_unions} u
+                 WHERE u.area_id IS NOT NULL
+
+                 UNION
+
+                 SELECT u2.area_id
+                 FROM ${pgConfig.tables.nikke_accounts} a
+                 JOIN ${pgConfig.tables.nikke_unions} u2 ON u2.union_id = a.union_id
+                 WHERE u2.area_id IS NOT NULL
+             ) area_candidates
+             ORDER BY area_id ASC`,
+        );
+
+        const choices = result.rows
+            .map((row) => Number.parseInt(String(row.area_id), 10))
+            .filter((areaId) => Number.isInteger(areaId))
+            .slice(0, 25)
+            .map((areaId) => ({
+                name: areaId === 84 ? 'global' : `Area ${areaId}`,
+                value: areaId,
+            }));
+
+        return choices.length > 0 ? choices : [{ name: 'global', value: 84 }];
+    } catch (error) {
+        logger.error('Error loading Nikke area choices:', error);
+        return [{ name: 'global', value: 84 }];
+    }
+}
+
 export async function getNikkeAccountByOpenId(client, intlOpenId) {
     const accounts = await getNikkeAccounts(client, { seedDefaults: false });
     return accounts.find((account) => String(account.intl_open_id) === String(intlOpenId)) || null;

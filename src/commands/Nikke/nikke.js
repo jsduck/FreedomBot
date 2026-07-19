@@ -14,7 +14,7 @@ import { handleGuildDetails, handleGuildMembers } from './modules/nikke_guild.js
 import { handleUnionRaidData, handleUnionRaidLevelData, handleUnionRaidDataOfGuildSeason, handleUnionRaidLevelDataOfGuildSeason } from './modules/nikke_guild.js';
 import { handleQueryGuildCardList } from './modules/nikke_guild.js';
 import { handleGetMyGuildInfo, handleGetUserDailyContentsProgress, handleGetUserProfileOutpostInfo, handleGetUserProfileBasicInfo, handleGetUserGameInfo, handleGetUserCharacters, handleGetUserProfile, handleSearchUser } from './modules/nikke_user.js';
-import { addNikkeAccount, deleteNikkeAccount, getNikkeAccountChoices, getNikkeUnionChoices, updateNikkeAccountUnionId } from '../../utils/database.js';
+import { addNikkeAccount, deleteNikkeAccount, getNikkeAccountChoices, getNikkeAreaChoices, getNikkeUnionChoices, getNikkeUnionGuildChoices, updateNikkeAccountUnionId } from '../../utils/database.js';
 
 async function handleAccountAdd(interaction, client) {
     try {
@@ -159,6 +159,8 @@ export default {
     async buildData(client) {
         const accountChoices = await getNikkeAccountChoices(client);
         const unionChoices = await getNikkeUnionChoices(client);
+        const guildChoices = await getNikkeUnionGuildChoices(client);
+        const areaChoices = await getNikkeAreaChoices(client);
 
         return new SlashCommandBuilder()
         .setName("nikke")
@@ -288,18 +290,14 @@ export default {
                         .setName("guild_id")
                         .setDescription("ID of the guild to fetch details for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Avaricia", value: 25471 }
-                        )
+                        .addChoices(...guildChoices)
                 )
                 .addIntegerOption(option =>
                     option
                         .setName("nikke_area_id")
                         .setDescription("Nikke area ID")
                         .setRequired(false)
-                        .addChoices(
-                            { name: "global", value: 84 }
-                        )
+                        .addChoices(...areaChoices)
                 ))
         .addSubcommand(subcommand =>
             subcommand
@@ -310,18 +308,14 @@ export default {
                         .setName("guild_id")
                         .setDescription("ID of the guild to fetch details for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Avaricia", value: 25471 }
-                        )
+                        .addChoices(...guildChoices)
                 )
                 .addIntegerOption(option =>
                     option
                         .setName("nikke_area_id")
                         .setDescription("Nikke area ID")
                         .setRequired(false)
-                        .addChoices(
-                            { name: "global", value: 84 }
-                        )
+                        .addChoices(...areaChoices)
                 ))
         .addSubcommand(subcommand =>
             subcommand
@@ -332,9 +326,7 @@ export default {
                         .setName("guild_id")
                         .setDescription("ID of the guild to fetch details for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Avaricia", value: 25471 }
-                        )
+                        .addChoices(...guildChoices)
                 )
                 .addStringOption(option =>
                     option
@@ -348,9 +340,7 @@ export default {
                         .setName("nikke_area_id")
                         .setDescription("Nikke area ID")
                         .setRequired(false)
-                        .addChoices(
-                            { name: "global", value: 84 }
-                        )
+                        .addChoices(...areaChoices)
                 ))
         .addSubcommand(subcommand =>
             subcommand
@@ -361,9 +351,7 @@ export default {
                         .setName("guild_id")
                         .setDescription("ID of the guild to fetch details for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Avaricia", value: 25471 }
-                        )
+                        .addChoices(...guildChoices)
                 )
                 .addStringOption(option =>
                     option
@@ -377,9 +365,7 @@ export default {
                         .setName("nikke_area_id")
                         .setDescription("Nikke area ID")
                         .setRequired(false)
-                        .addChoices(
-                            { name: "global", value: 84 }
-                        )
+                        .addChoices(...areaChoices)
                 )
                 .addIntegerOption(option =>
                     option
@@ -402,9 +388,7 @@ export default {
                         .setName("guild_id")
                         .setDescription("ID of the guild to fetch details for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Avaricia", value: 25471 }
-                        )
+                        .addChoices(...guildChoices)
                 )
                 .addIntegerOption(option =>
                     option
@@ -422,9 +406,7 @@ export default {
                         .setName("area_id")
                         .setDescription("Area ID")
                         .setRequired(false)
-                        .addChoices(
-                            { name: "global", value: 84 }
-                        )
+                        .addChoices(...areaChoices)
                 ))
         .addSubcommand(subcommand =>
             subcommand
@@ -435,9 +417,7 @@ export default {
                         .setName("guild_id")
                         .setDescription("ID of the guild to fetch details for")
                         .setRequired(true)
-                        .addChoices(
-                            { name: "Avaricia", value: 25471 }
-                        )
+                        .addChoices(...guildChoices)
                 )
                 .addIntegerOption(option =>
                     option
@@ -456,9 +436,7 @@ export default {
                         .setName("area_id")
                         .setDescription("Area ID")
                         .setRequired(false)
-                        .addChoices(
-                            { name: "global", value: 84 }
-                        )
+                        .addChoices(...areaChoices)
                 ))
         .addSubcommand(subcommand =>
             subcommand
@@ -493,9 +471,7 @@ export default {
                         .setName("nikke_area_id")
                         .setDescription("Nikke area ID")
                         .setRequired(false)
-                        .addChoices(
-                            { name: "global", value: 84 }
-                        )
+                        .addChoices(...areaChoices)
                 )
                 .addStringOption(option =>
                     option
@@ -519,9 +495,7 @@ export default {
                         .setName("nikke_area_id")
                         .setDescription("Nikke area ID")
                         .setRequired(false)
-                        .addChoices(
-                            { name: "global", value: 84 }
-                        )
+                        .addChoices(...areaChoices)
                 ))
         .addSubcommand(subcommand =>
             subcommand
@@ -539,9 +513,7 @@ export default {
                         .setName("nikke_area_id")
                         .setDescription("Nikke area ID")
                         .setRequired(false)
-                        .addChoices(
-                            { name: "global", value: 84 }
-                        )
+                        .addChoices(...areaChoices)
                 ))
         .addSubcommand(subcommand =>
             subcommand
@@ -559,9 +531,7 @@ export default {
                         .setName("nikke_area_id")
                         .setDescription("Nikke area ID")
                         .setRequired(false)
-                        .addChoices(
-                            { name: "global", value: 84 }
-                        )
+                        .addChoices(...areaChoices)
                 ))
         .addSubcommand(subcommand =>
             subcommand
@@ -579,9 +549,7 @@ export default {
                         .setName("nikke_area_id")
                         .setDescription("Nikke area ID")
                         .setRequired(false)
-                        .addChoices(
-                            { name: "global", value: 84 }
-                        )
+                        .addChoices(...areaChoices)
                 ))
         .addSubcommand(subcommand =>
             subcommand
@@ -610,9 +578,7 @@ export default {
                         .setName("nikke_area_id")
                         .setDescription("Nikke area ID")
                         .setRequired(false)
-                        .addChoices(
-                            { name: "global", value: 84 }
-                        )
+                        .addChoices(...areaChoices)
                 ))
         .addSubcommand(subcommand =>
             subcommand
