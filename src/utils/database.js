@@ -71,7 +71,6 @@ export {
     getNikkeAreaChoices,
     getNikkeAccountsByUnionId,
     getNikkeAccountByOpenId,
-    getNikkeAccountByName,
     addNikkeAccount,
     incrementNikkeAccountPingCount,
     syncNikkeAccountProfile,

@@ -31,7 +31,6 @@ export const tableStatements = [
     `CREATE TABLE IF NOT EXISTS ${t.nikke_accounts} (
         intl_open_id VARCHAR(20) PRIMARY KEY,
         name VARCHAR(100) NOT NULL UNIQUE,
-        union_id VARCHAR(20),
         discord_tag VARCHAR(64),
         ping_count INTEGER DEFAULT 0,
         basic_info JSONB,
@@ -48,6 +47,7 @@ export const tableStatements = [
     `ALTER TABLE ${t.nikke_accounts} ADD COLUMN IF NOT EXISTS outpost_info JSONB`,
     `ALTER TABLE ${t.nikke_accounts} ADD COLUMN IF NOT EXISTS daily_progress JSONB`,
     `ALTER TABLE ${t.nikke_accounts} ADD COLUMN IF NOT EXISTS profile_fetched_at TIMESTAMP`,
+    `ALTER TABLE ${t.nikke_accounts} DROP COLUMN IF EXISTS union_id`,
 
     `CREATE TABLE IF NOT EXISTS ${t.nikke_unions} (
         union_id VARCHAR(20) PRIMARY KEY,

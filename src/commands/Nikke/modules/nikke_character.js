@@ -141,7 +141,7 @@ function formatTable(title, rows) {
 
 function formatTable2(rows) {
   return rows
-    .map(([field, value]) => `${field.padEnd(16)} ${value}`)
+        .map(([field, value]) => `${field}: \`${value}\``)
     .join("\n");
 }
 
@@ -164,6 +164,31 @@ function formatCurrentTimestamp() {
 
 function formatDataSource(source) {
     return source || 'unknown';
+}
+
+function resolveSynchroLevelFromOutpost(account, fallbackLevel) {
+    const outpost = account?.outpost_info;
+
+    if (outpost && typeof outpost === 'object') {
+        const parsed = Number(outpost.synchro_level);
+        if (Number.isFinite(parsed) && parsed > 0) {
+            return parsed;
+        }
+    }
+
+    if (typeof outpost === 'string') {
+        try {
+            const parsedOutpost = JSON.parse(outpost);
+            const parsed = Number(parsedOutpost?.synchro_level);
+            if (Number.isFinite(parsed) && parsed > 0) {
+                return parsed;
+            }
+        } catch {
+            // Ignore parse errors and use fallback.
+        }
+    }
+
+    return fallbackLevel;
 }
 
 export const USER_CHARACTER_UPDATE_BUTTON_ID = 'nikke_user_character_update';
@@ -253,6 +278,7 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
     const account = await getNikkeAccountByOpenId(client, intlOpenId);
     const union = await getNikkeUnionById(client, account?.union_id);
     const unionName = union?.name || 'UNION';
+    const synchroLevel = resolveSynchroLevelFromOutpost(account, units[0].lv);
 
     const embed = createEmbed({
             title: `[${unionName}] ${account?.name ?? intlOpenId}'s ${getNameByCode(units[0].name_code)}`,
@@ -263,20 +289,20 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
     embed.addFields(
                 { 
                     name: "Basic Info",
-                    value: `\`${formatTable2([
-                        ["Synchro-Level", units[0].lv],
+                    value: `${formatTable2([
+                        ["Synchro-Level", synchroLevel],
                         ["Combat Power", Number(units[0].combat).toLocaleString("en-US")],
                         ["Bond", units[0].attractive_lv],
                         ["Limit Break", getDups(units[0].grade + units[0].core)],
                         ["Doll", getDollStats(units[0])],
                         ["Skills", `${units[0].skill1_lv} / ${units[0].skill2_lv} / ${units[0].ulti_skill_lv}`],
                         ["Cube", getCubeStats(units[0])],
-                    ])}\n\``,
+                    ])}`,
                     inline: false 
                 },
                 {
                     name: "Stats",
-                    value: `\`${formatTable2(OLarray)}\n\``,
+                    value: `${formatTable2(OLarray)}`,
                     inline: false
                 },
                 {

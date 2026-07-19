@@ -144,7 +144,7 @@ async function handleUnionCounterEnable(interaction, client) {
     await InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(
             'Union Counter Enabled',
-            `Enabled reminders for union ${result.union.name} (${result.union.union_id}).\nTracked members from nikke_accounts: ${result.member_count}.\nHourly outpost fullness and evening daily mission checks are now active.`
+            `Enabled reminders for union ${result.union.name} (${result.union.union_id}).\nTracked members from nikke_accounts: ${result.member_count}.\nTesting mode is active with 5-minute checks.`
         )],
     }).catch(logger.error);
 }

@@ -7,14 +7,14 @@ import {
 } from '../../services/nikke.js';
 
 const DEFAULT_NIKKE_ACCOUNTS = Object.freeze([
-    { name: 'Kaarako', intl_open_id: '3166452414820481224', union_id: '25471' },
-    { name: 'Demi', intl_open_id: '16338490109246680481', union_id: '25471' },
-    { name: 'Shaito', intl_open_id: '12167197956671690221', union_id: '25471' },
-    { name: 'Fizix', intl_open_id: '5877343215992272387', union_id: '25471' },
-    { name: 'Jae', intl_open_id: '15097183441877165889', union_id: '25471' },
-    { name: 'Effelon', intl_open_id: '16262646283866114091', union_id: '25471' },
-    { name: 'Fesha', intl_open_id: '12816795455667592937', union_id: '25471' },
-    { name: 'Nelex', intl_open_id: '1175532717634698043', union_id: '25471' },
+    { name: 'Kaarako', intl_open_id: '3166452414820481224' },
+    { name: 'Demi', intl_open_id: '16338490109246680481' },
+    { name: 'Shaito', intl_open_id: '12167197956671690221' },
+    { name: 'Fizix', intl_open_id: '5877343215992272387' },
+    { name: 'Jae', intl_open_id: '15097183441877165889' },
+    { name: 'Effelon', intl_open_id: '16262646283866114091' },
+    { name: 'Fesha', intl_open_id: '12816795455667592937' },
+    { name: 'Nelex', intl_open_id: '1175532717634698043' },
 ]);
 
 const DEFAULT_NIKKE_UNIONS = Object.freeze([
@@ -34,13 +34,19 @@ function normalizeAccountRow(row) {
         return null;
     }
 
+    const basicInfo = row.basic_info ?? null;
+    const derivedUnionIdRaw = basicInfo?.gsn;
+    const derivedUnionId = derivedUnionIdRaw === null || derivedUnionIdRaw === undefined || String(derivedUnionIdRaw).trim() === ''
+        ? null
+        : String(derivedUnionIdRaw).trim();
+
     return {
         name: row.name ?? null,
         intl_open_id: String(row.intl_open_id ?? ''),
-        union_id: row.union_id ?? null,
+        union_id: derivedUnionId,
         discord_tag: row.discord_tag ?? null,
         ping_count: Number.parseInt(String(row.ping_count ?? 0), 10) || 0,
-        basic_info: row.basic_info ?? null,
+        basic_info: basicInfo,
         outpost_info: row.outpost_info ?? null,
         daily_progress: row.daily_progress ?? null,
         profile_fetched_at: row.profile_fetched_at ?? null,
@@ -108,7 +114,6 @@ async function upsertAccountProfileRow(wrapper, {
     basic_info,
     outpost_info,
     daily_progress,
-    derived_union_id = null,
 }) {
     const normalizedOpenId = String(intl_open_id || '').trim();
 
@@ -117,7 +122,6 @@ async function upsertAccountProfileRow(wrapper, {
          SET basic_info = $2::jsonb,
              outpost_info = $3::jsonb,
              daily_progress = $4::jsonb,
-             union_id = COALESCE($5, union_id),
              profile_fetched_at = NOW(),
              updated_at = NOW()
          WHERE intl_open_id = $1`,
@@ -126,7 +130,6 @@ async function upsertAccountProfileRow(wrapper, {
             JSON.stringify(basic_info ?? {}),
             JSON.stringify(outpost_info ?? {}),
             JSON.stringify(daily_progress ?? []),
-            derived_union_id,
         ],
     );
 
@@ -158,7 +161,7 @@ const PROFILE_SECTION_DEFINITIONS = Object.freeze({
 
 async function getAccountProfileSnapshot(wrapper, intlOpenId) {
     const result = await wrapper.db.pool.query(
-        `SELECT intl_open_id, union_id, basic_info, outpost_info, daily_progress, profile_fetched_at, updated_at
+        `SELECT intl_open_id, basic_info, outpost_info, daily_progress, profile_fetched_at, updated_at
          FROM ${pgConfig.tables.nikke_accounts}
          WHERE intl_open_id = $1
          LIMIT 1`,
@@ -226,7 +229,6 @@ async function seedDefaultAccounts(wrapper) {
     const values = DEFAULT_NIKKE_ACCOUNTS.map((account) => [
         account.name,
         account.intl_open_id,
-        account.union_id,
     ]);
 
     if (values.length === 0) {
@@ -234,18 +236,17 @@ async function seedDefaultAccounts(wrapper) {
     }
 
     const placeholders = values.map((_, index) => {
-        const offset = index * 3;
-        return `($${offset + 1}, $${offset + 2}, $${offset + 3})`;
+        const offset = index * 2;
+        return `($${offset + 1}, $${offset + 2})`;
     }).join(', ');
 
     const flattened = values.flat();
     await wrapper.db.pool.query(
-        `INSERT INTO ${pgConfig.tables.nikke_accounts} (name, intl_open_id, union_id)
+        `INSERT INTO ${pgConfig.tables.nikke_accounts} (name, intl_open_id)
          VALUES ${placeholders}
          ON CONFLICT (intl_open_id)
          DO UPDATE SET
              name = EXCLUDED.name,
-             union_id = EXCLUDED.union_id,
              updated_at = NOW()`,
         flattened,
     );
@@ -298,7 +299,7 @@ export async function getNikkeAccounts(client, { seedDefaults = true } = {}) {
 
         if (isPostgresSqlReady(wrapper)) {
             let result = await wrapper.db.pool.query(
-                `SELECT name, intl_open_id, union_id, discord_tag, ping_count, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at
+                `SELECT name, intl_open_id, discord_tag, ping_count, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at
                  FROM ${pgConfig.tables.nikke_accounts}
                  ORDER BY name ASC`,
             );
@@ -306,7 +307,7 @@ export async function getNikkeAccounts(client, { seedDefaults = true } = {}) {
             if (result.rows.length === 0 && seedDefaults) {
                 await seedDefaultAccounts(wrapper);
                 result = await wrapper.db.pool.query(
-                    `SELECT name, intl_open_id, union_id, discord_tag, ping_count, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at
+                    `SELECT name, intl_open_id, discord_tag, ping_count, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at
                      FROM ${pgConfig.tables.nikke_accounts}
                      ORDER BY name ASC`,
                 );
@@ -424,7 +425,7 @@ export async function getNikkeAreaChoices(client) {
 
                  SELECT u2.area_id
                  FROM ${pgConfig.tables.nikke_accounts} a
-                 JOIN ${pgConfig.tables.nikke_unions} u2 ON u2.union_id = a.union_id
+                 JOIN ${pgConfig.tables.nikke_unions} u2 ON u2.union_id = a.basic_info ->> 'gsn'
                  WHERE u2.area_id IS NOT NULL
              ) area_candidates
              ORDER BY area_id ASC`,
@@ -451,12 +452,7 @@ export async function getNikkeAccountByOpenId(client, intlOpenId) {
     return accounts.find((account) => String(account.intl_open_id) === String(intlOpenId)) || null;
 }
 
-export async function getNikkeAccountByName(client, name) {
-    const accounts = await getNikkeAccounts(client, { seedDefaults: false });
-    return accounts.find((account) => String(account.name).toLowerCase() === String(name).toLowerCase()) || null;
-}
-
-export async function addNikkeAccount(client, { name, intl_open_id, union_id = null, discord_tag = null }) {
+export async function addNikkeAccount(client, { name, intl_open_id, discord_tag = null }) {
     try {
         const wrapper = client?.db;
 
@@ -469,19 +465,16 @@ export async function addNikkeAccount(client, { name, intl_open_id, union_id = n
 
         const normalizedName = String(name || '').trim();
         const normalizedOpenId = String(intl_open_id || '').trim();
-        const normalizedUnionId = union_id === null || union_id === undefined || union_id === ''
-            ? null
-            : String(union_id).trim();
         const normalizedDiscordTag = discord_tag === null || discord_tag === undefined || discord_tag === ''
             ? null
             : String(discord_tag).trim();
 
         const result = await wrapper.db.pool.query(
-            `INSERT INTO ${pgConfig.tables.nikke_accounts} (name, intl_open_id, union_id, discord_tag)
-             VALUES ($1, $2, $3, $4)
+            `INSERT INTO ${pgConfig.tables.nikke_accounts} (name, intl_open_id, discord_tag)
+             VALUES ($1, $2, $3)
              ON CONFLICT DO NOTHING
-             RETURNING name, intl_open_id, union_id, discord_tag, ping_count, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at`,
-            [normalizedName, normalizedOpenId, normalizedUnionId, normalizedDiscordTag],
+             RETURNING name, intl_open_id, discord_tag, ping_count, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at`,
+            [normalizedName, normalizedOpenId, normalizedDiscordTag],
         );
 
         if (result.rowCount > 0) {
@@ -493,7 +486,7 @@ export async function addNikkeAccount(client, { name, intl_open_id, union_id = n
         }
 
         const existingByOpenId = await wrapper.db.pool.query(
-            `SELECT name, intl_open_id, union_id, discord_tag, ping_count, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at
+            `SELECT name, intl_open_id, discord_tag, ping_count, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at
              FROM ${pgConfig.tables.nikke_accounts}
              WHERE intl_open_id = $1
              LIMIT 1`,
@@ -509,7 +502,7 @@ export async function addNikkeAccount(client, { name, intl_open_id, union_id = n
         }
 
         const existingByName = await wrapper.db.pool.query(
-            `SELECT name, intl_open_id, union_id, discord_tag, ping_count, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at
+            `SELECT name, intl_open_id, discord_tag, ping_count, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at
              FROM ${pgConfig.tables.nikke_accounts}
              WHERE LOWER(name) = LOWER($1)
              LIMIT 1`,
@@ -571,7 +564,6 @@ export async function syncNikkeAccountProfile(client, { intl_open_id, union_id =
             basic_info: basicPayload.data?.basic_info ?? {},
             outpost_info: outpostPayload.data?.outpost_info ?? {},
             daily_progress: dailyPayload.data?.daily_progress ?? [],
-            derived_union_id: derivedUnionId,
         });
 
         return {
@@ -631,7 +623,7 @@ export async function getNikkeAccountProfileSection(
         const refreshed = await refreshProfileSection(
             wrapper,
             normalizedOpenId,
-            snapshot.union_id,
+            snapshot.basic_info?.gsn ?? null,
             section,
             Number.isInteger(parsedAreaId) ? parsedAreaId : null,
         );
@@ -671,12 +663,19 @@ export async function updateNikkeAccountUnionId(client, { intl_open_id, union_id
             ? null
             : String(union_id).trim();
 
+        if (!normalizedUnionId) {
+            return {
+                success: false,
+                reason: 'invalid_union_id',
+            };
+        }
+
         const result = await wrapper.db.pool.query(
             `UPDATE ${pgConfig.tables.nikke_accounts}
-             SET union_id = $2,
+             SET basic_info = jsonb_set(COALESCE(basic_info, '{}'::jsonb), '{gsn}', to_jsonb($2::text), true),
                  updated_at = NOW()
              WHERE intl_open_id = $1
-             RETURNING name, intl_open_id, union_id, discord_tag, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at`,
+             RETURNING name, intl_open_id, discord_tag, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at`,
             [normalizedOpenId, normalizedUnionId],
         );
 
@@ -717,7 +716,7 @@ export async function deleteNikkeAccount(client, intl_open_id) {
         const result = await wrapper.db.pool.query(
             `DELETE FROM ${pgConfig.tables.nikke_accounts}
              WHERE intl_open_id = $1
-             RETURNING name, intl_open_id, union_id, discord_tag, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at`,
+             RETURNING name, intl_open_id, discord_tag, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at`,
             [normalizedOpenId],
         );
 
@@ -769,7 +768,7 @@ export async function setNikkeUnionCounterEnabled(client, union_id, enabledBy = 
         const accountResult = await wrapper.db.pool.query(
             `SELECT intl_open_id, name, discord_tag
              FROM ${pgConfig.tables.nikke_accounts}
-             WHERE union_id = $1
+             WHERE basic_info ->> 'gsn' = $1
              ORDER BY name ASC`,
             [normalizedUnionId],
         );
@@ -929,9 +928,9 @@ export async function getNikkeAccountsByUnionId(client, union_id) {
 
         const normalizedUnionId = String(union_id || '').trim();
         const result = await wrapper.db.pool.query(
-            `SELECT name, intl_open_id, union_id, discord_tag, ping_count, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at
+            `SELECT name, intl_open_id, discord_tag, ping_count, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at
              FROM ${pgConfig.tables.nikke_accounts}
-             WHERE union_id = $1
+             WHERE basic_info ->> 'gsn' = $1
              ORDER BY name ASC`,
             [normalizedUnionId],
         );
