@@ -138,6 +138,15 @@ export const tableStatements = [
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
 
+    `CREATE TABLE IF NOT EXISTS ${t.nikke_user_character_cache} (
+        intl_open_id VARCHAR(20) NOT NULL,
+        name_code INTEGER NOT NULL,
+        data JSONB NOT NULL,
+        fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (intl_open_id, name_code)
+    )`,
+
     `CREATE TABLE IF NOT EXISTS ${t.invite_tracking} (
         guild_id VARCHAR(20),
         inviter_id VARCHAR(20),

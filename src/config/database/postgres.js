@@ -16,6 +16,7 @@ const configuredTables = {
     invite_tracking: 'invite_tracking',
     application_roles: 'application_roles',
     verification_audit: 'verification_audit',
+    nikke_user_character_cache: 'nikke_user_character_cache',
     temp_data: 'temp_data',
     cache_data: 'cache_data',
 };
@@ -35,6 +36,7 @@ const allowedTableIdentifiers = new Set([
     'invite_tracking',
     'application_roles',
     'verification_audit',
+    'nikke_user_character_cache',
     'temp_data',
     'cache_data',
 ]);

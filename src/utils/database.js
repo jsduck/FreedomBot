@@ -60,6 +60,11 @@ export {
     getGuildTicketStats,
 } from './database/tickets.js';
 
+export {
+    getUserCharacterCache,
+    upsertUserCharacterCache,
+} from './database/nikkeCharacterCache.js';
+
 import { db, getFromDb, setInDb } from './database/wrapper.js';
 import {
     getGuildConfigKey,

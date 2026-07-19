@@ -1,9 +1,11 @@
 import { getColor } from '../../../config/bot.js';
-import { PermissionFlagsBits } from 'discord.js';
-import { createEmbed, errorEmbed } from '../../../utils/embeds.js';
+import { createEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
-import { getUserCharacterDetails, getCharacters, getCharacterByName, getNameCodeByName, getNameByCode, safeJSON } from '../../../services/nikke.js';
+import { createError, ErrorTypes } from '../../../utils/errorHandler.js';
+import { getUserCharacterCache, upsertUserCharacterCache } from '../../../utils/database.js';
+import { getUserCharacterDetails, getCharacterByName, getNameCodeByName, getNameByCode } from '../../../services/nikke.js';
+import { ButtonStyle, ActionRowBuilder, ButtonBuilder } from 'discord.js';
 
 function getFunctionDetailsById(json, id) {
   const effect = json.state_effects.find(e => String(e.id) === String(id));
@@ -148,147 +150,162 @@ function formatTable2(rows) {
     .join("\n");
 }
 
-export async function handleUserCharacter(interaction, client) {
-    const guild = interaction.guild;
-        // Defer reply immediately to ensure interaction is acknowledged
-        try {
-            await InteractionHelper.safeDefer(interaction);
-        } catch (error) {
-            logger.error("Failed to defer reply:", error);
-            return;
+const USER_CHARACTER_UPDATE_BUTTON_ID = 'nikke_user_character_update';
+
+function slug(value) {
+    return String(value)
+        .toLowerCase()
+        .replace(/[:]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '');
+}
+
+export function buildUserCharacterComponents(intlOpenId, nameCode) {
+    return [
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(`${USER_CHARACTER_UPDATE_BUTTON_ID}:${intlOpenId}:${nameCode}`)
+                .setLabel('Update')
+                .setEmoji('🔄')
+                .setStyle(ButtonStyle.Primary)
+        )
+    ];
+}
+
+export async function buildUserCharacterView(client, intlOpenId, nameCodes, { refresh = false } = {}) {
+    const nameCode = getNameCodeByName(nameCodes);
+
+    if (!nameCode) {
+        throw createError(
+            `Unknown Nikke character: ${nameCodes}`,
+            ErrorTypes.VALIDATION,
+            `I could not find a Nikke character matching "${nameCodes}".`,
+            { expected: true },
+        );
+    }
+
+    const characterResponse = await getCharacterByName(slug(nameCodes));
+    const charJson = await characterResponse.json();
+
+    let payload = null;
+    if (!refresh) {
+        const cached = await getUserCharacterCache(client, intlOpenId, nameCode);
+        payload = cached?.data ?? cached;
+    }
+
+    if (!payload) {
+        const response = await getUserCharacterDetails(intlOpenId, [nameCode]);
+        if (!response.ok) {
+            throw createError(
+                `Failed to fetch Nikke user character details for ${intlOpenId}/${nameCode}`,
+                ErrorTypes.NETWORK,
+                'I could not reach the Nikke API right now. Please try again in a moment.',
+            );
         }
-    
-        // Check permissions after deferring
-        //if (!interaction.member.permissions.has(PermissionFlagsBits.//Administrator)) {
-        //    await InteractionHelper.safeEditReply(interaction, { 
-        //        embeds: [errorEmbed("You need **Administrator** permission //to check login status.")]
-        //    }).catch(logger.error);
-        //    return;
-        //}
-    
-        const intl_open_id = interaction.options.getString("intl_open_id");
-        const name_codes = interaction.options.getString("name_codes");//split(",").map(v => Number(v.trim()));
 
-        //console.log("intl_open_id:", intl_open_id);
-        //console.log("name_codes:", name_codes);
-        const slug = str =>
-            str
-                .toLowerCase()
-                .replace(/[:]/g, "")        // remove colons
-                .replace(/\s+/g, "-")       // replace spaces with hyphens
-                .replace(/[^a-z0-9-]/g, ""); // remove anything not allowed
-        
-        const character_db = await getCharacterByName(slug(name_codes));
-        const char_json = await character_db.json();
-        //console.log(char_json);
+        payload = await response.json();
+        await upsertUserCharacterCache(client, intlOpenId, nameCode, payload);
+    }
 
-        //console.log(name_codes);
-        const name_codes_array = [ getNameCodeByName(name_codes) ];
-        //console.log("name_codes_array:", name_codes_array);
-    
-        try {
-            const res = await getUserCharacterDetails(intl_open_id, name_codes_array);
-            if (res.ok) {
-                const data = await res.json();
-                const json = safeJSON(data, 2);
-                const length = json.length;
+    const units = payload.data.character_details;
+    const effects = payload.data.state_effects;
+    const lines = ["arm_equip_option1_id", "arm_equip_option2_id", "arm_equip_option3_id", "head_equip_option1_id", "head_equip_option2_id", "head_equip_option3_id", "leg_equip_option1_id", "leg_equip_option2_id", "leg_equip_option3_id", "torso_equip_option1_id", "torso_equip_option2_id", "torso_equip_option3_id"];
 
-                const units = data.data.character_details;
-                const effects = data.data.state_effects;
-                const lines = ["arm_equip_option1_id", "arm_equip_option2_id", "arm_equip_option3_id", "head_equip_option1_id", "head_equip_option2_id", "head_equip_option3_id", "leg_equip_option1_id", "leg_equip_option2_id", "leg_equip_option3_id", "torso_equip_option1_id", "torso_equip_option2_id", "torso_equip_option3_id"];
+    const gear = [];
+    lines.forEach(line => {
+        if (!units[0][line]) return;
+        const effect = effects.find(e => e.id == units[0][line]);
+        if (effect) gear.push(effect);
+    });
 
-                const gear = [];
-                lines.forEach(line => {
-                    if (!units[0][line]) return;
-                    const effect = effects.find(e => e.id == units[0][line]);
-                    if (effect) gear.push(effect);
-                });
-                var OLdict = {};
-                extractOLvalue(gear, OLdict);
-                const OLarray = Object.entries(OLdict).map(([key, value]) => {
-                const num = Number(value);
-                const formatted = isNaN(num) ? String(value) : `${num.toFixed(2)}%`;
-                return [formatFunctionDetails(key), formatted];
-                });
+    const OLdict = {};
+    extractOLvalue(gear, OLdict);
+    const OLarray = Object.entries(OLdict).map(([key, value]) => {
+        const num = Number(value);
+        const formatted = isNaN(num) ? String(value) : `${num.toFixed(2)}%`;
+        return [formatFunctionDetails(key), formatted];
+    });
 
-                const armLine = formatEquipLine("Arm", units[0].arm_equip_lv, units, effects, [lines[0], lines[1], lines[2]]);
-                const headLine = formatEquipLine("Head", units[0].head_equip_lv, units, effects, [lines[3], lines[4], lines[5]]);
-                const legLine = formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]);
-                const torsoLine = formatEquipLine("Torso", units[0].torso_equip_lv, units, effects, [lines[9], lines[10], lines[11]]);
+    const armLine = formatEquipLine("Arm", units[0].arm_equip_lv, units, effects, [lines[0], lines[1], lines[2]]);
+    const headLine = formatEquipLine("Head", units[0].head_equip_lv, units, effects, [lines[3], lines[4], lines[5]]);
+    const legLine = formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]);
+    const torsoLine = formatEquipLine("Torso", units[0].torso_equip_lv, units, effects, [lines[9], lines[10], lines[11]]);
 
-                const overload2x2 =
-                    `${headLine}    ${torsoLine}
+    const embed = createEmbed({
+            title: `${getChoiceNameFromValue(intlOpenId) ?? intlOpenId}'s ${getNameByCode(units[0].name_code)} Chara Details`,
+            description: '',
+            color: getColor('success')
+        }).setThumbnail("https://static.dotgg.gg/nikke/characters/" + charJson.img + ".webp")
+            .addFields(
+                { 
+                    name: "Basic Info",
+                    value: `\`${formatTable2([
+                        ["Synchro-Level", units[0].lv],
+                        ["Combat Power", Number(units[0].combat).toLocaleString("en-US")],
+                        ["Bond", units[0].attractive_lv],
+                        ["Limit Break", getDups(units[0].grade + units[0].core)],
+                        ["Doll", getDollStats(units[0])],
+                        ["Skills", `${units[0].skill1_lv} / ${units[0].skill2_lv} / ${units[0].ulti_skill_lv}`]
+                    ])}\n\``,
+                    inline: false 
+                },
+                {
+                    name: "Stats",
+                    value: `\`${formatTable2(OLarray)}\n\``,
+                    inline: false
+                },
+                {
+                    name: "**Overload Info**",
+                    value: "",
+                    inline: false
+                },
+                {
+                    name: `Head (Lv${units[0].head_equip_lv})`,
+                    value: formatEquipLine("Head", units[0].head_equip_lv, units, effects, [lines[3], lines[4], lines[5]]),
+                    inline: true
+                },
+                {
+                    name: `Torso (Lv${units[0].torso_equip_lv})`,
+                    value: formatEquipLine("Torso", units[0].torso_equip_lv, units, effects, [lines[9], lines[10], lines[11]]),
+                    inline: true
+                },
+                {
+                    name: "",
+                    value: "",
+                    inline: false
+                },
+                {
+                    name: `Arm (Lv${units[0].arm_equip_lv})`,
+                    value: formatEquipLine("Arm", units[0].arm_equip_lv, units, effects, [lines[0], lines[1], lines[2]]),
+                    inline: true
+                },
+                {
+                    name: `Leg (Lv${units[0].leg_equip_lv})`,
+                    value: formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]),
+                    inline: true
+                },
+            );
 
-                    ${armLine}    ${legLine}`;
-                const preview = safeJSON(data, 2).slice(0, 1000); // fits in embed
-
-                const name  = getChoiceNameFromValue(intl_open_id);
-
-                const embed = createEmbed({
-                        title: `${name}'s ${getNameByCode(units[0].name_code)} Chara Details`,
-                        description: ``,
-                        color: getColor('success')
-                    }).setThumbnail("https://static.dotgg.gg/nikke/characters/" + char_json.img + ".webp")
-                        .addFields(
-                            { 
-                                name: "Basic Info", // invisible header 
-                                value: `\`${formatTable2([
-                                    ["Synchro-Level", units[0].lv],
-                                    ["Combat Power", Number(units[0].combat).toLocaleString("en-US")],
-                                    ["Bond", units[0].attractive_lv],
-                                    ["Limit Break", getDups(units[0].grade + units[0].core)],
-                                    ["Doll", getDollStats(units[0])],
-                                    ["Skills", `${units[0].skill1_lv} / ${units[0].skill2_lv} / ${units[0].ulti_skill_lv}`]
-                                ])}\n\``,
-                                inline: false 
-                            },
-                            {
-                                name: "Stats", // invisible header
-                                value: `\`${formatTable2(OLarray)}\n\``,
-                                inline: false
-                            },
-                            {
-                                name: "**Overload Info**",
-                                value: "",
-                                inline: false
-                            },
-                            {
-                                name: `Head (Lv${units[0].head_equip_lv})`,
-                                value: formatEquipLine("Head", units[0].head_equip_lv, units, effects, [lines[3], lines[4], lines[5]]),
-                                inline: true
-                            },
-                            {
-                                name: `Torso (Lv${units[0].torso_equip_lv})`,
-                                value: formatEquipLine("Torso", units[0].torso_equip_lv, units, effects, [lines[9], lines[10], lines[11]]),
-                                inline: true
-                            },
-                            // *** ROW BREAK ***
-                            {
-                                name: "",
-                                value: "",
-                                inline: false
-                            },
-                            {
-                                name: `Arm (Lv${units[0].arm_equip_lv})`,
-                                value: formatEquipLine("Arm", units[0].arm_equip_lv, units, effects, [lines[0], lines[1], lines[2]]),
-                                inline: true
-                            },
-                            {
-                                name: `Leg (Lv${units[0].leg_equip_lv})`,
-                                value: formatEquipLine("Leg", units[0].leg_equip_lv, units, effects, [lines[6], lines[7], lines[8]]),
-                                inline: true
-                            },
-                            
-                        );
-
-                await InteractionHelper.safeEditReply(interaction, {
-                    embeds: [embed]
-                }).catch(logger.error);
-            }
-        } catch (error) {
-            logger.error("Error checking login status:", error);
-            await InteractionHelper.safeEditReply(interaction, {
-                embeds: [errorEmbed("An error occurred while trying to check login status. Please try again.")]
-            }).catch(logger.error);
-        }
+    return {
+        embed,
+        components: buildUserCharacterComponents(intlOpenId, nameCode),
     };
+}
+
+export async function handleUserCharacter(interaction, client) {
+    try {
+        await InteractionHelper.safeDefer(interaction);
+    } catch (error) {
+        logger.error('Failed to defer reply:', error);
+        return;
+    }
+
+    const intl_open_id = interaction.options.getString('intl_open_id');
+    const name_codes = interaction.options.getString('name_codes');
+    const response = await buildUserCharacterView(client, intl_open_id, name_codes);
+
+    await InteractionHelper.safeEditReply(interaction, {
+        embeds: [response.embed],
+        components: response.components,
+    });
+}
