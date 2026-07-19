@@ -17,9 +17,9 @@ function getDups(dups) {
         case 0:
         case 1:
         case 2:
-            return `⭐`.repeat(dups);
+            return `x`.repeat(dups);
         case 3:
-            return `⭐⭐⭐`;
+            return `xxx⭐`;
         default:
             return `CORE ${dups-3}`;
     }
@@ -244,11 +244,13 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
             title: `${account?.name ?? intlOpenId}'s ${getNameByCode(units[0].name_code)} Chara Details`,
             description: '',
             color: getColor('success')
-        }).setThumbnail("https://static.dotgg.gg/nikke/characters/" + charJson.img + ".webp")
-            .setFooter({
-                text: `Source: ${formatDataSource(dataSource)} | Fetched at: ${formatCacheTimestamp(cacheRecord?.fetched_at)} | Updated at: ${formatCacheTimestamp(cacheRecord?.updated_at)}`,
-            })
-            .addFields(
+        }).setThumbnail("https://static.dotgg.gg/nikke/characters/" + charJson.img + ".webp");
+
+    embed.data.footer = {
+        text: `Source: ${formatDataSource(dataSource)} | Fetched at: ${formatCacheTimestamp(cacheRecord?.fetched_at)} | Updated at: ${formatCacheTimestamp(cacheRecord?.updated_at)}`,
+    };
+
+    embed.addFields(
                 { 
                     name: "Basic Info",
                     value: `\`${formatTable2([
