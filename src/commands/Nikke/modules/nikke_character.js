@@ -119,10 +119,11 @@ function formatEquipLine(label, level, units, effects, lines) {
   });
 
     const width = rows.reduce((max, row) => Math.max(max, `${row.type} (${row.lvl})`.length), 0);
-
-    return rows
-        .map((r) => `${`${r.type} (${r.lvl})`.padEnd(width)}: \`${r.val}\``)
+    const body = rows
+        .map((r) => `${`${r.type} (${r.lvl})`.padEnd(width)} ${r.val}`)
         .join("\n");
+
+    return `\`\`\`\n${body}\n\`\`\``;
 }
 
 function formatTable(title, rows) {
@@ -163,9 +164,47 @@ function formatDataSource(source) {
 
 function formatAlignedRows(rows) {
     const width = rows.reduce((max, [field]) => Math.max(max, String(field).length), 0);
-    return rows
-        .map(([field, value]) => `${String(field).padEnd(width)}: \`${value}\``)
+    const body = rows
+        .map(([field, value]) => `${String(field).padEnd(width)} ${value}`)
         .join("\n");
+
+    return `\`\`\`\n${body}\n\`\`\``;
+}
+
+function getStatsMarker(field, value) {
+    const normalizedField = String(field || '').toLowerCase();
+    const normalizedValue = Number.parseFloat(String(value).replace('%', ''));
+
+    if (normalizedField === 'eledmg') {
+        if (Number.isFinite(normalizedValue) && normalizedValue < 45) {
+            return '🟥';
+        }
+
+        if (Number.isFinite(normalizedValue) && normalizedValue > 90) {
+            return '🟩';
+        }
+    }
+
+    if (normalizedField === 'attack') {
+        if (Number.isFinite(normalizedValue) && normalizedValue < 20) {
+            return '🟥';
+        }
+
+        if (Number.isFinite(normalizedValue) && normalizedValue > 40) {
+            return '🟩';
+        }
+    }
+
+    return '⬜';
+}
+
+function formatStatsRows(rows) {
+    const width = rows.reduce((max, [field]) => Math.max(max, String(field).length), 0);
+    const body = rows
+        .map(([field, value]) => `${String(field).padEnd(width)} ${getStatsMarker(field, value)} ${value}`)
+        .join("\n");
+
+    return `\`\`\`\n${body}\n\`\`\``;
 }
 
 function resolveSynchroLevelFromOutpost(account, fallbackLevel) {
@@ -316,7 +355,7 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
                 },
                 {
                     name: "Stats",
-                    value: `${formatAlignedRows(OLarray)}`,
+                    value: `${formatStatsRows(OLarray)}`,
                     inline: false
                 },
                 {
