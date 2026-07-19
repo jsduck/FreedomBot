@@ -74,18 +74,20 @@ export async function upsertUserCharacterCache(client, intlOpenId, nameCode, dat
                  ON CONFLICT (intl_open_id, name_code)
                  DO UPDATE SET
                      data = EXCLUDED.data,
-                     fetched_at = EXCLUDED.fetched_at,
-                     updated_at = EXCLUDED.updated_at`,
+                     updated_at = NOW()`,
                 [normalizedIntlOpenId, normalizedNameCode, data],
             );
             return true;
         }
 
-        await wrapper.set(getFallbackKey(normalizedIntlOpenId, normalizedNameCode), {
+        const fallbackKey = getFallbackKey(normalizedIntlOpenId, normalizedNameCode);
+        const existing = normalizeCacheRow(await wrapper.get(fallbackKey, null));
+
+        await wrapper.set(fallbackKey, {
             intl_open_id: normalizedIntlOpenId,
             name_code: normalizedNameCode,
             data,
-            fetched_at: new Date().toISOString(),
+            fetched_at: existing?.fetched_at || new Date().toISOString(),
             updated_at: new Date().toISOString(),
         });
         return true;
