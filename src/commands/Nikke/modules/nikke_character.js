@@ -55,7 +55,7 @@ function getCubeStats(rawNikke) {
         case 1000304:
             return `Bastion Lv ${rawNikke.harmony_cube_lv}`;
         default:
-            return `${rawNikke.harmony_cube_tid} Lv ${rawNikke.harmony_cube_lv}`;
+            return `${rawNikke.harmony_cube_tid} Lv${rawNikke.harmony_cube_lv}`;
     }
 }
 
@@ -94,7 +94,7 @@ function formatFunctionDetails(details) {
         case "StatDef":
             return "Def";
         case "StatAccuracyCircle":
-            return "Hit:";
+            return "Hit";
         default:
             return "";
     }
@@ -118,8 +118,10 @@ function formatEquipLine(label, level, units, effects, lines) {
     return { type, lvl, val };
   });
 
+    const width = rows.reduce((max, row) => Math.max(max, `${row.type} (${row.lvl})`.length), 0);
+
     return rows
-        .map((r) => `${r.type} (${r.lvl}): \`${r.val}\``)
+        .map((r) => `${`${r.type} (${r.lvl})`.padEnd(width)}: \`${r.val}\``)
         .join("\n");
 }
 
@@ -157,6 +159,13 @@ function formatCurrentTimestamp() {
 
 function formatDataSource(source) {
     return source || 'unknown';
+}
+
+function formatAlignedRows(rows) {
+    const width = rows.reduce((max, [field]) => Math.max(max, String(field).length), 0);
+    return rows
+        .map(([field, value]) => `${String(field).padEnd(width)}: \`${value}\``)
+        .join("\n");
 }
 
 function resolveSynchroLevelFromOutpost(account, fallbackLevel) {
@@ -226,7 +235,9 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
     let dataSource = refresh ? 'Live API (forced refresh)' : 'Database cache';
     if (!refresh) {
         cacheRecord = await getUserCharacterCache(client, intlOpenId, nameCode);
-        payload = cacheRecord?.data ?? cacheRecord;
+        const cachedPayload = cacheRecord?.data ?? cacheRecord;
+        // Backward compatibility: old cache may store full response; new cache stores only .data.
+        payload = cachedPayload?.data ?? cachedPayload;
     }
 
     if (!payload) {
@@ -240,13 +251,23 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
             );
         }
 
-        payload = await response.json();
+        const rawPayload = await response.json();
+        payload = rawPayload?.data ?? null;
+
+        if (!payload) {
+            throw createError(
+                `Invalid Nikke user character payload for ${intlOpenId}/${nameCode}`,
+                ErrorTypes.VALIDATION,
+                'Nikke API returned an unexpected payload format. Please try again in a moment.',
+            );
+        }
+
         await upsertUserCharacterCache(client, intlOpenId, nameCode, payload);
         cacheRecord = await getUserCharacterCache(client, intlOpenId, nameCode);
     }
 
-    const units = payload.data.character_details;
-    const effects = payload.data.state_effects;
+    const units = payload.character_details;
+    const effects = payload.state_effects;
     const lines = ["arm_equip_option1_id", "arm_equip_option2_id", "arm_equip_option3_id", "head_equip_option1_id", "head_equip_option2_id", "head_equip_option3_id", "leg_equip_option1_id", "leg_equip_option2_id", "leg_equip_option3_id", "torso_equip_option1_id", "torso_equip_option2_id", "torso_equip_option3_id"];
 
     const gear = [];
@@ -282,7 +303,7 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
     embed.addFields(
                 { 
                     name: "Basic Info",
-                    value: `${formatTable2([
+                    value: `${formatAlignedRows([
                         ["Synchro-Level", synchroLevel],
                         ["Combat Power", Number(units[0].combat).toLocaleString("en-US")],
                         ["Bond", units[0].attractive_lv],
@@ -295,7 +316,7 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
                 },
                 {
                     name: "Stats",
-                    value: `${formatTable2(OLarray)}`,
+                    value: `${formatAlignedRows(OLarray)}`,
                     inline: false
                 },
                 {
