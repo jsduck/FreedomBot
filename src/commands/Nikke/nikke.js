@@ -14,7 +14,7 @@ import { handleGuildDetails, handleGuildMembers } from './modules/nikke_guild.js
 import { handleUnionRaidData, handleUnionRaidLevelData, handleUnionRaidDataOfGuildSeason, handleUnionRaidLevelDataOfGuildSeason } from './modules/nikke_guild.js';
 import { handleQueryGuildCardList } from './modules/nikke_guild.js';
 import { handleGetMyGuildInfo, handleGetUserDailyContentsProgress, handleGetUserProfileOutpostInfo, handleGetUserProfileBasicInfo, handleGetUserGameInfo, handleGetUserCharacters, handleGetUserProfile, handleSearchUser } from './modules/nikke_user.js';
-import { addNikkeAccount, deleteNikkeAccount, getNikkeAccountChoices, updateNikkeAccountUnionId } from '../../utils/database.js';
+import { addNikkeAccount, deleteNikkeAccount, getNikkeAccountChoices, getNikkeUnionChoices, updateNikkeAccountUnionId } from '../../utils/database.js';
 
 async function handleAccountAdd(interaction, client) {
     try {
@@ -158,6 +158,7 @@ async function handleAccountDelete(interaction, client) {
 export default {
     async buildData(client) {
         const accountChoices = await getNikkeAccountChoices(client);
+        const unionChoices = await getNikkeUnionChoices(client);
 
         return new SlashCommandBuilder()
         .setName("nikke")
@@ -187,6 +188,7 @@ export default {
                                 .setName("union_id")
                                 .setDescription("Union id for the account")
                                 .setRequired(true)
+                                .addChoices(...unionChoices)
                         )
                 )
                 .addSubcommand(subcommand =>
@@ -203,7 +205,8 @@ export default {
                             option
                                 .setName("union_id")
                                 .setDescription("New union id for the account")
-                                .setRequired(true)
+                            .setRequired(true)
+                            .addChoices(...unionChoices)
                         )
                 )
                 .addSubcommand(subcommand =>
@@ -386,7 +389,8 @@ export default {
                         .addChoices(
                             { name: "Level 1", value: 1 },
                             { name: "Level 2", value: 2 },
-                            { name: "Level 3", value: 3 }
+                            { name: "Level 3", value: 3 },
+                            { name: "Level 4", value: 4 }
                         )
                 ))
         .addSubcommand(subcommand =>

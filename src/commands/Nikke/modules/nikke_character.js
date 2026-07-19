@@ -17,9 +17,9 @@ function getDups(dups) {
         case 0:
         case 1:
         case 2:
-            return `x`.repeat(dups);
+            return `⭐`.repeat(dups);
         case 3:
-            return `xxx⭐`;
+            return `⭐⭐⭐`;
         default:
             return `CORE ${dups-3}`;
     }
@@ -45,6 +45,20 @@ function getDollStats(rawNikke) {
             return `SR ${rawNikke.favorite_item_lv}`;
         default:
             return `SSR ${rawNikke.favorite_item_lv+1}`;
+    }
+}
+
+function getCubeStats(rawNikke) {
+    switch (rawNikke.cube_tid) {
+        case 0:
+            return ``;
+        case 200101:
+        case 200201:
+        case 200301:
+        case 200401:
+        case 200501:
+        default:
+            return `${rawNikke.cube_tid} Lv ${rawNikke.cube_lv}`;
     }
 }
 
@@ -144,10 +158,7 @@ function formatCacheTimestamp(value) {
         return 'unknown';
     }
 
-    return new Intl.DateTimeFormat('en-US', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-    }).format(date);
+    return `<t:${Math.floor(date.getTime() / 1000)}:F>`;
 }
 
 function formatDataSource(source) {
@@ -241,7 +252,7 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
         const account = await getNikkeAccountByOpenId(client, intlOpenId);
 
     const embed = createEmbed({
-            title: `${account?.name ?? intlOpenId}'s ${getNameByCode(units[0].name_code)} Chara Details`,
+            title: `[UNION] ${account?.name ?? intlOpenId}'s ${getNameByCode(units[0].name_code)}`,
             description: '',
             color: getColor('success')
         }).setThumbnail("https://static.dotgg.gg/nikke/characters/" + charJson.img + ".webp");
@@ -259,7 +270,8 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
                         ["Bond", units[0].attractive_lv],
                         ["Limit Break", getDups(units[0].grade + units[0].core)],
                         ["Doll", getDollStats(units[0])],
-                        ["Skills", `${units[0].skill1_lv} / ${units[0].skill2_lv} / ${units[0].ulti_skill_lv}`]
+                        ["Skills", `${units[0].skill1_lv} / ${units[0].skill2_lv} / ${units[0].ulti_skill_lv}`],
+                        ["Cube", getCubeStats(units[0])],
                     ])}\n\``,
                     inline: false 
                 },

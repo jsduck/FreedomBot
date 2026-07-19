@@ -34,6 +34,20 @@ function normalizeAccountRow(row) {
     };
 }
 
+function normalizeUnionRow(row) {
+    if (!row) {
+        return null;
+    }
+
+    return {
+        name: row.name ?? null,
+        union_id: String(row.union_id ?? ''),
+        area_id: row.area_id ?? null,
+        created_at: row.created_at ?? null,
+        updated_at: row.updated_at ?? null,
+    };
+}
+
 async function seedDefaultAccounts(wrapper) {
     if (!isPostgresSqlReady(wrapper)) {
         return false;
@@ -109,6 +123,41 @@ export async function getNikkeAccountChoices(client) {
     return accounts.map((account) => ({
         name: account.name,
         value: account.intl_open_id,
+    }));
+}
+
+export async function getNikkeUnions(client) {
+    try {
+        const wrapper = client?.db;
+
+        if (!wrapper) {
+            return [];
+        }
+
+        if (isPostgresSqlReady(wrapper)) {
+            const result = await wrapper.db.pool.query(
+                `SELECT name, union_id, area_id, created_at, updated_at
+                 FROM ${pgConfig.tables.nikke_unions}
+                 ORDER BY name ASC`,
+            );
+
+            return result.rows.map(normalizeUnionRow).filter(Boolean);
+        }
+
+        return [];
+    } catch (error) {
+        logger.error('Error loading Nikke unions:', error);
+        return [];
+    }
+}
+
+export async function getNikkeUnionChoices(client) {
+    const unions = await getNikkeUnions(client);
+    return unions.slice(0, 25).map((union) => ({
+        name: union.area_id !== null && union.area_id !== undefined
+            ? `${union.name} (Area ${union.area_id})`
+            : union.name,
+        value: union.union_id,
     }));
 }
 
