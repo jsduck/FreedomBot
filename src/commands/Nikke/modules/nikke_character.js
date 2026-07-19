@@ -196,15 +196,12 @@ function getStatsValueColor(field, value) {
 }
 
 function formatStatsRows(rows) {
-    const width = rows.reduce((max, [field]) => Math.max(max, String(field).length), 0);
-    const body = rows
+    return rows
         .map(([field, value]) => {
             const color = getStatsValueColor(field, value);
-            return `${String(field).padEnd(width)}: ${color}${value}\u001b[0m`;
+            return `${field}:\n\`\`\`ansi\n${color}${value}\u001b[0m\n\`\`\``;
         })
         .join("\n");
-
-    return `\`\`\`ansi\n${body}\n\`\`\``;
 }
 
 function resolveSynchroLevelFromOutpost(account, fallbackLevel) {
