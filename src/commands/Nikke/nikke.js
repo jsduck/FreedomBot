@@ -16,6 +16,26 @@ import { handleQueryGuildCardList } from './modules/nikke_guild.js';
 import { handleAccountProfile, handleGetMyGuildInfo, handleGetUserDailyContentsProgress, handleGetUserProfileOutpostInfo, handleGetUserProfileBasicInfo, handleGetUserCharacters, handleGetUserProfile, handleSearchUser } from './modules/nikke_user.js';
 import { addNikkeAccount, deleteNikkeAccount, getNikkeAccountChoices, getNikkeAreaChoices, getNikkeUnionChoices, getNikkeUnionGuildChoices, setNikkeUnionCounterChannel, setNikkeUnionCounterDisabled, setNikkeUnionCounterEnabled, syncNikkeAccountProfile, updateNikkeAccountUnionId } from '../../utils/database.js';
 
+function extractIntlOpenIdFromInput(input) {
+    const raw = String(input || '').trim();
+    if (!raw) {
+        return null;
+    }
+
+    try {
+        const temp = raw.split('openid=')[1]?.split('&')[0]?.replaceAll('%3D', '=');
+        if (!temp) {
+            return null;
+        }
+
+        const decoded = atob(temp);
+        const intlOpenId = decoded.split('-')[1]?.trim();
+        return intlOpenId || null;
+    } catch {
+        return null;
+    }
+}
+
 async function handleAccountAdd(interaction, client) {
     try {
         await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
@@ -32,14 +52,23 @@ async function handleAccountAdd(interaction, client) {
     }
 
     const name = interaction.options.getString('name', true).trim();
-    const intlOpenId = interaction.options.getString('intl_open_id', true).trim();
-    const unionId = interaction.options.getString('union_id', true).trim();
+    const accountInput = interaction.options.getString('account_input', true).trim();
+    const intlOpenId = extractIntlOpenIdFromInput(accountInput);
     const discordTag = interaction.options.getString('discord_tag', false)?.trim() || null;
+
+    if (!intlOpenId) {
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed(
+                'Invalid Account Input',
+                'Could not extract `intl_open_id` from the provided string. Include a value containing `openid=`.'
+            )],
+        }).catch(logger.error);
+        return;
+    }
 
     const result = await addNikkeAccount(client, {
         name,
         intl_open_id: intlOpenId,
-        union_id: unionId,
         discord_tag: discordTag,
     });
 
@@ -69,13 +98,13 @@ async function handleAccountAdd(interaction, client) {
     });
 
     const profileSyncMessage = profileSyncResult.success
-        ? `\nSaved profile payloads (basic_info, outpost_info, daily_progress) in nikke_accounts for area ${profileSyncResult.area_id}.`
+        ? `\nSaved profile payloads (basic_info, outpost_info, daily_progress) in nikke_accounts for area ${profileSyncResult.area_id}${profileSyncResult.union_id ? ` and derived union id ${profileSyncResult.union_id} from profile gsn` : ''}.`
         : '\nAccount profile payload sync failed. You can retry by re-adding or updating this account later.';
 
     await InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(
             'Account Added',
-            `Stored ${result.account.name} with open id ${result.account.intl_open_id}${result.account.union_id ? ` and union id ${result.account.union_id}` : ''}${result.account.discord_tag ? ` and Discord tag ${result.account.discord_tag}` : ''}.${profileSyncMessage}`
+            `Stored ${result.account.name} with open id ${result.account.intl_open_id}${result.account.discord_tag ? ` and Discord tag ${result.account.discord_tag}` : ''}.${profileSyncMessage}`
         )],
     }).catch(logger.error);
 }
@@ -321,16 +350,9 @@ export default {
                         )
                         .addStringOption(option =>
                             option
-                                .setName("intl_open_id")
-                                .setDescription("Account open id")
+                                .setName("account_input")
+                                .setDescription("Account link or raw string containing openid=")
                                 .setRequired(true)
-                        )
-                        .addStringOption(option =>
-                            option
-                                .setName("union_id")
-                                .setDescription("Union id for the account")
-                                .setRequired(true)
-                                .addChoices(...unionChoices)
                         )
                         .addStringOption(option =>
                             option

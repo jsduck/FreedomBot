@@ -252,8 +252,11 @@ class TitanBot extends Client {
     cron.schedule('0 6 * * *', runSafeTask('birthday_check', () => checkBirthdays(this)));
     cron.schedule('* * * * *', runSafeTask('giveaway_check', () => checkGiveaways(this)));
     cron.schedule('*/15 * * * *', runSafeTask('counter_update', () => this.updateAllCounters()));
-    cron.schedule('0 * * * *', runSafeTask('nikke_union_outpost_counter_check', () => runUnionOutpostStorageCounterCheck(this)));
-    cron.schedule('*/30 * * * *', runSafeTask('nikke_union_daily_mission_counter_check', () => runUnionDailyMissionCounterCheck(this)));
+    // Rollback schedules:
+    // cron.schedule('0 * * * *', runSafeTask('nikke_union_outpost_counter_check', () => runUnionOutpostStorageCounterCheck(this)));
+    // cron.schedule('0,30 * * * *', runSafeTask('nikke_union_daily_mission_counter_check', () => runUnionDailyMissionCounterCheck(this)));
+    cron.schedule('*/5 * * * *', runSafeTask('nikke_union_outpost_counter_check', () => runUnionOutpostStorageCounterCheck(this)));
+    cron.schedule('*/5 * * * *', runSafeTask('nikke_union_daily_mission_counter_check', () => runUnionDailyMissionCounterCheck(this)));
   }
 
   async updateAllCounters() {

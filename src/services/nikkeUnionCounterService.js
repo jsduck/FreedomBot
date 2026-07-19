@@ -89,15 +89,21 @@ async function sendUnionPing(client, union, account, message) {
 }
 
 function isDailyMissionWindowUtcPlus3(date = new Date()) {
-    const utcHour = date.getUTCHours();
+    // Rollback behavior (UTC+3 window only):
+    // const utcHour = date.getUTCHours();
+    // const utcMinute = date.getUTCMinutes();
+    // const hourInUtcPlus3 = (utcHour + 3) % 24;
+    //
+    // if (hourInUtcPlus3 < 21 || hourInUtcPlus3 > 22) {
+    //     return false;
+    // }
+    //
+    // return utcMinute === 0 || utcMinute === 30;
+
     const utcMinute = date.getUTCMinutes();
-    const hourInUtcPlus3 = (utcHour + 3) % 24;
 
-    if (hourInUtcPlus3 < 21 || hourInUtcPlus3 > 22) {
-        return false;
-    }
-
-    return utcMinute === 0 || utcMinute === 30;
+    // Testing mode: run this check every 5 minutes.
+    return utcMinute % 5 === 0;
 }
 
 async function refreshDailyProgress(client, account, areaId) {

@@ -107,6 +107,7 @@ async function upsertAccountProfileRow(wrapper, {
     basic_info,
     outpost_info,
     daily_progress,
+    derived_union_id = null,
 }) {
     const normalizedOpenId = String(intl_open_id || '').trim();
 
@@ -115,6 +116,7 @@ async function upsertAccountProfileRow(wrapper, {
          SET basic_info = $2::jsonb,
              outpost_info = $3::jsonb,
              daily_progress = $4::jsonb,
+             union_id = COALESCE($5, union_id),
              profile_fetched_at = NOW(),
              updated_at = NOW()
          WHERE intl_open_id = $1`,
@@ -123,6 +125,7 @@ async function upsertAccountProfileRow(wrapper, {
             JSON.stringify(basic_info ?? {}),
             JSON.stringify(outpost_info ?? {}),
             JSON.stringify(daily_progress ?? []),
+            derived_union_id,
         ],
     );
 
@@ -557,18 +560,24 @@ export async function syncNikkeAccountProfile(client, { intl_open_id, union_id =
         const basicPayload = await readNikkePayload(basicRes, 'getUserProfileBasicInfo');
         const outpostPayload = await readNikkePayload(outpostRes, 'getUserProfileOutpostInfo');
         const dailyPayload = await readNikkePayload(dailyRes, 'getUserDailyContentsProgress');
+        const derivedUnionIdRaw = basicPayload.data?.basic_info?.gsn;
+        const derivedUnionId = derivedUnionIdRaw === null || derivedUnionIdRaw === undefined || String(derivedUnionIdRaw).trim() === ''
+            ? null
+            : String(derivedUnionIdRaw).trim();
 
         await upsertAccountProfileRow(wrapper, {
             intl_open_id: normalizedOpenId,
             basic_info: basicPayload.data?.basic_info ?? {},
             outpost_info: outpostPayload.data?.outpost_info ?? {},
             daily_progress: dailyPayload.data?.daily_progress ?? [],
+            derived_union_id: derivedUnionId,
         });
 
         return {
             success: true,
             intl_open_id: normalizedOpenId,
             area_id: areaId,
+            union_id: derivedUnionId,
         };
     } catch (error) {
         logger.error('Error syncing Nikke account profile:', error);
