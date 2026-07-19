@@ -761,6 +761,10 @@ export async function setNikkeUnionCounterEnabled(client, union_id, enabledBy = 
             return { success: false, reason: 'union_not_found' };
         }
 
+        const existingMembers = unionResult.rows[0].members && typeof unionResult.rows[0].members === 'object'
+            ? unionResult.rows[0].members
+            : {};
+
         const accountResult = await wrapper.db.pool.query(
             `SELECT intl_open_id, name, discord_tag
              FROM ${pgConfig.tables.nikke_accounts}
@@ -770,6 +774,7 @@ export async function setNikkeUnionCounterEnabled(client, union_id, enabledBy = 
         );
 
         const membersPayload = {
+            ...existingMembers,
             counter_enabled: true,
             enabled_at: new Date().toISOString(),
             enabled_by: enabledBy || null,
