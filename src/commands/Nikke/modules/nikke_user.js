@@ -31,6 +31,24 @@ const ACCOUNT_PROFILE_SECTIONS = Object.freeze([
     },
 ]);
 
+const ACCOUNT_PROFILE_EMBED_PRESETS = Object.freeze({
+    basic_info: {
+        title: '✅ Account Profile • Basic Info',
+        description: 'Identity and progression summary fetched from Nikke profile cache/API.',
+        responseFieldName: 'Basic Info Payload',
+    },
+    outpost_info: {
+        title: '✅ Account Profile • Outpost Info',
+        description: 'Outpost production and storage details fetched from Nikke profile cache/API.',
+        responseFieldName: 'Outpost Payload',
+    },
+    daily_progress: {
+        title: '✅ Account Profile • Daily Contents Progress',
+        description: 'Daily task and activity progress fetched from Nikke profile cache/API.',
+        responseFieldName: 'Daily Progress Payload',
+    },
+});
+
 function formatCacheTimestamp(value) {
     if (!value) {
         return 'unknown';
@@ -193,6 +211,11 @@ export async function buildAccountProfileView(
 ) {
     const normalizedIndex = normalizeProfileViewIndex(viewIndex);
     const section = ACCOUNT_PROFILE_SECTIONS[normalizedIndex];
+    const embedPreset = ACCOUNT_PROFILE_EMBED_PRESETS[section.key] || {
+        title: `✅ Account Profile • ${section.label}`,
+        description: `Successfully called Nikke API endpoint \`${section.endpoint}\`.`,
+        responseFieldName: 'Response Preview',
+    };
     const resolvedAreaId = resolveAreaId(areaId);
 
     const result = await getNikkeAccountProfileSection(client, {
@@ -211,19 +234,18 @@ export async function buildAccountProfileView(
     }
 
     const json = safeJSON(result.data, 2);
-    const length = json.length;
     const preview = json.slice(0, 1000);
     const effectiveAreaId = Number.isInteger(Number.parseInt(String(result.area_id), 10))
         ? Number.parseInt(String(result.area_id), 10)
         : resolvedAreaId;
 
     const embed = createEmbed({
-        title: `✅ Account Profile • ${section.label}`,
-        description: `Successfully called Nikke API endpoint \`${section.endpoint}\`.`,
+        title: embedPreset.title,
+        description: embedPreset.description,
         color: getColor('success'),
     }).addFields(
         {
-            name: 'Response Preview',
+            name: embedPreset.responseFieldName,
             value: `\`\`\`json\n${preview}\n\`\`\``,
         },
         {
@@ -238,12 +260,7 @@ export async function buildAccountProfileView(
     return {
         embed,
         components: buildAccountProfilePagerComponents(intlOpenId, effectiveAreaId, normalizedIndex),
-        file: length > 1000
-            ? {
-                attachment: Buffer.from(json),
-                name: 'response.json',
-            }
-            : null,
+        file: null,
     };
 }
 
