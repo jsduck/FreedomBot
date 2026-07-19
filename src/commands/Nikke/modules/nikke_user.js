@@ -31,23 +31,55 @@ const ACCOUNT_PROFILE_SECTIONS = Object.freeze([
     },
 ]);
 
-const ACCOUNT_PROFILE_EMBED_PRESETS = Object.freeze({
-    basic_info: createEmbed({
-        title: '✅ Account Profile • Basic Info',
-        description: 'Identity and progression summary fetched from Nikke profile cache/API.',
+function summarizeSectionData(data) {
+    if (Array.isArray(data)) {
+        return `${data.length} entries`;
+    }
+
+    if (data && typeof data === 'object') {
+        const keys = Object.keys(data);
+        return `${keys.length} keys`;
+    }
+
+    return 'no structured data';
+}
+
+function buildAccountProfileEmbedPreset(sectionKey, data, sectionLabel) {
+    if (sectionKey === 'basic_info') {
+        const commanderName = data?.nickname || data?.name || data?.user_name || data?.role_name || 'Unknown';
+        const commanderLevel = data?.commander_level ?? data?.level ?? data?.lv ?? 'Unknown';
+        return createEmbed({
+            title: '✅ Account Profile • Basic Info',
+            description: `Commander: **${commanderName}** | Level: **${commanderLevel}**`,
+            color: getColor('success'),
+        });
+    }
+
+    if (sectionKey === 'outpost_info') {
+        const synchroLevel = data?.synchro_level ?? data?.synchro?.level ?? 'Unknown';
+        const outpostLevel = data?.outpost_level ?? data?.outpost?.level ?? 'Unknown';
+        return createEmbed({
+            title: '✅ Account Profile • Outpost Info',
+            description: `Synchro Level: **${synchroLevel}** | Outpost Level: **${outpostLevel}**`,
+            color: getColor('success'),
+        });
+    }
+
+    if (sectionKey === 'daily_progress') {
+        const summary = summarizeSectionData(data);
+        return createEmbed({
+            title: '✅ Account Profile • Daily Contents Progress',
+            description: `Daily progress snapshot contains **${summary}**.`,
+            color: getColor('success'),
+        });
+    }
+
+    return createEmbed({
+        title: `✅ Account Profile • ${sectionLabel}`,
+        description: `Section snapshot contains **${summarizeSectionData(data)}**.`,
         color: getColor('success'),
-    }),
-    outpost_info: createEmbed({
-        title: '✅ Account Profile • Outpost Info',
-        description: 'Outpost production and storage details fetched from Nikke profile cache/API.',
-        color: getColor('success'),
-    }),
-    daily_progress: createEmbed({
-        title: '✅ Account Profile • Daily Contents Progress',
-        description: 'Daily task and activity progress fetched from Nikke profile cache/API.',
-        color: getColor('success'),
-    }),
-});
+    });
+}
 
 const ACCOUNT_PROFILE_RESPONSE_FIELD_NAMES = Object.freeze({
     basic_info: 'Basic Info Payload',
@@ -66,6 +98,10 @@ function formatCacheTimestamp(value) {
     }
 
     return `<t:${Math.floor(date.getTime() / 1000)}:F>`;
+}
+
+function formatCurrentTimestamp() {
+    return `<t:${Math.floor(Date.now() / 1000)}:F>`;
 }
 
 function buildProfileUpdateComponents(buttonId, intlOpenId, areaId) {
@@ -155,7 +191,7 @@ async function buildStoredProfileSectionView(client, {
         { name: title, value: `\`\`\`json\n${preview}\n\`\`\`` },
         {
             name: 'Data Source',
-            value: `Source: ${result.source || 'unknown'}\nFetched at: ${formatCacheTimestamp(result.fetched_at)}\nUpdated at: ${formatCacheTimestamp(result.updated_at)}`,
+            value: `Source: ${result.source || 'unknown'}\nFetched at: ${formatCurrentTimestamp()}\nUpdated at: ${formatCacheTimestamp(result.updated_at)}`,
             inline: false,
         },
     );
@@ -217,12 +253,6 @@ export async function buildAccountProfileView(
 ) {
     const normalizedIndex = normalizeProfileViewIndex(viewIndex);
     const section = ACCOUNT_PROFILE_SECTIONS[normalizedIndex];
-    const embedPreset = ACCOUNT_PROFILE_EMBED_PRESETS[section.key]
-        || createEmbed({
-            title: `✅ Account Profile • ${section.label}`,
-            description: `Successfully called Nikke API endpoint \`${section.endpoint}\`.`,
-            color: getColor('success'),
-        });
     const responseFieldName = ACCOUNT_PROFILE_RESPONSE_FIELD_NAMES[section.key] || 'Response Preview';
     const resolvedAreaId = resolveAreaId(areaId);
 
@@ -246,15 +276,12 @@ export async function buildAccountProfileView(
     const effectiveAreaId = Number.isInteger(Number.parseInt(String(result.area_id), 10))
         ? Number.parseInt(String(result.area_id), 10)
         : resolvedAreaId;
+    const embedPreset = buildAccountProfileEmbedPreset(section.key, result.data, section.label);
 
     const embed = EmbedBuilder.from(embedPreset).addFields(
         {
-            name: responseFieldName,
-            value: `\`\`\`json\n${preview}\n\`\`\``,
-        },
-        {
             name: 'Data Source',
-            value: `Source: ${result.source || 'unknown'}\nFetched at: ${formatCacheTimestamp(result.fetched_at)}\nUpdated at: ${formatCacheTimestamp(result.updated_at)}`,
+            value: `Source: ${result.source || 'unknown'}\nFetched at: ${formatCurrentTimestamp()}\nUpdated at: ${formatCacheTimestamp(result.updated_at)}`,
             inline: false,
         },
     ).setFooter({
