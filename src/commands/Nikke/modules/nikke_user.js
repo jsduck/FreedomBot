@@ -4,9 +4,7 @@ import { createEmbed, errorEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { getMyGuildInfo, getUserGameInfo, searchUser, getUserProfile, getUserCharacters, safeJSON } from '../../../services/nikke.js';
-import { getNikkeAccountProfileSection } from '../../../utils/database.js';
-
-//import { getNikkeUnionById } from '../../../utils/database.js';
+import { getNikkeAccountProfileSection, getNikkeUnionById } from '../../../utils/database.js';
 
 export const USER_PROFILE_BASIC_INFO_UPDATE_BUTTON_ID = 'nikke_user_profile_basic_info_update';
 export const USER_PROFILE_OUTPOST_INFO_UPDATE_BUTTON_ID = 'nikke_user_profile_outpost_info_update';
@@ -46,43 +44,121 @@ function summarizeSectionData(data) {
     return 'no structured data';
 }
 
-async function buildAccountProfileEmbedPreset(sectionKey, data, sectionLabel) {
+function formatCurrencies(currencies) {
+    if (!currencies) {
+        return 'Unknown';
+    }
+
+    if (Array.isArray(currencies)) {
+        if (currencies.length === 0) {
+            return 'Unknown';
+        }
+
+        return currencies.map((entry, index) => {
+            const type = entry?.type ?? index;
+            const value = entry?.value ?? 'Unknown';
+            return `Type ${type}: **${value}**`;
+        }).join('\n');
+    }
+
+    if (typeof currencies === 'object') {
+        const entries = Object.entries(currencies);
+        if (entries.length === 0) {
+            return 'Unknown';
+        }
+
+        return entries.map(([key, value]) => `${key}: **${value}**`).join('\n');
+    }
+
+    return String(currencies);
+}
+
+function formatProfileDate(value) {
+    if (value === null || value === undefined || value === '') {
+        return 'Unknown';
+    }
+
+    let date;
+    if (typeof value === 'number') {
+        date = new Date(value < 1e12 ? value * 1000 : value);
+    } else if (typeof value === 'string' && /^\d+$/.test(value)) {
+        const parsed = Number.parseInt(value, 10);
+        date = new Date(parsed < 1e12 ? parsed * 1000 : parsed);
+    } else {
+        date = new Date(value);
+    }
+
+    if (Number.isNaN(date.getTime())) {
+        return String(value);
+    }
+
+    return date.toISOString().slice(0, 10);
+}
+
+function formatCampaignProgress(value) {
+    if (value === null || value === undefined || value === '') {
+        return 'Unknown';
+    }
+
+    const raw = String(value).trim();
+    if (!/^\d+$/.test(raw) || raw.length < 7) {
+        return raw;
+    }
+
+    // API value format example: 6046044 -> 46-40, 7046043 -> 46-39
+    const chapter = Number.parseInt(raw.slice(1, 4), 10);
+    const stageRaw = Number.parseInt(raw.slice(4), 10);
+
+    if (!Number.isInteger(chapter) || !Number.isInteger(stageRaw)) {
+        return raw;
+    }
+
+    const stage = stageRaw - 4;
+    if (stage <= 0) {
+        return raw;
+    }
+
+    return `${chapter}-${String(stage).padStart(2, '0')}`;
+}
+
+async function buildAccountProfileEmbedPreset(client, sectionKey, data, sectionLabel) {
     if (sectionKey === 'basic_info') {
         const commanderName = data?.nickname || 'Unknown';
         const commanderLevel = data?.lv ?? 'Unknown';
-        //const union = await getNikkeUnionById(client, account?.union_id);
-        //const unionName = union?.name || 'UNION';
+        const unionId = data?.gsn ?? null;
+        const union = unionId ? await getNikkeUnionById(client, unionId) : null;
+        const unionName = union?.name || 'UNION';
 
         return createEmbed({
-            title: `[NIGGA] ${commanderName} • Profile • Basic Info`,
+            title: `[${unionName}] ${commanderName} • Profile • Basic Info`,
             description: ``,
             color: getColor('success'),
         }).addFields(
             {
-                name: 'Section 1',
+                name: 'Basic Info',
                 value: [
                     `Commander Name: **${commanderName}**`,
                     `Commander Level: **${commanderLevel}**`,
                     `Character Count: **${data?.character_count ?? 'Unknown'}**`,
                     `Costume Count: **${data?.character_costume_count ?? 'Unknown'}**`,
-                    `Created at: **${data?.created_at ?? 'Unknown'}**`,
-                    `Last action at: **${data?.last_action_at ?? 'Unknown'}**`,
-                    //`Union: **${unionName}**`,
+                    `Created at: **${formatProfileDate(data?.created_at)}**`,
+                    `Last action at: **${formatProfileDate(data?.last_action_at)}**`,
+                    `Union: **${unionName}**`,
                     `Banned: **${data?.is_banned ? 'Yes' : 'No'}**`,
                 ].join('\n'),
                 inline: false,
             },
             {
-                name: 'Section 2',
-                value: data?.currencies ? Object.entries(data.currencies).map(([key, value]) => `${key}: **${value}**`).join('\n') : 'Unknown',
+                name: 'Currencies',
+                value: formatCurrencies(data?.currencies),
                 inline: false,
             },
             {
-                name: 'Section 3',
+                name: 'Progress',
                 value: [
                     `Team Combat Power: **${data?.team_combat ?? 'Unknown'}**`,
-                    `Normal Mode Progress: **${data?.progress_normal_campaign ?? 'Unknown'}**`,
-                    `Hard Mode Progress: **${data?.progress_hard_campaign ?? 'Unknown'}**`,
+                    `Normal Mode Progress: **${formatCampaignProgress(data?.progress_normal_campaign)}**`,
+                    `Hard Mode Progress: **${formatCampaignProgress(data?.progress_hard_campaign)}**`,
                     `Tribal Tower: **${data?.progress_tribe_tower ?? 'Unknown'}**`,
                     `Simulation Overclock: **${data?.sim_room_overclock_latest_season_high_score ?? 'Unknown'}**`,
                 ].join('\n'),
@@ -311,7 +387,7 @@ export async function buildAccountProfileView(
     const effectiveAreaId = Number.isInteger(Number.parseInt(String(result.area_id), 10))
         ? Number.parseInt(String(result.area_id), 10)
         : resolvedAreaId;
-    const embedPreset = await buildAccountProfileEmbedPreset(section.key, result.data, section.label);
+    const embedPreset = await buildAccountProfileEmbedPreset(client, section.key, result.data, section.label);
 
     const embed = EmbedBuilder.from(embedPreset).addFields(
         {
