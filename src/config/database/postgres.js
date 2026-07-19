@@ -19,7 +19,6 @@ const configuredTables = {
     nikke_accounts: 'nikke_accounts',
     nikke_unions: 'nikke_unions',
     nikke_user_character_cache: 'nikke_user_character_cache',
-    temp_data: 'temp_data',
     cache_data: 'cache_data',
 };
 
@@ -41,7 +40,6 @@ const allowedTableIdentifiers = new Set([
     'nikke_accounts',
     'nikke_unions',
     'nikke_user_character_cache',
-    'temp_data',
     'cache_data',
 ]);
 

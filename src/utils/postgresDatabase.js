@@ -322,7 +322,7 @@ class PostgreSQLDatabase {
 
     async _getTempValue(key, defaultValue = null) {
         const result = await this.pool.query(
-            `SELECT value FROM ${pgConfig.tables.temp_data} WHERE key = $1 AND (expires_at IS NULL OR expires_at > NOW())`,
+            `SELECT value FROM ${pgConfig.tables.cache_data} WHERE key = $1 AND (expires_at IS NULL OR expires_at > NOW())`,
             [key],
         );
         return result.rows.length > 0 ? result.rows[0].value : defaultValue;
@@ -404,7 +404,7 @@ class PostgreSQLDatabase {
 
             if (parsedKey.type === 'temp' || isTempBackedType(parsedKey.type)) {
                 await this.pool.query(
-                    `INSERT INTO ${pgConfig.tables.temp_data} (key, value, expires_at)
+                    `INSERT INTO ${pgConfig.tables.cache_data} (key, value, expires_at)
                      VALUES ($1, $2, $3)
                      ON CONFLICT (key) DO UPDATE SET value = $2, expires_at = $3`,
                     [parsedKey.fullKey, jsonValue, expiresAt],
@@ -441,7 +441,7 @@ class PostgreSQLDatabase {
             let deleted = false;
 
             if (parsedKey.type === 'temp' || isTempBackedType(parsedKey.type)) {
-                await this.pool.query(`DELETE FROM ${pgConfig.tables.temp_data} WHERE key = $1`, [parsedKey.fullKey]);
+                await this.pool.query(`DELETE FROM ${pgConfig.tables.cache_data} WHERE key = $1`, [parsedKey.fullKey]);
                 deleted = true;
             } else if (parsedKey.type === 'cache') {
                 await this.pool.query(`DELETE FROM ${pgConfig.tables.cache_data} WHERE key = $1`, [parsedKey.fullKey]);
@@ -451,11 +451,11 @@ class PostgreSQLDatabase {
             }
 
             for (const legacyKey of getLegacyVariantsForCanonical(canonicalKey)) {
-                await this.pool.query(`DELETE FROM ${pgConfig.tables.temp_data} WHERE key = $1`, [legacyKey]);
+                await this.pool.query(`DELETE FROM ${pgConfig.tables.cache_data} WHERE key = $1`, [legacyKey]);
             }
 
             if (key !== canonicalKey) {
-                await this.pool.query(`DELETE FROM ${pgConfig.tables.temp_data} WHERE key = $1`, [key]);
+                await this.pool.query(`DELETE FROM ${pgConfig.tables.cache_data} WHERE key = $1`, [key]);
             }
 
             return deleted;
@@ -478,7 +478,7 @@ class PostgreSQLDatabase {
 
             for (const tempPrefix of tempPrefixes) {
                 const tempResult = await this.pool.query(
-                    `SELECT key FROM ${pgConfig.tables.temp_data} WHERE key LIKE $1 AND (expires_at IS NULL OR expires_at > NOW())`,
+                    `SELECT key FROM ${pgConfig.tables.cache_data} WHERE key LIKE $1 AND (expires_at IS NULL OR expires_at > NOW())`,
                     [`${tempPrefix}%`],
                 );
                 for (const row of tempResult.rows) {

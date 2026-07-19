@@ -76,6 +76,13 @@ export const tableStatements = [
         PRIMARY KEY (intl_open_id, name_code)
     )`,
 
+    `CREATE TABLE IF NOT EXISTS ${t.cache_data} (
+        key VARCHAR(255) PRIMARY KEY,
+        value JSONB NOT NULL,
+        expires_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+
 ];
 
 export const indexStatements = [

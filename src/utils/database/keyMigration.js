@@ -37,7 +37,7 @@ async function keyExists(client, canonicalKey) {
     }
 
     const tempResult = await client.query(
-        `SELECT 1 FROM ${pgConfig.tables.temp_data} WHERE key = $1 LIMIT 1`,
+        `SELECT 1 FROM ${pgConfig.tables.cache_data} WHERE key = $1 LIMIT 1`,
         [canonicalKey],
     );
     return tempResult.rows.length > 0;
@@ -123,19 +123,19 @@ async function migrateCountersFromTemp(client, legacyKey, value) {
 
 async function migrateTempKeyRename(client, legacyKey, canonicalKey) {
     await client.query(
-        `INSERT INTO ${pgConfig.tables.temp_data} (key, value, expires_at, created_at)
+        `INSERT INTO ${pgConfig.tables.cache_data} (key, value, expires_at, created_at)
          SELECT $1, value, expires_at, created_at
-         FROM ${pgConfig.tables.temp_data}
+         FROM ${pgConfig.tables.cache_data}
          WHERE key = $2
          ON CONFLICT (key) DO NOTHING`,
         [canonicalKey, legacyKey],
     );
-    await client.query(`DELETE FROM ${pgConfig.tables.temp_data} WHERE key = $1`, [legacyKey]);
+    await client.query(`DELETE FROM ${pgConfig.tables.cache_data} WHERE key = $1`, [legacyKey]);
 }
 
 async function hasCompletedMarker(client) {
     const result = await client.query(
-        `SELECT 1 FROM ${pgConfig.tables.temp_data} WHERE key = $1 LIMIT 1`,
+        `SELECT 1 FROM ${pgConfig.tables.cache_data} WHERE key = $1 LIMIT 1`,
         [KEY_MIGRATION_MARKER],
     );
     return result.rows.length > 0;
@@ -143,7 +143,7 @@ async function hasCompletedMarker(client) {
 
 async function writeCompletedMarker(client, summary) {
     await client.query(
-        `INSERT INTO ${pgConfig.tables.temp_data} (key, value, expires_at, created_at)
+        `INSERT INTO ${pgConfig.tables.cache_data} (key, value, expires_at, created_at)
          VALUES ($1, $2::jsonb, NULL, CURRENT_TIMESTAMP)
          ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
         [KEY_MIGRATION_MARKER, JSON.stringify({ completedAt: new Date().toISOString(), ...summary })],
@@ -176,7 +176,7 @@ export async function runKeyMigration({ pool, dryRun = false, force = false, log
         logger.info(`Starting key migration${dryRun ? ' (dry run)' : ''}...`);
 
         const rows = await client.query(
-            `SELECT key, value FROM ${pgConfig.tables.temp_data} ORDER BY key`,
+            `SELECT key, value FROM ${pgConfig.tables.cache_data} ORDER BY key`,
         );
 
         for (const row of rows.rows) {
@@ -192,7 +192,7 @@ export async function runKeyMigration({ pool, dryRun = false, force = false, log
                     summary.skipped += 1;
                     if (!dryRun) {
                         await client.query(
-                            `DELETE FROM ${pgConfig.tables.temp_data} WHERE key = $1`,
+                            `DELETE FROM ${pgConfig.tables.cache_data} WHERE key = $1`,
                             [legacyKey],
                         );
                     }
@@ -206,19 +206,19 @@ export async function runKeyMigration({ pool, dryRun = false, force = false, log
                     if (parsed.type === 'economy') {
                         await migrateEconomyFromTemp(client, legacyKey, row.value);
                         await client.query(
-                            `DELETE FROM ${pgConfig.tables.temp_data} WHERE key = $1`,
+                            `DELETE FROM ${pgConfig.tables.cache_data} WHERE key = $1`,
                             [legacyKey],
                         );
                     } else if (parsed.type === 'user_level') {
                         await migrateUserLevelFromTemp(client, legacyKey, row.value);
                         await client.query(
-                            `DELETE FROM ${pgConfig.tables.temp_data} WHERE key = $1`,
+                            `DELETE FROM ${pgConfig.tables.cache_data} WHERE key = $1`,
                             [legacyKey],
                         );
                     } else if (parsed.type === 'counters') {
                         await migrateCountersFromTemp(client, legacyKey, row.value);
                         await client.query(
-                            `DELETE FROM ${pgConfig.tables.temp_data} WHERE key = $1`,
+                            `DELETE FROM ${pgConfig.tables.cache_data} WHERE key = $1`,
                             [legacyKey],
                         );
                     } else {
