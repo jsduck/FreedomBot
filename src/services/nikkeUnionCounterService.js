@@ -133,7 +133,7 @@ export async function runUnionOutpostStorageCounterCheck(client) {
                 }
 
                 const fullness = Number(progress.outpost_battle_storage_fullness);
-                if (!Number.isFinite(fullness) || fullness < 0.9) {
+                if (!Number.isFinite(fullness) || fullness < 0.5) { // Temp threshold for testing; adjust as needed
                     continue;
                 }
 
