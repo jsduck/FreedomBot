@@ -450,6 +450,7 @@ export const botConfig = {
   // Set any feature to `false` to disable it globally.
   features: {
     // Core systems.
+    nikke: true,
     economy: true,
     leveling: true,
     moderation: true,
@@ -540,6 +541,7 @@ const COMMAND_CATEGORY_FEATURE_MAP = {
   leveling: "leveling",
   logging: "logging",
   moderation: "moderation",
+  nikke: "nikke",
   music: "music",
   reaction_roles: "reactionRoles",
   search: "search",
