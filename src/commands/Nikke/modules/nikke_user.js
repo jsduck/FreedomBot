@@ -45,7 +45,7 @@ function summarizeSectionData(data) {
 }
 
 const CURRENCY_TYPE_LABELS = Object.freeze({
-    98: 'Paid Gems',
+    98: 'Gems',
     99: 'Free Gems',
     1000: 'Battle Data',
     2000: 'Credits',
@@ -78,6 +78,41 @@ function formatCurrencyValue(value) {
     }
 
     return new Intl.NumberFormat('en-US').format(numeric);
+}
+
+function parseCurrencyNumericValue(value) {
+    const numeric = typeof value === 'number'
+        ? value
+        : Number.parseFloat(String(value).replace(/,/g, ''));
+
+    return Number.isFinite(numeric) ? numeric : null;
+}
+
+function mergeGemCurrencies(entries) {
+    let gemTotal = 0;
+    let hasGem = false;
+    const merged = [];
+
+    for (const entry of entries) {
+        const type = Number.parseInt(String(entry.type), 10);
+
+        if (type === 98 || type === 99) {
+            const numericValue = parseCurrencyNumericValue(entry.value);
+            if (numericValue !== null) {
+                gemTotal += numericValue;
+                hasGem = true;
+                continue;
+            }
+        }
+
+        merged.push(entry);
+    }
+
+    if (hasGem) {
+        merged.push({ type: 98, value: gemTotal });
+    }
+
+    return merged;
 }
 
 function getCurrencyLabel(type) {
@@ -125,7 +160,9 @@ function formatCurrencies(currencies) {
             value: entry?.value ?? 'Unknown',
         }));
 
-        return sortCurrencyEntries(normalizedEntries).map((entry) => {
+        const displayEntries = mergeGemCurrencies(normalizedEntries);
+
+        return sortCurrencyEntries(displayEntries).map((entry) => {
             const label = getCurrencyLabel(entry.type);
             const value = formatCurrencyValue(entry.value);
             return `${label}: **${value}**`;
@@ -143,7 +180,9 @@ function formatCurrencies(currencies) {
             value,
         }));
 
-        return sortCurrencyEntries(normalizedEntries).map((entry) => {
+        const displayEntries = mergeGemCurrencies(normalizedEntries);
+
+        return sortCurrencyEntries(displayEntries).map((entry) => {
             const label = getCurrencyLabel(entry.type);
             const value = formatCurrencyValue(entry.value);
             return `${label}: **${value}**`;
