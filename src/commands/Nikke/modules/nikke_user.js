@@ -45,11 +45,11 @@ function summarizeSectionData(data) {
 }
 
 const CURRENCY_TYPE_LABELS = Object.freeze({
-    98: 'Gems',
-    99: 'Credits',
+    98: 'Paid Gems',
+    99: 'Free Gems',
     1000: 'Battle Data',
-    2000: 'Core Dust',
-    3000: 'Re-Energy',
+    2000: 'Credits',
+    3000: 'Core Dust',
     5100: 'Recruit Voucher',
     5200: 'Advanced Recruit Voucher',
     11000: 'Silver Mileage Ticket',
