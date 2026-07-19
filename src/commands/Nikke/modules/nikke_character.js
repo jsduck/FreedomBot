@@ -154,7 +154,7 @@ function formatDataSource(source) {
     return source || 'unknown';
 }
 
-const USER_CHARACTER_UPDATE_BUTTON_ID = 'nikke_user_character_update';
+export const USER_CHARACTER_UPDATE_BUTTON_ID = 'nikke_user_character_update';
 
 function slug(value) {
     return String(value)
