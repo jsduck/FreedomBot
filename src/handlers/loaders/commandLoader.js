@@ -271,6 +271,7 @@ async function registerGlobalCommands(client, clientId, commands, totalSubcomman
 
 async function registerGuildCommands(client, clientId, guildId, commands) {
     if (!guildId) {
+        logger.warn('No guild ID configured; skipping guild command registration and relying on global registration.');
         return;
     }
 

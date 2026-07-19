@@ -326,9 +326,17 @@ class TitanBot extends Client {
 
   async registerCommands() {
     try {
+      const targetGuildId = this.config.bot.testGuildId || this.config.bot.guildId || null;
+
+      if (targetGuildId) {
+        startupLog(`Registering slash commands for guild ${targetGuildId} and globally...`);
+      } else {
+        startupLog('Registering slash commands globally (no guild id configured)...');
+      }
+
       await registerSlashCommands(this, {
         clientId: this.config.bot.clientId,
-        guildId: this.config.bot.testGuildId,
+        guildId: targetGuildId,
       });
     } catch (error) {
       logger.error('Error registering commands:', error);
