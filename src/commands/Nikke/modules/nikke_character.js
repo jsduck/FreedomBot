@@ -49,7 +49,7 @@ function getDollStats(rawNikke) {
 }
 
 function getCubeStats(rawNikke) {
-    switch (rawNikke.cube_tid) {
+    switch (rawNikke.harmony_cube_tid) {
         case 0:
             return ``;
         case 200101:
@@ -58,7 +58,7 @@ function getCubeStats(rawNikke) {
         case 200401:
         case 200501:
         default:
-            return `${rawNikke.cube_tid} Lv ${rawNikke.cube_lv}`;
+            return `${rawNikke.harmony_cube_tid} Lv ${rawNikke.harmony_cube_lv}`;
     }
 }
 
@@ -310,7 +310,7 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
                 },
                 {
                     name: "Data Source",
-                    value: `Source: ${formatDataSource(dataSource)}\nFetched at: ${formatCacheTimestamp(cacheRecord?.fetched_at)}\nUpdated at: ${formatCacheTimestamp(cacheRecord?.updated_at)}`,
+                    value: `Source: ${formatDataSource(dataSource)}\nFetched at: ${formatCacheTimestamp(new Date())}\nUpdated at: ${formatCacheTimestamp(cacheRecord?.updated_at)}`,
                     inline: false
                 }
             );
