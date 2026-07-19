@@ -293,16 +293,21 @@ function formatTowerDailyInfoList(list) {
         return 'None';
     }
 
-    return list
+    const openTowers = list
         .slice()
         .sort((a, b) => Number(a?.type ?? 0) - Number(b?.type ?? 0))
+        .filter((entry) => entry?.is_opened)
         .map((entry) => {
             const towerType = entry?.type ?? '?';
-            const opened = entry?.is_opened ? 'Open' : 'Closed';
             const remaining = formatSimpleValue(entry?.remaining_count);
-            return `Tower ${towerType}: ${opened}, Remaining **${remaining}**`;
-        })
-        .join(' | ');
+            return `- Tower ${towerType}: Remaining **${remaining}**`;
+        });
+
+    if (openTowers.length === 0) {
+        return 'None';
+    }
+
+    return openTowers.join('\n');
 }
 
 async function buildAccountProfileEmbedPreset(client, intlOpenId, sectionKey, data, sectionLabel) {
