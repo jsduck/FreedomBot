@@ -168,42 +168,6 @@ function formatAlignedRows(rows) {
         .join("\n");
 }
 
-function getStatsValueColor(field, value) {
-    const normalizedField = String(field || '').toLowerCase();
-    const normalizedValue = Number.parseFloat(String(value).replace('%', ''));
-
-    if (normalizedField === 'eledmg') {
-        if (Number.isFinite(normalizedValue) && normalizedValue < 45) {
-            return '\u001b[31m';
-        }
-
-        if (Number.isFinite(normalizedValue) && normalizedValue > 90) {
-            return '\u001b[32m';
-        }
-    }
-
-    if (normalizedField === 'attack') {
-        if (Number.isFinite(normalizedValue) && normalizedValue < 20) {
-            return '\u001b[31m';
-        }
-
-        if (Number.isFinite(normalizedValue) && normalizedValue > 40) {
-            return '\u001b[32m';
-        }
-    }
-
-    return '\u001b[0m';
-}
-
-function formatStatsRows(rows) {
-    return rows
-        .map(([field, value]) => {
-            const color = getStatsValueColor(field, value);
-            return `${field}:\n\`\`\`ansi\n${color}${value}\u001b[0m\n\`\`\``;
-        })
-        .join("\n");
-}
-
 function resolveSynchroLevelFromOutpost(account, fallbackLevel) {
     const outpost = account?.outpost_info;
 
@@ -352,7 +316,7 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
                 },
                 {
                     name: "Stats",
-                    value: `${formatStatsRows(OLarray)}`,
+                    value: `${formatAlignedRows(OLarray)}`,
                     inline: false
                 },
                 {
