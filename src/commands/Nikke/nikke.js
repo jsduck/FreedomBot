@@ -15,14 +15,82 @@ import { handleAccountAdd, handleAccountDelete, handleAccountUpdate } from './mo
 import { handleAccountProgress, handleAccountProgressAdd, handleAccountProgressFetch, handleAccountProgressRemove } from './modules/nikke_progress.js';
 import { handleUnionCounterDisable, handleUnionCounterEnable, handleUnionSetCounterChannel } from './modules/nikke_union_counter.js';
 import { handleAccountProfile, handleGetMyGuildInfo, handleGetUserCharacters, handleGetUserDailyContentsProgress, handleGetUserProfile, handleGetUserProfileBasicInfo, handleGetUserProfileOutpostInfo, handleSearchUser } from './modules/nikke_user.js';
-import { getNikkeAccountChoices, getNikkeUnionChoices, getNikkeUnionGuildChoices } from '../../utils/database.js';
+import { getNikkeAccounts, getNikkeUnions } from '../../utils/database.js';
+
+function truncateChoiceName(value, maxLength = 100) {
+    return String(value || '').slice(0, maxLength);
+}
+
+function buildAccountAutocompleteChoices(accounts, query) {
+    const normalizedQuery = String(query || '').toLowerCase();
+    return accounts
+        .filter((account) => {
+            const name = String(account.name || '').toLowerCase();
+            const openId = String(account.intl_open_id || '').toLowerCase();
+            return !normalizedQuery || name.includes(normalizedQuery) || openId.includes(normalizedQuery);
+        })
+        .slice(0, 25)
+        .map((account) => ({
+            name: truncateChoiceName(`${account.name || 'Unknown'} (${account.intl_open_id})`),
+            value: String(account.intl_open_id || ''),
+        }));
+}
+
+function buildUnionAutocompleteChoices(unions, query) {
+    const normalizedQuery = String(query || '').toLowerCase();
+    return unions
+        .filter((union) => {
+            const name = String(union.name || '').toLowerCase();
+            const unionId = String(union.union_id || '').toLowerCase();
+            const area = String(union.area_id ?? '').toLowerCase();
+            return !normalizedQuery || name.includes(normalizedQuery) || unionId.includes(normalizedQuery) || area.includes(normalizedQuery);
+        })
+        .slice(0, 25)
+        .map((union) => ({
+            name: truncateChoiceName(
+                union.area_id !== null && union.area_id !== undefined
+                    ? `${union.name} (${union.union_id}) Area ${union.area_id}`
+                    : `${union.name} (${union.union_id})`
+            ),
+            value: String(union.union_id || ''),
+        }));
+}
+
+function buildGuildIdAutocompleteChoices(unions, query) {
+    const normalizedQuery = String(query || '').toLowerCase();
+    return unions
+        .map((union) => {
+            const numericUnionId = Number.parseInt(String(union.union_id), 10);
+            if (!Number.isInteger(numericUnionId)) {
+                return null;
+            }
+
+            return {
+                union,
+                guildId: numericUnionId,
+            };
+        })
+        .filter(Boolean)
+        .filter(({ union, guildId }) => {
+            const name = String(union.name || '').toLowerCase();
+            const unionId = String(union.union_id || '').toLowerCase();
+            const guildIdText = String(guildId);
+            const area = String(union.area_id ?? '').toLowerCase();
+            return !normalizedQuery || name.includes(normalizedQuery) || unionId.includes(normalizedQuery) || guildIdText.includes(normalizedQuery) || area.includes(normalizedQuery);
+        })
+        .slice(0, 25)
+        .map(({ union, guildId }) => ({
+            name: truncateChoiceName(
+                union.area_id !== null && union.area_id !== undefined
+                    ? `${union.name} (${guildId}) Area ${union.area_id}`
+                    : `${union.name} (${guildId})`
+            ),
+            value: guildId,
+        }));
+}
 
 export default {
     async data(client) {
-        const accountChoices = await getNikkeAccountChoices(client);
-        const unionChoices = await getNikkeUnionChoices(client);
-        const guildChoices = await getNikkeUnionGuildChoices(client);
-
         return new SlashCommandBuilder()
             .setName('nikke')
             .setDescription('Nikke commands.')
@@ -62,13 +130,14 @@ export default {
                                     .setName('intl_open_id')
                                     .setDescription('Account open id')
                                     .setRequired(true)
+                                    .setAutocomplete(true)
                             )
                             .addStringOption(option =>
                                 option
                                     .setName('union_id')
                                     .setDescription('New union id for the account')
                                     .setRequired(true)
-                                    .addChoices(...unionChoices)
+                                    .setAutocomplete(true)
                             )
                     )
                     .addSubcommand(subcommand =>
@@ -80,6 +149,7 @@ export default {
                                     .setName('intl_open_id')
                                     .setDescription('Account open id')
                                     .setRequired(true)
+                                    .setAutocomplete(true)
                             )
                     )
                     .addSubcommand(subcommand =>
@@ -91,7 +161,7 @@ export default {
                                     .setName('intl_open_id')
                                     .setDescription('OpenID of the user to fetch profile for')
                                     .setRequired(true)
-                                    .addChoices(...accountChoices)
+                                    .setAutocomplete(true)
                             )
                     )
                     .addSubcommand(subcommand =>
@@ -103,7 +173,7 @@ export default {
                                     .setName('intl_open_id')
                                     .setDescription('OpenID of the user to fetch profile basic info for')
                                     .setRequired(true)
-                                    .addChoices(...accountChoices)
+                                    .setAutocomplete(true)
                             )
                     )
                     .addSubcommand(subcommand =>
@@ -115,7 +185,7 @@ export default {
                                     .setName('intl_open_id')
                                     .setDescription('OpenID of the user to fetch profile outpost info for')
                                     .setRequired(true)
-                                    .addChoices(...accountChoices)
+                                    .setAutocomplete(true)
                             )
                     )
                     .addSubcommand(subcommand =>
@@ -127,7 +197,7 @@ export default {
                                     .setName('intl_open_id')
                                     .setDescription('OpenID of the user to fetch daily contents progress for')
                                     .setRequired(true)
-                                    .addChoices(...accountChoices)
+                                    .setAutocomplete(true)
                             )
                     )
             )
@@ -144,7 +214,7 @@ export default {
                                     .setName('union_id')
                                     .setDescription('Union to monitor')
                                     .setRequired(true)
-                                    .addChoices(...unionChoices)
+                                    .setAutocomplete(true)
                             )
                     )
                     .addSubcommand(subcommand =>
@@ -156,7 +226,7 @@ export default {
                                     .setName('union_id')
                                     .setDescription('Union to stop monitoring')
                                     .setRequired(true)
-                                    .addChoices(...unionChoices)
+                                    .setAutocomplete(true)
                             )
                     )
                     .addSubcommand(subcommand =>
@@ -168,7 +238,7 @@ export default {
                                     .setName('union_id')
                                     .setDescription('Union to configure')
                                     .setRequired(true)
-                                    .addChoices(...unionChoices)
+                                    .setAutocomplete(true)
                             )
                             .addChannelOption(option =>
                                 option
@@ -192,7 +262,7 @@ export default {
                                     .setName('intl_open_id')
                                     .setDescription('OpenID of the account to fetch progress for')
                                     .setRequired(true)
-                                    .addChoices(...accountChoices)
+                                    .setAutocomplete(true)
                             )
                     )
                     .addSubcommand(subcommand =>
@@ -204,7 +274,7 @@ export default {
                                     .setName('intl_open_id')
                                     .setDescription('OpenID of the account to fetch progress for')
                                     .setRequired(true)
-                                    .addChoices(...accountChoices)
+                                    .setAutocomplete(true)
                             )
                     )
                     .addSubcommand(subcommand =>
@@ -216,7 +286,7 @@ export default {
                                     .setName('intl_open_id')
                                     .setDescription('OpenID of the account to add progress for')
                                     .setRequired(true)
-                                    .addChoices(...accountChoices)
+                                    .setAutocomplete(true)
                             )
                             .addBooleanOption(option =>
                                 option
@@ -234,7 +304,7 @@ export default {
                                     .setName('intl_open_id')
                                     .setDescription('OpenID of the account to remove progress for')
                                     .setRequired(true)
-                                    .addChoices(...accountChoices)
+                                    .setAutocomplete(true)
                             )
                     )
             )
@@ -290,7 +360,7 @@ export default {
                             .setName('intl_open_id')
                             .setDescription('OpenID of the user to fetch character info for')
                             .setRequired(true)
-                            .addChoices(...accountChoices)
+                            .setAutocomplete(true)
                     )
                     .addStringOption(option =>
                         option
@@ -308,7 +378,7 @@ export default {
                             .setName('guild_id')
                             .setDescription('ID of the guild to fetch details for')
                             .setRequired(true)
-                            .addChoices(...guildChoices)
+                            .setAutocomplete(true)
                     )
             )
             .addSubcommand(subcommand =>
@@ -320,7 +390,7 @@ export default {
                             .setName('guild_id')
                             .setDescription('ID of the guild to fetch details for')
                             .setRequired(true)
-                            .addChoices(...guildChoices)
+                            .setAutocomplete(true)
                     )
             )
             .addSubcommand(subcommand =>
@@ -332,14 +402,14 @@ export default {
                             .setName('guild_id')
                             .setDescription('ID of the guild to fetch details for')
                             .setRequired(true)
-                            .addChoices(...guildChoices)
+                            .setAutocomplete(true)
                     )
                     .addStringOption(option =>
                         option
                             .setName('intl_open_id')
                             .setDescription('OpenID of the user to fetch character info for')
                             .setRequired(true)
-                            .addChoices(...accountChoices)
+                            .setAutocomplete(true)
                     )
             )
             .addSubcommand(subcommand =>
@@ -351,14 +421,14 @@ export default {
                             .setName('guild_id')
                             .setDescription('ID of the guild to fetch details for')
                             .setRequired(true)
-                            .addChoices(...guildChoices)
+                            .setAutocomplete(true)
                     )
                     .addStringOption(option =>
                         option
                             .setName('intl_open_id')
                             .setDescription('OpenID of the user to fetch character info for')
                             .setRequired(true)
-                            .addChoices(...accountChoices)
+                            .setAutocomplete(true)
                     )
                     .addIntegerOption(option =>
                         option
@@ -382,7 +452,7 @@ export default {
                             .setName('guild_id')
                             .setDescription('ID of the guild to fetch details for')
                             .setRequired(true)
-                            .addChoices(...guildChoices)
+                            .setAutocomplete(true)
                     )
                     .addIntegerOption(option =>
                         option
@@ -405,7 +475,7 @@ export default {
                             .setName('guild_id')
                             .setDescription('ID of the guild to fetch details for')
                             .setRequired(true)
-                            .addChoices(...guildChoices)
+                            .setAutocomplete(true)
                     )
                     .addIntegerOption(option =>
                         option
@@ -464,7 +534,7 @@ export default {
                             .setName('intl_open_id')
                             .setDescription('OpenID of the user to fetch guild info for')
                             .setRequired(true)
-                            .addChoices(...accountChoices)
+                            .setAutocomplete(true)
                     )
             )
             .addSubcommand(subcommand =>
@@ -476,7 +546,7 @@ export default {
                             .setName('intl_open_id')
                             .setDescription('OpenID of the user to fetch characters for')
                             .setRequired(true)
-                            .addChoices(...accountChoices)
+                            .setAutocomplete(true)
                     )
             )
             .addSubcommand(subcommand =>
@@ -488,7 +558,7 @@ export default {
                             .setName('intl_open_id')
                             .setDescription('OpenID of the user to fetch profile for')
                             .setRequired(true)
-                            .addChoices(...accountChoices)
+                            .setAutocomplete(true)
                     )
             )
             .addSubcommand(subcommand =>
@@ -515,6 +585,40 @@ export default {
                     )
             )
             ;
+    },
+
+    async autocomplete(interaction, client) {
+        try {
+            const focused = interaction.options.getFocused(true);
+            const query = String(focused.value || '').trim().toLowerCase();
+
+            if (focused.name === 'intl_open_id') {
+                const accounts = await getNikkeAccounts(client, { seedDefaults: false });
+                await interaction.respond(buildAccountAutocompleteChoices(accounts, query));
+                return;
+            }
+
+            if (focused.name === 'union_id') {
+                const unions = await getNikkeUnions(client);
+                await interaction.respond(buildUnionAutocompleteChoices(unions, query));
+                return;
+            }
+
+            if (focused.name === 'guild_id') {
+                const unions = await getNikkeUnions(client);
+                await interaction.respond(buildGuildIdAutocompleteChoices(unions, query));
+                return;
+            }
+
+            await interaction.respond([]);
+        } catch (error) {
+            logger.error('Error handling Nikke autocomplete:', {
+                error: error.message,
+                guildId: interaction.guildId,
+                commandName: interaction.commandName,
+            });
+            await interaction.respond([]).catch(() => {});
+        }
     },
 
     async execute(interaction, guildConfig, client) {

@@ -14,6 +14,10 @@ const DEFAULT_NIKKE_UNIONS = Object.freeze([
     { name: 'Avaricia', union_id: '25471', area_id: 84 },
 ]);
 
+const MAX_NIKKE_ACCOUNT_COMMAND_CHOICES = 5;
+const MAX_NIKKE_UNION_COMMAND_CHOICES = 10;
+const MAX_NIKKE_CHOICE_NAME_LENGTH = 60;
+
 function isPostgresSqlReady(wrapper) {
     return Boolean(
         wrapper?.db?.pool &&
@@ -437,8 +441,8 @@ export async function getNikkeAccounts(client, { seedDefaults = true } = {}) {
 
 export async function getNikkeAccountChoices(client) {
     const accounts = await getNikkeAccounts(client);
-    return accounts.map((account) => ({
-        name: account.name,
+    return accounts.slice(0, MAX_NIKKE_ACCOUNT_COMMAND_CHOICES).map((account) => ({
+        name: String(account.name || account.intl_open_id || 'Unknown').slice(0, MAX_NIKKE_CHOICE_NAME_LENGTH),
         value: account.intl_open_id,
     }));
 }
@@ -479,10 +483,12 @@ export async function getNikkeUnions(client) {
 
 export async function getNikkeUnionChoices(client) {
     const unions = await getNikkeUnions(client);
-    return unions.slice(0, 25).map((union) => ({
-        name: union.area_id !== null && union.area_id !== undefined
-            ? `${union.name} (Area ${union.area_id})`
-            : union.name,
+    return unions.slice(0, MAX_NIKKE_UNION_COMMAND_CHOICES).map((union) => ({
+        name: (
+            union.area_id !== null && union.area_id !== undefined
+                ? `${union.name} (Area ${union.area_id})`
+                : union.name
+        ).slice(0, MAX_NIKKE_CHOICE_NAME_LENGTH),
         value: union.union_id,
     }));
 }
@@ -498,14 +504,16 @@ export async function getNikkeUnionGuildChoices(client) {
             }
 
             return {
-                name: union.area_id !== null && union.area_id !== undefined
-                    ? `${union.name} (Area ${union.area_id})`
-                    : union.name,
+                name: (
+                    union.area_id !== null && union.area_id !== undefined
+                        ? `${union.name} (Area ${union.area_id})`
+                        : union.name
+                ).slice(0, MAX_NIKKE_CHOICE_NAME_LENGTH),
                 value: numericUnionId,
             };
         })
         .filter(Boolean)
-        .slice(0, 25);
+        .slice(0, MAX_NIKKE_UNION_COMMAND_CHOICES);
 }
 
 export async function getNikkeUnionById(client, unionId) {
