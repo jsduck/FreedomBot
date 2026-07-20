@@ -300,7 +300,7 @@ function formatTowerDailyInfoList(list) {
         .map((entry) => {
             const towerType = entry?.type ?? '?';
             const remaining = formatSimpleValue(entry?.remaining_count);
-            return `- Tower ${towerType}: Remaining **${remaining}**`;
+            return `\n- Tower ${towerType}: Remaining **${remaining}**`;
         });
 
     if (openTowers.length === 0) {
@@ -945,7 +945,7 @@ export async function handleGetUserProfileBasicInfo(interaction, client) {
     const nikke_area_id = null;
 
     try {
-        const response = await buildUserProfileBasicInfoView(client, intl_open_id, nikke_area_id);
+        const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 0);
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
             components: response.components,
@@ -981,7 +981,7 @@ export async function handleGetUserProfileOutpostInfo(interaction, client) {
     const nikke_area_id = null;
 
     try {
-        const response = await buildUserProfileOutpostInfoView(client, intl_open_id, nikke_area_id);
+        const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 1);
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
             components: response.components,
@@ -1017,7 +1017,7 @@ export async function handleGetUserDailyContentsProgress(interaction, client) {
     const nikke_area_id = null;
 
     try {
-        const response = await buildUserDailyContentsProgressView(client, intl_open_id, nikke_area_id);
+        const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 2);
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
             components: response.components,
