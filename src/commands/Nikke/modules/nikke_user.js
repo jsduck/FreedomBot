@@ -962,7 +962,7 @@ export async function handleGetUserProfileBasicInfo(interaction, client) {
     const nikke_area_id = null;
 
     try {
-        const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 0, { refresh: true });
+        const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 0);
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
             components: buildAccountProfileUpdateOnlyComponents(intl_open_id, response.areaId, 0, { singleMode: true }),
@@ -998,7 +998,7 @@ export async function handleGetUserProfileOutpostInfo(interaction, client) {
     const nikke_area_id = null;
 
     try {
-        const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 1, { refresh: true });
+        const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 1);
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
             components: buildAccountProfileUpdateOnlyComponents(intl_open_id, response.areaId, 1, { singleMode: true }),
@@ -1034,7 +1034,7 @@ export async function handleGetUserDailyContentsProgress(interaction, client) {
     const nikke_area_id = null;
 
     try {
-        const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 2, { refresh: true });
+        const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 2);
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
             components: buildAccountProfileUpdateOnlyComponents(intl_open_id, response.areaId, 2, { singleMode: true }),
