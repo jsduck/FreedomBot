@@ -288,6 +288,91 @@ function formatRewardList(rewards) {
     return rewards.join(', ');
 }
 
+function parseProgressNumber(value) {
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : null;
+    }
+
+    if (typeof value === 'string') {
+        const numeric = Number.parseFloat(value.replace(/,/g, '').trim());
+        return Number.isFinite(numeric) ? numeric : null;
+    }
+
+    return null;
+}
+
+const DAILY_PROGRESS_THRESHOLD_RULES = Object.freeze([
+    { key: 'counsel_remaining_count', source: 'number', operator: 'eq', value: 0 },
+    { key: 'daily_mission_receivable_points', source: 'number', operator: 'eq', value: 0 },
+    { key: 'daily_mission_received_points', source: 'number', operator: 'gt', value: 100 },
+    { key: 'daily_mission_received_rewards', source: 'length', operator: 'gt', value: 20 },
+    { key: 'intercept_remaining_tickets', source: 'number', operator: 'eq', value: 0 },
+    { key: 'outpost_battle_storage_excess', source: 'number', operator: 'eq', value: 0 },
+    { key: 'outpost_battle_storage_fullness', source: 'percent', operator: 'lt', value: 90 },
+    { key: 'rookie_arena_remaining_count', source: 'number', operator: 'eq', value: 0 },
+    { key: 'special_arena_remaining_count', source: 'number', operator: 'eq', value: 0 },
+    { key: 'weekly_mission_receivable_points', source: 'number', operator: 'eq', value: 0 },
+    { key: 'weekly_mission_received_points', source: 'number', operator: 'gt', value: 100 },
+    { key: 'weekly_mission_received_rewards', source: 'length', operator: 'gt', value: 20 },
+]);
+
+function getDailyProgressThresholdRule(key) {
+    return DAILY_PROGRESS_THRESHOLD_RULES.find((rule) => rule.key === key) ?? null;
+}
+
+function evaluateDailyProgressThreshold(key, rawValue) {
+    const rule = getDailyProgressThresholdRule(key);
+    if (!rule) {
+        return false;
+    }
+
+    let comparable = null;
+
+    if (rule.source === 'length') {
+        comparable = Array.isArray(rawValue) ? rawValue.length : parseProgressNumber(rawValue);
+    } else if (rule.source === 'percent') {
+        const numeric = parseProgressNumber(rawValue);
+        comparable = numeric === null
+            ? null
+            : (numeric <= 1 ? numeric * 100 : numeric);
+    } else {
+        comparable = parseProgressNumber(rawValue);
+    }
+
+    if (comparable === null) {
+        return false;
+    }
+
+    if (rule.operator === 'eq') {
+        return comparable === rule.value;
+    }
+
+    if (rule.operator === 'gt') {
+        return comparable > rule.value;
+    }
+
+    if (rule.operator === 'lt') {
+        return comparable < rule.value;
+    }
+
+    return false;
+}
+
+function statusEmoji(isDone) {
+    return isDone ? '✅' : '❌';
+}
+
+function isTowerDailyDone(list) {
+    if (!Array.isArray(list) || list.length === 0) {
+        return false;
+    }
+
+    return list.every((entry) => {
+        const remaining = parseProgressNumber(entry?.remaining_count);
+        return remaining === 0;
+    });
+}
+
 function formatTowerDailyInfoList(list) {
     if (!Array.isArray(list) || list.length === 0) {
         return 'None';
@@ -395,6 +480,20 @@ async function buildAccountProfileEmbedPreset(client, intlOpenId, sectionKey, da
             ? `Chapter ${simChapter}, Difficulty ${simDifficulty}`
             : 'Unknown';
 
+        const adviseDone = evaluateDailyProgressThreshold('counsel_remaining_count', dailyData?.counsel_remaining_count);
+        const dailyMissionReceivableDone = evaluateDailyProgressThreshold('daily_mission_receivable_points', dailyData?.daily_mission_receivable_points);
+        const dailyMissionReceivedDone = evaluateDailyProgressThreshold('daily_mission_received_points', dailyData?.daily_mission_received_points);
+        const dailyMissionRewardsDone = evaluateDailyProgressThreshold('daily_mission_received_rewards', dailyData?.daily_mission_received_rewards);
+        const interceptDone = evaluateDailyProgressThreshold('intercept_remaining_tickets', dailyData?.intercept_remaining_tickets);
+        const outpostStorageExcessDone = evaluateDailyProgressThreshold('outpost_battle_storage_excess', dailyData?.outpost_battle_storage_excess);
+        const outpostStorageFullnessDone = evaluateDailyProgressThreshold('outpost_battle_storage_fullness', dailyData?.outpost_battle_storage_fullness);
+        const rookieArenaDone = evaluateDailyProgressThreshold('rookie_arena_remaining_count', dailyData?.rookie_arena_remaining_count);
+        const specialArenaDone = evaluateDailyProgressThreshold('special_arena_remaining_count', dailyData?.special_arena_remaining_count);
+        const towerDailyDone = isTowerDailyDone(dailyData?.tower_daily_info_list);
+        const weeklyMissionReceivableDone = evaluateDailyProgressThreshold('weekly_mission_receivable_points', dailyData?.weekly_mission_receivable_points);
+        const weeklyMissionReceivedDone = evaluateDailyProgressThreshold('weekly_mission_received_points', dailyData?.weekly_mission_received_points);
+        const weeklyMissionRewardsDone = evaluateDailyProgressThreshold('weekly_mission_received_rewards', dailyData?.weekly_mission_received_rewards);
+
         return createEmbed({
             title: `[${resolvedUnionName}] ${accountName} • Daily Contents Progress`,
             description: ``,
@@ -403,23 +502,23 @@ async function buildAccountProfileEmbedPreset(client, intlOpenId, sectionKey, da
             {
                 name: 'Daily Progress',
                 value: [
-                    `Advise Remaining: **${formatSimpleValue(dailyData?.counsel_remaining_count)}**`,
-                    `Daily Mission Receivable: **${formatSimpleValue(dailyData?.daily_mission_receivable_points)}**`,
-                    `Daily Mission Received: **${formatSimpleValue(dailyData?.daily_mission_received_points)}**`,
-                    `Daily Mission Rewards: **${formatRewardList(dailyData?.daily_mission_received_rewards)}**`,
+                    `${statusEmoji(adviseDone)} Advise Remaining: **${formatSimpleValue(dailyData?.counsel_remaining_count)}**`,
+                    `${statusEmoji(dailyMissionReceivableDone)} Daily Mission Receivable: **${formatSimpleValue(dailyData?.daily_mission_receivable_points)}**`,
+                    `${statusEmoji(dailyMissionReceivedDone)} Daily Mission Received: **${formatSimpleValue(dailyData?.daily_mission_received_points)}**`,
+                    `${statusEmoji(dailyMissionRewardsDone)} Daily Mission Rewards: **${formatRewardList(dailyData?.daily_mission_received_rewards)}**`,
                     `Dispatch Completed: **${formatSimpleValue(dailyData?.dispatch_completed_count)}**`,
                     `Dispatch In Progress: **${formatSimpleValue(dailyData?.dispatch_in_progress_count)}**`,
-                    `Intercept Remaining: **${formatSimpleValue(dailyData?.intercept_remaining_tickets)}**`,
+                    `${statusEmoji(interceptDone)} Intercept Remaining: **${formatSimpleValue(dailyData?.intercept_remaining_tickets)}**`,
                     `Outpost Battle Efficiency: **${formatSimpleValue(dailyData?.outpost_battle_efficiency)}**`,
-                    `Outpost Storage Excess: **${formatSimpleValue(dailyData?.outpost_battle_storage_excess)}**`,
-                    `Outpost Storage Fullness: **${formatPercent(dailyData?.outpost_battle_storage_fullness)}**`,
-                    `Rookie Arena Remaining: **${formatSimpleValue(dailyData?.rookie_arena_remaining_count)}**`,
-                    `Special Arena Remaining: **${formatSimpleValue(dailyData?.special_arena_remaining_count)}**`,
+                    `${statusEmoji(outpostStorageExcessDone)} Outpost Storage Excess: **${formatSimpleValue(dailyData?.outpost_battle_storage_excess)}**`,
+                    `${statusEmoji(outpostStorageFullnessDone)} Outpost Storage Fullness: **${formatPercent(dailyData?.outpost_battle_storage_fullness)}**`,
+                    `${statusEmoji(rookieArenaDone)} Rookie Arena Remaining: **${formatSimpleValue(dailyData?.rookie_arena_remaining_count)}**`,
+                    `${statusEmoji(specialArenaDone)} Special Arena Remaining: **${formatSimpleValue(dailyData?.special_arena_remaining_count)}**`,
                     `Sim Room Best: **${simRecord}**`,
-                    `Tower Daily: ${formatTowerDailyInfoList(dailyData?.tower_daily_info_list)}`,
-                    `Weekly Mission Receivable: **${formatSimpleValue(dailyData?.weekly_mission_receivable_points)}**`,
-                    `Weekly Mission Received: **${formatSimpleValue(dailyData?.weekly_mission_received_points)}**`,
-                    `Weekly Mission Rewards: **${formatRewardList(dailyData?.weekly_mission_received_rewards)}**`,
+                    `${statusEmoji(towerDailyDone)} Tower Daily: ${formatTowerDailyInfoList(dailyData?.tower_daily_info_list)}`,
+                    `${statusEmoji(weeklyMissionReceivableDone)} Weekly Mission Receivable: **${formatSimpleValue(dailyData?.weekly_mission_receivable_points)}**`,
+                    `${statusEmoji(weeklyMissionReceivedDone)} Weekly Mission Received: **${formatSimpleValue(dailyData?.weekly_mission_received_points)}**`,
+                    `${statusEmoji(weeklyMissionRewardsDone)} Weekly Mission Rewards: **${formatRewardList(dailyData?.weekly_mission_received_rewards)}**`,
                 ].join('\n'),
                 inline: false,
             }
