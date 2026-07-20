@@ -948,7 +948,7 @@ export async function handleGetUserProfileBasicInfo(interaction, client) {
         const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 0);
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
-            components: response.components,
+            components: [],
             files: response.file ? [response.file] : [],
         }).catch(logger.error);
     } catch (error) {
@@ -984,7 +984,7 @@ export async function handleGetUserProfileOutpostInfo(interaction, client) {
         const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 1);
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
-            components: response.components,
+            components: [],
             files: response.file ? [response.file] : [],
         }).catch(logger.error);
     } catch (error) {
@@ -1020,7 +1020,7 @@ export async function handleGetUserDailyContentsProgress(interaction, client) {
         const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 2);
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
-            components: response.components,
+            components: [],
             files: response.file ? [response.file] : [],
         }).catch(logger.error);
     } catch (error) {
