@@ -945,7 +945,7 @@ export async function handleGetUserProfileBasicInfo(interaction, client) {
     const nikke_area_id = null;
 
     try {
-        const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 0);
+        const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 0, { refresh: true });
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
             components: [],
@@ -981,7 +981,7 @@ export async function handleGetUserProfileOutpostInfo(interaction, client) {
     const nikke_area_id = null;
 
     try {
-        const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 1);
+        const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 1, { refresh: true });
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
             components: [],
@@ -1017,7 +1017,7 @@ export async function handleGetUserDailyContentsProgress(interaction, client) {
     const nikke_area_id = null;
 
     try {
-        const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 2);
+        const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 2, { refresh: true });
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
             components: [],
