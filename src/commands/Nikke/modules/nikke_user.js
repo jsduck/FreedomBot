@@ -498,6 +498,22 @@ function buildAccountProfilePagerComponents(intlOpenId, areaId, viewIndex) {
     ];
 }
 
+export function buildAccountProfileUpdateOnlyComponents(intlOpenId, areaId, viewIndex, { singleMode = false } = {}) {
+    const customId = singleMode
+        ? `${ACCOUNT_PROFILE_UPDATE_BUTTON_ID}:${intlOpenId}:${areaId}:${viewIndex}:single`
+        : `${ACCOUNT_PROFILE_UPDATE_BUTTON_ID}:${intlOpenId}:${areaId}:${viewIndex}`;
+
+    return [
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(customId)
+                .setLabel('Update')
+                .setEmoji('🔄')
+                .setStyle(ButtonStyle.Primary),
+        ),
+    ];
+}
+
 function resolveAreaId(value) {
     const parsed = Number.parseInt(String(value), 10);
     return Number.isInteger(parsed) ? parsed : null;
@@ -641,6 +657,7 @@ export async function buildAccountProfileView(
 
     return {
         embed,
+        areaId: effectiveAreaId,
         components: buildAccountProfilePagerComponents(intlOpenId, effectiveAreaId, normalizedIndex),
         file: null,
     };
@@ -948,7 +965,7 @@ export async function handleGetUserProfileBasicInfo(interaction, client) {
         const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 0, { refresh: true });
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
-            components: [],
+            components: buildAccountProfileUpdateOnlyComponents(intl_open_id, response.areaId, 0, { singleMode: true }),
             files: response.file ? [response.file] : [],
         }).catch(logger.error);
     } catch (error) {
@@ -984,7 +1001,7 @@ export async function handleGetUserProfileOutpostInfo(interaction, client) {
         const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 1, { refresh: true });
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
-            components: [],
+            components: buildAccountProfileUpdateOnlyComponents(intl_open_id, response.areaId, 1, { singleMode: true }),
             files: response.file ? [response.file] : [],
         }).catch(logger.error);
     } catch (error) {
@@ -1020,7 +1037,7 @@ export async function handleGetUserDailyContentsProgress(interaction, client) {
         const response = await buildAccountProfileView(client, intl_open_id, nikke_area_id, 2, { refresh: true });
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [response.embed],
-            components: [],
+            components: buildAccountProfileUpdateOnlyComponents(intl_open_id, response.areaId, 2, { singleMode: true }),
             files: response.file ? [response.file] : [],
         }).catch(logger.error);
     } catch (error) {

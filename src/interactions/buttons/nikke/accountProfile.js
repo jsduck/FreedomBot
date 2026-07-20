@@ -4,6 +4,7 @@ import {
     ACCOUNT_PROFILE_BACK_BUTTON_ID,
     ACCOUNT_PROFILE_FORWARD_BUTTON_ID,
     ACCOUNT_PROFILE_UPDATE_BUTTON_ID,
+    buildAccountProfileUpdateOnlyComponents,
     buildAccountProfileView,
 } from '../../../commands/Nikke/modules/nikke_user.js';
 
@@ -17,11 +18,13 @@ function parseViewIndex(value) {
     return Number.isInteger(parsed) ? parsed : 0;
 }
 
-async function renderAccountProfile(interaction, client, intlOpenId, areaId, viewIndex, { refresh = false } = {}) {
+async function renderAccountProfile(interaction, client, intlOpenId, areaId, viewIndex, { refresh = false, singleUpdate = false } = {}) {
     const response = await buildAccountProfileView(client, intlOpenId, areaId, viewIndex, { refresh });
     await interaction.message.edit({
         embeds: [response.embed],
-        components: response.components,
+        components: singleUpdate
+            ? buildAccountProfileUpdateOnlyComponents(intlOpenId, response.areaId, viewIndex, { singleMode: true })
+            : response.components,
         files: response.file ? [response.file] : [],
     });
 }
@@ -95,7 +98,7 @@ export const accountProfileUpdateHandler = {
     customId: ACCOUNT_PROFILE_UPDATE_BUTTON_ID,
     async execute(interaction, client, args = []) {
         try {
-            const [intlOpenId, areaIdRaw, viewIndexRaw] = args;
+            const [intlOpenId, areaIdRaw, viewIndexRaw, modeRaw] = args;
             if (!intlOpenId) {
                 return replyUserError(interaction, {
                     type: ErrorTypes.VALIDATION,
@@ -110,7 +113,10 @@ export const accountProfileUpdateHandler = {
                 intlOpenId,
                 parseAreaId(areaIdRaw),
                 parseViewIndex(viewIndexRaw),
-                { refresh: true },
+                {
+                    refresh: true,
+                    singleUpdate: modeRaw === 'single',
+                },
             );
         } catch (error) {
             logger.error('Error in Nikke account profile update button:', error);
