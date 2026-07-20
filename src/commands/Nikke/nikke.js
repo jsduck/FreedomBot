@@ -11,7 +11,7 @@ import { handleUserCharacter } from './modules/nikke_character.js';
 import { handleGuildDetails, handleGuildMembers } from './modules/nikke_guild.js';
 import { handleUnionRaidData, handleUnionRaidLevelData, handleUnionRaidDataOfGuildSeason, handleUnionRaidLevelDataOfGuildSeason } from './modules/nikke_guild.js';
 import { handleQueryGuildCardList } from './modules/nikke_guild.js';
-import { handleAccountAdd, handleAccountDelete, handleAccountUpdate } from './modules/nikke_account.js';
+import { handleAccountAdd, handleAccountDelete, handleAccountProgress, handleAccountUpdate } from './modules/nikke_account.js';
 import { handleUnionCounterDisable, handleUnionCounterEnable, handleUnionSetCounterChannel } from './modules/nikke_union_counter.js';
 import { handleAccountProfile, handleGetMyGuildInfo, handleGetUserCharacters, handleGetUserDailyContentsProgress, handleGetUserProfile, handleGetUserProfileBasicInfo, handleGetUserProfileOutpostInfo, handleSearchUser } from './modules/nikke_user.js';
 import { getNikkeAccountChoices, getNikkeUnionChoices, getNikkeUnionGuildChoices } from '../../utils/database.js';
@@ -89,6 +89,18 @@ export default {
                                 option
                                     .setName('intl_open_id')
                                     .setDescription('OpenID of the user to fetch profile for')
+                                    .setRequired(true)
+                                    .addChoices(...accountChoices)
+                            )
+                    )
+                    .addSubcommand(subcommand =>
+                        subcommand
+                            .setName('progress')
+                            .setDescription('Get account progress from the database')
+                            .addStringOption(option =>
+                                option
+                                    .setName('intl_open_id')
+                                    .setDescription('OpenID of the account to fetch progress for')
                                     .setRequired(true)
                                     .addChoices(...accountChoices)
                             )
@@ -474,6 +486,9 @@ export default {
                         break;
                     case 'profile':
                         await handleAccountProfile(interaction, client);
+                        break;
+                    case 'progress':
+                        await handleAccountProgress(interaction, client);
                         break;
                     case 'basic':
                         await handleGetUserProfileBasicInfo(interaction, client);

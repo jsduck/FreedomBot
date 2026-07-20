@@ -49,6 +49,42 @@ export const tableStatements = [
     `ALTER TABLE ${t.nikke_accounts} ADD COLUMN IF NOT EXISTS profile_fetched_at TIMESTAMP`,
     `ALTER TABLE ${t.nikke_accounts} DROP COLUMN IF EXISTS union_id`,
 
+    `CREATE TABLE IF NOT EXISTS ${t.nikke_accounts_progress} (
+        intl_open_id VARCHAR(20) PRIMARY KEY,
+        data JSONB NOT NULL DEFAULT '{}',
+        tracked BOOLEAN NOT NULL DEFAULT FALSE,
+        fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (intl_open_id) REFERENCES ${t.nikke_accounts}(intl_open_id) ON DELETE CASCADE
+    )`,
+
+    `DO $$
+    BEGIN
+        IF EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_name = '${t.nikke_accounts_progress}'
+              AND column_name = 'tracked'
+              AND data_type <> 'boolean'
+        ) THEN
+            ALTER TABLE ${t.nikke_accounts_progress}
+            ALTER COLUMN tracked DROP DEFAULT;
+
+            ALTER TABLE ${t.nikke_accounts_progress}
+            ALTER COLUMN tracked TYPE BOOLEAN
+            USING CASE
+                WHEN tracked IS NULL THEN FALSE
+                WHEN LOWER(TRIM(BOTH '"' FROM tracked::text)) IN ('true', 't', '1', 'yes', 'y') THEN TRUE
+                ELSE FALSE
+            END;
+
+            ALTER TABLE ${t.nikke_accounts_progress}
+            ALTER COLUMN tracked SET DEFAULT FALSE;
+        END IF;
+    END
+    $$`,
+
     `CREATE TABLE IF NOT EXISTS ${t.nikke_unions} (
         union_id VARCHAR(20) PRIMARY KEY,
         name VARCHAR(100) NOT NULL UNIQUE,
@@ -108,5 +144,6 @@ export const triggerDefinitions = [
     { name: 'update_guilds_updated_at', table: t.guilds },
     { name: 'update_guild_users_updated_at', table: t.guild_users },
     { name: 'update_nikke_accounts_updated_at', table: t.nikke_accounts },
+    { name: 'update_nikke_accounts_progress_updated_at', table: t.nikke_accounts_progress },
     { name: 'update_nikke_unions_updated_at', table: t.nikke_unions },
 ];

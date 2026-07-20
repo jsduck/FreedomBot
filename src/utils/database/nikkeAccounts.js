@@ -71,6 +71,21 @@ function normalizeUnionRow(row) {
     };
 }
 
+function normalizeAccountProgressRow(row) {
+    if (!row) {
+        return null;
+    }
+
+    return {
+        intl_open_id: String(row.intl_open_id ?? ''),
+        data: row.data ?? {},
+        tracked: Boolean(row.tracked),
+        fetched_at: row.fetched_at ?? null,
+        created_at: row.created_at ?? null,
+        updated_at: row.updated_at ?? null,
+    };
+}
+
 async function resolveAccountAreaId(wrapper, unionId) {
     const normalizedUnionId = unionId === null || unionId === undefined || unionId === ''
         ? null
@@ -967,6 +982,47 @@ export async function incrementNikkeAccountPingCount(client, intl_open_id, incre
     } catch (error) {
         logger.error(`Error incrementing Nikke account ping count for ${intl_open_id}:`, error);
         return false;
+    }
+}
+
+export async function getNikkeAccountProgressByOpenId(client, intl_open_id) {
+    try {
+        const wrapper = client?.db;
+
+        if (!isPostgresSqlReady(wrapper)) {
+            return {
+                success: false,
+                reason: 'database_unavailable',
+            };
+        }
+
+        const normalizedOpenId = String(intl_open_id || '').trim();
+        const result = await wrapper.db.pool.query(
+            `SELECT intl_open_id, data, tracked, fetched_at, created_at, updated_at
+             FROM ${pgConfig.tables.nikke_accounts_progress}
+             WHERE intl_open_id = $1
+             LIMIT 1`,
+            [normalizedOpenId],
+        );
+
+        if (result.rowCount === 0) {
+            return {
+                success: false,
+                reason: 'not_found',
+            };
+        }
+
+        return {
+            success: true,
+            progress: normalizeAccountProgressRow(result.rows[0]),
+        };
+    } catch (error) {
+        logger.error('Error loading Nikke account progress:', error);
+        return {
+            success: false,
+            reason: 'error',
+            error,
+        };
     }
 }
 

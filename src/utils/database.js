@@ -75,6 +75,7 @@ export {
     incrementNikkeAccountPingCount,
     syncNikkeAccountProfile,
     getNikkeAccountProfileSection,
+    getNikkeAccountProgressByOpenId,
     setNikkeUnionCounterEnabled,
     setNikkeUnionCounterChannel,
     setNikkeUnionCounterDisabled,
