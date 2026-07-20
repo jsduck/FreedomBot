@@ -309,6 +309,7 @@ export async function getNikkeAccounts(client, { seedDefaults = true } = {}) {
         const wrapper = client?.db;
 
         if (!wrapper) {
+            logger.warn('Database wrapper is not available. Returning default Nikke accounts.');
             return DEFAULT_NIKKE_ACCOUNTS;
         }
 
@@ -1018,6 +1019,194 @@ export async function getNikkeAccountProgressByOpenId(client, intl_open_id) {
         };
     } catch (error) {
         logger.error('Error loading Nikke account progress:', error);
+        return {
+            success: false,
+            reason: 'error',
+            error,
+        };
+    }
+}
+
+export async function fetchNikkeAccountProgress(client, {
+    intl_open_id,
+    tracked = true,
+    area_id = null,
+} = {}) {
+    try {
+        const wrapper = client?.db;
+
+        if (!isPostgresSqlReady(wrapper)) {
+            return {
+                success: false,
+                reason: 'database_unavailable',
+            };
+        }
+
+        const normalizedOpenId = String(intl_open_id || '').trim();
+        const refreshResult = await getNikkeAccountProfileSection(client, {
+            intl_open_id: normalizedOpenId,
+            section: 'daily_progress',
+            refresh: true,
+            area_id,
+        });
+
+        if (!refreshResult.success) {
+            return {
+                success: false,
+                reason: refreshResult.reason || 'refresh_failed',
+                error: refreshResult.error,
+            };
+        }
+
+        const data = refreshResult.data ?? {};
+        const result = await wrapper.db.pool.query(
+            `INSERT INTO ${pgConfig.tables.nikke_accounts_progress} (intl_open_id, data, tracked, fetched_at, updated_at)
+             VALUES ($1, $2::jsonb, $3, NOW(), NOW())
+             ON CONFLICT (intl_open_id)
+             DO UPDATE SET
+                data = EXCLUDED.data,
+                tracked = EXCLUDED.tracked,
+                fetched_at = NOW(),
+                updated_at = NOW()
+             RETURNING intl_open_id, data, tracked, fetched_at, created_at, updated_at`,
+            [normalizedOpenId, JSON.stringify(data), Boolean(tracked)],
+        );
+
+        return {
+            success: true,
+            source: refreshResult.source || 'Live API',
+            progress: normalizeAccountProgressRow(result.rows[0]),
+        };
+    } catch (error) {
+        logger.error('Error fetching Nikke account progress:', error);
+        return {
+            success: false,
+            reason: 'error',
+            error,
+        };
+    }
+}
+
+export async function addNikkeAccountProgressEntry(client, {
+    intl_open_id,
+    tracked = true,
+    data = {},
+} = {}) {
+    try {
+        const wrapper = client?.db;
+
+        if (!isPostgresSqlReady(wrapper)) {
+            return {
+                success: false,
+                reason: 'database_unavailable',
+            };
+        }
+
+        const normalizedOpenId = String(intl_open_id || '').trim();
+        if (!normalizedOpenId) {
+            return {
+                success: false,
+                reason: 'invalid_open_id',
+            };
+        }
+
+        const baseData = data && typeof data === 'object' ? data : {};
+        const progressData = baseData.progress && typeof baseData.progress === 'object' ? baseData.progress : {};
+        const dailyMissions = progressData.daily_missions && typeof progressData.daily_missions === 'object'
+            ? progressData.daily_missions
+            : {};
+        const weeklyMissions = progressData.weekly_missions && typeof progressData.weekly_missions === 'object'
+            ? progressData.weekly_missions
+            : {};
+        const normalizedData = {
+            profile: baseData.profile && typeof baseData.profile === 'object' ? baseData.profile : {},
+            progress: {
+                daily_missions: {
+                    receivable_points: dailyMissions.receivable_points ?? null,
+                },
+                weekly_missions: {
+                    receivable_points: weeklyMissions.receivable_points ?? null,
+                },
+                interception_hits: progressData.interception_hits ?? null,
+            },
+            currency: {
+                gems: baseData?.currency?.gems ?? null,
+                golden_mileage: baseData?.currency?.golden_mileage ?? null,
+                silver_mileage: baseData?.currency?.silver_mileage ?? null,
+                recruit_vouches: baseData?.currency?.recruit_vouches ?? null,
+                advanced_recruit_vouches: baseData?.currency?.advanced_recruit_vouches ?? null,
+            },
+            dolls: baseData.dolls && typeof baseData.dolls === 'object' ? baseData.dolls : {},
+            elemental_scores: baseData.elemental_scores && typeof baseData.elemental_scores === 'object' ? baseData.elemental_scores : {},
+            raid_damage: baseData.raid_damage && typeof baseData.raid_damage === 'object' ? baseData.raid_damage : {},
+        };
+
+        const result = await wrapper.db.pool.query(
+            `INSERT INTO ${pgConfig.tables.nikke_accounts_progress} (intl_open_id, data, tracked, fetched_at, updated_at)
+             VALUES ($1, $2::jsonb, $3, NOW(), NOW())
+             ON CONFLICT (intl_open_id)
+             DO UPDATE SET
+                data = EXCLUDED.data,
+                tracked = EXCLUDED.tracked,
+                updated_at = NOW()
+             RETURNING intl_open_id, data, tracked, fetched_at, created_at, updated_at`,
+            [normalizedOpenId, JSON.stringify(normalizedData), Boolean(tracked)],
+        );
+
+        return {
+            success: true,
+            progress: normalizeAccountProgressRow(result.rows[0]),
+            action: result.rowCount > 0 ? 'upserted' : 'unknown',
+        };
+    } catch (error) {
+        logger.error('Error adding Nikke account progress entry:', error);
+        return {
+            success: false,
+            reason: 'error',
+            error,
+        };
+    }
+}
+
+export async function removeNikkeAccountProgressEntry(client, intl_open_id) {
+    try {
+        const wrapper = client?.db;
+
+        if (!isPostgresSqlReady(wrapper)) {
+            return {
+                success: false,
+                reason: 'database_unavailable',
+            };
+        }
+
+        const normalizedOpenId = String(intl_open_id || '').trim();
+        if (!normalizedOpenId) {
+            return {
+                success: false,
+                reason: 'invalid_open_id',
+            };
+        }
+
+        const result = await wrapper.db.pool.query(
+            `DELETE FROM ${pgConfig.tables.nikke_accounts_progress}
+             WHERE intl_open_id = $1
+             RETURNING intl_open_id, data, tracked, fetched_at, created_at, updated_at`,
+            [normalizedOpenId],
+        );
+
+        if (result.rowCount === 0) {
+            return {
+                success: false,
+                reason: 'not_found',
+            };
+        }
+
+        return {
+            success: true,
+            progress: normalizeAccountProgressRow(result.rows[0]),
+        };
+    } catch (error) {
+        logger.error('Error removing Nikke account progress entry:', error);
         return {
             success: false,
             reason: 'error',

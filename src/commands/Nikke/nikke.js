@@ -11,7 +11,8 @@ import { handleUserCharacter } from './modules/nikke_character.js';
 import { handleGuildDetails, handleGuildMembers } from './modules/nikke_guild.js';
 import { handleUnionRaidData, handleUnionRaidLevelData, handleUnionRaidDataOfGuildSeason, handleUnionRaidLevelDataOfGuildSeason } from './modules/nikke_guild.js';
 import { handleQueryGuildCardList } from './modules/nikke_guild.js';
-import { handleAccountAdd, handleAccountDelete, handleAccountProgress, handleAccountUpdate } from './modules/nikke_account.js';
+import { handleAccountAdd, handleAccountDelete, handleAccountUpdate } from './modules/nikke_account.js';
+import { handleAccountProgress, handleAccountProgressAdd, handleAccountProgressFetch, handleAccountProgressRemove } from './modules/nikke_progress.js';
 import { handleUnionCounterDisable, handleUnionCounterEnable, handleUnionSetCounterChannel } from './modules/nikke_union_counter.js';
 import { handleAccountProfile, handleGetMyGuildInfo, handleGetUserCharacters, handleGetUserDailyContentsProgress, handleGetUserProfile, handleGetUserProfileBasicInfo, handleGetUserProfileOutpostInfo, handleSearchUser } from './modules/nikke_user.js';
 import { getNikkeAccountChoices, getNikkeUnionChoices, getNikkeUnionGuildChoices } from '../../utils/database.js';
@@ -89,18 +90,6 @@ export default {
                                 option
                                     .setName('intl_open_id')
                                     .setDescription('OpenID of the user to fetch profile for')
-                                    .setRequired(true)
-                                    .addChoices(...accountChoices)
-                            )
-                    )
-                    .addSubcommand(subcommand =>
-                        subcommand
-                            .setName('progress')
-                            .setDescription('Get account progress from the database')
-                            .addStringOption(option =>
-                                option
-                                    .setName('intl_open_id')
-                                    .setDescription('OpenID of the account to fetch progress for')
                                     .setRequired(true)
                                     .addChoices(...accountChoices)
                             )
@@ -187,6 +176,65 @@ export default {
                                     .setDescription('Channel to send reminder pings in')
                                     .setRequired(true)
                                     .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+                            )
+                    )
+            )
+            .addSubcommandGroup(group =>
+                group
+                    .setName('progress')
+                    .setDescription('Progress cache commands')
+                    .addSubcommand(subcommand =>
+                        subcommand
+                            .setName('view')
+                            .setDescription('Get account progress from the database')
+                            .addStringOption(option =>
+                                option
+                                    .setName('intl_open_id')
+                                    .setDescription('OpenID of the account to fetch progress for')
+                                    .setRequired(true)
+                                    .addChoices(...accountChoices)
+                            )
+                    )
+                    .addSubcommand(subcommand =>
+                        subcommand
+                            .setName('fetch')
+                            .setDescription('Fetch latest account progress and store it in the database')
+                            .addStringOption(option =>
+                                option
+                                    .setName('intl_open_id')
+                                    .setDescription('OpenID of the account to fetch progress for')
+                                    .setRequired(true)
+                                    .addChoices(...accountChoices)
+                            )
+                    )
+                    .addSubcommand(subcommand =>
+                        subcommand
+                            .setName('add')
+                            .setDescription('Manually add or update an account progress entry')
+                            .addStringOption(option =>
+                                option
+                                    .setName('intl_open_id')
+                                    .setDescription('OpenID of the account to add progress for')
+                                    .setRequired(true)
+                                    .addChoices(...accountChoices)
+                            )
+                            .addBooleanOption(option =>
+                                option
+                                    .setName('tracked')
+                                    .setDescription('Whether this account progress should be tracked')
+                                    .setRequired(false)
+                            )
+                    )
+                    .addSubcommand(subcommand =>
+                        subcommand
+                            .setName('remove')
+                            .setDescription('Manually remove an account progress entry')
+                            .addStringOption(option =>
+                                option
+                                    .setName('intl_open_id')
+                                    .setDescription('OpenID of the account to remove progress for')
+                                    .setRequired(true)
+                                    .addChoices(...accountChoices)
                             )
                     )
             )
@@ -465,7 +513,8 @@ export default {
                             .setDescription('Name of the user to search for')
                             .setRequired(false)
                     )
-            );
+            )
+            ;
     },
 
     async execute(interaction, guildConfig, client) {
@@ -486,9 +535,6 @@ export default {
                         break;
                     case 'profile':
                         await handleAccountProfile(interaction, client);
-                        break;
-                    case 'progress':
-                        await handleAccountProgress(interaction, client);
                         break;
                     case 'basic':
                         await handleGetUserProfileBasicInfo(interaction, client);
@@ -522,6 +568,29 @@ export default {
                     default:
                         await InteractionHelper.safeReply(interaction, {
                             embeds: [errorEmbed('Unknown union subcommand.')],
+                            flags: MessageFlags.Ephemeral,
+                        }).catch(logger.error);
+                }
+                return;
+            }
+
+            if (subcommandGroup === 'progress') {
+                switch (subcommand) {
+                    case 'view':
+                        await handleAccountProgress(interaction, client);
+                        break;
+                    case 'fetch':
+                        await handleAccountProgressFetch(interaction, client);
+                        break;
+                    case 'add':
+                        await handleAccountProgressAdd(interaction, client);
+                        break;
+                    case 'remove':
+                        await handleAccountProgressRemove(interaction, client);
+                        break;
+                    default:
+                        await InteractionHelper.safeReply(interaction, {
+                            embeds: [errorEmbed('Unknown progress subcommand.')],
                             flags: MessageFlags.Ephemeral,
                         }).catch(logger.error);
                 }

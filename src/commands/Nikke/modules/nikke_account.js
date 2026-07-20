@@ -1,11 +1,10 @@
 import { PermissionFlagsBits, MessageFlags } from 'discord.js';
-import { createEmbed, errorEmbed, successEmbed } from '../../../utils/embeds.js';
+import { errorEmbed, successEmbed } from '../../../utils/embeds.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { logger } from '../../../utils/logger.js';
 import {
     addNikkeAccount,
     deleteNikkeAccount,
-    getNikkeAccountProgressByOpenId,
     syncNikkeAccountProfile,
     updateNikkeAccountUnionId,
 } from '../../../utils/database.js';
@@ -186,81 +185,5 @@ export async function handleAccountDelete(interaction, client) {
             'Account Deleted',
             `Deleted ${result.account.name} (${result.account.intl_open_id}) from the database.`
         )],
-    }).catch(logger.error);
-}
-
-function formatEmbedTimestamp(value) {
-    if (!value) {
-        return 'Unknown';
-    }
-
-    const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) {
-        return 'Unknown';
-    }
-
-    return `<t:${Math.floor(date.getTime() / 1000)}:F>`;
-}
-
-export async function handleAccountProgress(interaction, client) {
-    try {
-        await InteractionHelper.safeDefer(interaction);
-    } catch (error) {
-        logger.error('Failed to defer account progress interaction:', error);
-        return;
-    }
-
-    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-        await InteractionHelper.safeEditReply(interaction, {
-            embeds: [errorEmbed('You need **Administrator** permission to view Nikke account progress.')],
-        }).catch(logger.error);
-        return;
-    }
-
-    const intlOpenId = interaction.options.getString('intl_open_id', true).trim();
-    const result = await getNikkeAccountProgressByOpenId(client, intlOpenId);
-
-    if (!result.success) {
-        if (result.reason === 'not_found') {
-            await InteractionHelper.safeEditReply(interaction, {
-                embeds: [errorEmbed('Progress Not Found', `No progress row exists for open id ${intlOpenId}.`)],
-            }).catch(logger.error);
-            return;
-        }
-
-        await InteractionHelper.safeEditReply(interaction, {
-            embeds: [errorEmbed('Database Error', 'Unable to load Nikke account progress right now.')],
-        }).catch(logger.error);
-        return;
-    }
-
-    const progress = result.progress;
-    const dataJson = JSON.stringify(progress.data ?? {}, null, 2);
-    const dataPreview = dataJson.length > 1000
-        ? `${dataJson.slice(0, 1000)}\n...`
-        : dataJson;
-
-    const embed = createEmbed({
-        title: `✅ Account Progress • ${intlOpenId}`,
-        description: `Tracked: **${progress.tracked ? 'Yes' : 'No'}**`,
-    }).addFields(
-        {
-            name: 'Data Preview',
-            value: `\`\`\`json\n${dataPreview}\n\`\`\``,
-            inline: false,
-        },
-        {
-            name: 'Timestamps',
-            value: [
-                `Fetched at: ${formatEmbedTimestamp(progress.fetched_at)}`,
-                `Created at: ${formatEmbedTimestamp(progress.created_at)}`,
-                `Updated at: ${formatEmbedTimestamp(progress.updated_at)}`,
-            ].join('\n'),
-            inline: false,
-        },
-    );
-
-    await InteractionHelper.safeEditReply(interaction, {
-        embeds: [embed],
     }).catch(logger.error);
 }
