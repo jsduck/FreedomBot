@@ -304,16 +304,16 @@ function parseProgressNumber(value) {
 const DAILY_PROGRESS_THRESHOLD_RULES = Object.freeze([
     { key: 'counsel_remaining_count', source: 'number', operator: 'eq', value: 0 },
     { key: 'daily_mission_receivable_points', source: 'number', operator: 'eq', value: 0 },
-    { key: 'daily_mission_received_points', source: 'number', operator: 'gt', value: 100 },
-    { key: 'daily_mission_received_rewards', source: 'length', operator: 'gt', value: 20 },
+    { key: 'daily_mission_received_points', source: 'number', operator: 'gte', value: 100 },
+    { key: 'daily_mission_received_rewards', source: 'length', operator: 'gte', value: 20 },
     { key: 'intercept_remaining_tickets', source: 'number', operator: 'eq', value: 0 },
     { key: 'outpost_battle_storage_excess', source: 'number', operator: 'eq', value: 0 },
     { key: 'outpost_battle_storage_fullness', source: 'percent', operator: 'lt', value: 90 },
     { key: 'rookie_arena_remaining_count', source: 'number', operator: 'eq', value: 0 },
     { key: 'special_arena_remaining_count', source: 'number', operator: 'eq', value: 0 },
     { key: 'weekly_mission_receivable_points', source: 'number', operator: 'eq', value: 0 },
-    { key: 'weekly_mission_received_points', source: 'number', operator: 'gt', value: 100 },
-    { key: 'weekly_mission_received_rewards', source: 'length', operator: 'gt', value: 20 },
+    { key: 'weekly_mission_received_points', source: 'number', operator: 'gte', value: 100 },
+    { key: 'weekly_mission_received_rewards', source: 'length', operator: 'gte', value: 20 },
 ]);
 
 function getDailyProgressThresholdRule(key) {
@@ -351,6 +351,10 @@ function evaluateDailyProgressThreshold(key, rawValue) {
         return comparable > rule.value;
     }
 
+    if (rule.operator === 'gte') {
+        return comparable >= rule.value;
+    }
+
     if (rule.operator === 'lt') {
         return comparable < rule.value;
     }
@@ -367,7 +371,12 @@ function isTowerDailyDone(list) {
         return false;
     }
 
-    return list.every((entry) => {
+    const openedTowers = list.filter((entry) => entry?.is_opened);
+    if (openedTowers.length === 0) {
+        return false;
+    }
+
+    return openedTowers.every((entry) => {
         const remaining = parseProgressNumber(entry?.remaining_count);
         return remaining === 0;
     });
