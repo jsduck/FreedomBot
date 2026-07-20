@@ -328,7 +328,21 @@ function evaluateDailyProgressThreshold(key, rawValue) {
 
     let comparable = null;
 
-    if (rule.source === 'length') {
+    const isRewardThresholdKey = key === 'daily_mission_received_rewards'
+        || key === 'weekly_mission_received_rewards';
+
+    if (isRewardThresholdKey) {
+        if (Array.isArray(rawValue)) {
+            if (rawValue.length === 1) {
+                const singleValue = parseProgressNumber(rawValue[0]);
+                comparable = singleValue !== null ? singleValue : rawValue.length;
+            } else {
+                comparable = rawValue.length;
+            }
+        } else {
+            comparable = parseProgressNumber(rawValue);
+        }
+    } else if (rule.source === 'length') {
         comparable = Array.isArray(rawValue) ? rawValue.length : parseProgressNumber(rawValue);
     } else if (rule.source === 'percent') {
         const numeric = parseProgressNumber(rawValue);
