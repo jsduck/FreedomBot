@@ -6,6 +6,7 @@ import {
     addNikkeAccount,
     deleteNikkeAccount,
     syncNikkeAccountProfile,
+    syncNikkeUnionAndMemberAccountsForAccount,
     updateNikkeAccountUnionId,
 } from '../../../utils/database.js';
 
@@ -94,10 +95,25 @@ export async function handleAccountAdd(interaction, client) {
         ? `\nSaved profile payloads (basic_info, outpost_info, daily_progress) in nikke_accounts for area ${profileSyncResult.area_id}${profileSyncResult.union_id ? ` and derived union id ${profileSyncResult.union_id} from profile gsn` : ''}.`
         : '\nAccount profile payload sync failed. You can retry by re-adding or updating this account later.';
 
+    let unionMembersSyncMessage = '';
+    if (profileSyncResult.success && profileSyncResult.union_id) {
+        const unionMembersSyncResult = await syncNikkeUnionAndMemberAccountsForAccount(client, {
+            intl_open_id: result.account.intl_open_id,
+            union_id: profileSyncResult.union_id,
+            area_id: profileSyncResult.area_id,
+        });
+
+        if (unionMembersSyncResult.success) {
+            unionMembersSyncMessage = `\nUnion sync completed for union id ${unionMembersSyncResult.union_id} (area ${unionMembersSyncResult.area_id}). ${unionMembersSyncResult.union_created ? 'Created missing union entry.' : 'Union already existed.'} Checked ${unionMembersSyncResult.members_total} union members, added ${unionMembersSyncResult.members_added} missing accounts, synced ${unionMembersSyncResult.members_synced} profiles${unionMembersSyncResult.members_sync_failed > 0 ? `, ${unionMembersSyncResult.members_sync_failed} profile sync failures` : ''}.`;
+        } else {
+            unionMembersSyncMessage = '\nUnion/member sync failed after account add. You can rerun account add or use union commands to refresh manually.';
+        }
+    }
+
     await InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(
             'Account Added',
-            `Stored ${result.account.name} with open id ${result.account.intl_open_id}${result.account.discord_tag ? ` and Discord tag ${result.account.discord_tag}` : ''}.${profileSyncMessage}`
+            `Stored ${result.account.name} with open id ${result.account.intl_open_id}${result.account.discord_tag ? ` and Discord tag ${result.account.discord_tag}` : ''}.${profileSyncMessage}${unionMembersSyncMessage}`
         )],
     }).catch(logger.error);
 }

@@ -1,21 +1,14 @@
 import { pgConfig } from '../../config/database/postgres.js';
 import { logger } from '../logger.js';
 import {
+    getGuildDetail,
+    getGuildMembers,
     getUserDailyContentsProgress,
     getUserProfileBasicInfo,
     getUserProfileOutpostInfo,
 } from '../../services/nikke.js';
 
-const DEFAULT_NIKKE_ACCOUNTS = Object.freeze([
-    { name: 'Kaarako', intl_open_id: '3166452414820481224' },
-    { name: 'Demi', intl_open_id: '16338490109246680481' },
-    { name: 'Shaito', intl_open_id: '12167197956671690221' },
-    { name: 'Fizix', intl_open_id: '5877343215992272387' },
-    { name: 'Jae', intl_open_id: '15097183441877165889' },
-    { name: 'Effelon', intl_open_id: '16262646283866114091' },
-    { name: 'Fesha', intl_open_id: '12816795455667592937' },
-    { name: 'Nelex', intl_open_id: '1175532717634698043' },
-]);
+const DEFAULT_NIKKE_ACCOUNTS = Object.freeze([]);
 
 const DEFAULT_NIKKE_UNIONS = Object.freeze([
     { name: 'Avaricia', union_id: '25471', area_id: 84 },
@@ -122,6 +115,117 @@ async function readNikkePayload(response, endpointName) {
     }
 
     return payload;
+}
+
+function extractGuildDetailPayload(payload) {
+    if (!payload || typeof payload !== 'object') {
+        return null;
+    }
+
+    const data = payload.data && typeof payload.data === 'object' ? payload.data : null;
+    const detail = data?.guild_detail ?? payload.guild_detail ?? null;
+    return detail && typeof detail === 'object' ? detail : null;
+}
+
+function extractGuildMembersPayload(payload) {
+    if (!payload || typeof payload !== 'object') {
+        return [];
+    }
+
+    const data = payload.data && typeof payload.data === 'object' ? payload.data : null;
+    const items = data?.items ?? payload.items ?? data?.guild_members ?? payload.guild_members;
+    return Array.isArray(items) ? items : [];
+}
+
+function toNormalizedOpenId(value) {
+    return String(value || '').trim();
+}
+
+function toNormalizedUnionId(value) {
+    return value === null || value === undefined || value === ''
+        ? ''
+        : String(value).trim();
+}
+
+function toNormalizedAreaId(value, fallback = 84) {
+    const parsed = Number.parseInt(String(value), 10);
+    return Number.isInteger(parsed) ? parsed : fallback;
+}
+
+function buildMemberSnapshotPayload(memberItems) {
+    return {
+        last_synced_at: new Date().toISOString(),
+        source: 'getGuildMembers',
+        accounts: memberItems.map((member) => ({
+            intl_open_id: String(member.member_id || '').trim(),
+            name: member.nickname ? String(member.nickname).trim() : null,
+            bind_area_id: Number.parseInt(String(member.bind_area_id), 10) || null,
+            level: Number.parseInt(String(member.level), 10) || null,
+            icon_id: member.icon_id ? String(member.icon_id).trim() : null,
+        })).filter((member) => member.intl_open_id),
+    };
+}
+
+async function resolveUniqueAccountName(wrapper, preferredName, intlOpenId) {
+    const suffixSeed = String(intlOpenId || '').trim().slice(-6) || 'member';
+    const baseNameRaw = String(preferredName || '').trim();
+    const fallbackBaseName = `NikkeMember-${suffixSeed}`;
+    const baseName = (baseNameRaw || fallbackBaseName).slice(0, 100);
+
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+        const suffix = attempt === 0 ? '' : `-${attempt + 1}`;
+        const candidate = `${baseName.slice(0, 100 - suffix.length)}${suffix}`;
+        const result = await wrapper.db.pool.query(
+            `SELECT 1
+             FROM ${pgConfig.tables.nikke_accounts}
+             WHERE LOWER(name) = LOWER($1)
+             LIMIT 1`,
+            [candidate],
+        );
+
+        if (result.rowCount === 0) {
+            return candidate;
+        }
+    }
+
+    return `${baseName.slice(0, 89)}-${Date.now().toString().slice(-10)}`;
+}
+
+async function doesUnionExist(wrapper, unionId) {
+    const result = await wrapper.db.pool.query(
+        `SELECT union_id
+         FROM ${pgConfig.tables.nikke_unions}
+         WHERE union_id = $1
+         LIMIT 1`,
+        [unionId],
+    );
+
+    return result.rowCount > 0;
+}
+
+async function upsertUnionFromGuildData(wrapper, {
+    unionId,
+    areaId,
+    guildDetail,
+    memberItems,
+}) {
+    const guildNameRaw = guildDetail?.guild_name ?? guildDetail?.name ?? `Union ${unionId}`;
+    const guildName = String(guildNameRaw || `Union ${unionId}`).trim().slice(0, 100);
+    const resolvedAreaId = toNormalizedAreaId(guildDetail?.nikke_area_id, areaId);
+
+    const result = await wrapper.db.pool.query(
+        `INSERT INTO ${pgConfig.tables.nikke_unions} (name, union_id, area_id, members)
+         VALUES ($1, $2, $3, $4::jsonb)
+         ON CONFLICT (union_id)
+         DO UPDATE SET
+             name = EXCLUDED.name,
+             area_id = COALESCE(EXCLUDED.area_id, ${pgConfig.tables.nikke_unions}.area_id),
+             updated_at = NOW()
+         RETURNING name, union_id, area_id, counter_channel_id, members, created_at, updated_at`,
+        [guildName, unionId, resolvedAreaId, JSON.stringify(buildMemberSnapshotPayload(memberItems))],
+    );
+
+    return normalizeUnionRow(result.rows[0]);
 }
 
 async function upsertAccountProfileRow(wrapper, {
@@ -309,8 +413,8 @@ export async function getNikkeAccounts(client, { seedDefaults = true } = {}) {
         const wrapper = client?.db;
 
         if (!wrapper) {
-            logger.warn('Database wrapper is not available. Returning default Nikke accounts.');
-            return DEFAULT_NIKKE_ACCOUNTS;
+            logger.warn('Database wrapper is not available. Returning empty Nikke accounts list.');
+            return [];
         }
 
         if (isPostgresSqlReady(wrapper)) {
@@ -320,23 +424,14 @@ export async function getNikkeAccounts(client, { seedDefaults = true } = {}) {
                  ORDER BY name ASC`,
             );
 
-            if (result.rows.length === 0 && seedDefaults) {
-                await seedDefaultAccounts(wrapper);
-                result = await wrapper.db.pool.query(
-                    `SELECT name, intl_open_id, discord_tag, ping_count, basic_info, outpost_info, daily_progress, profile_fetched_at, created_at, updated_at
-                     FROM ${pgConfig.tables.nikke_accounts}
-                     ORDER BY name ASC`,
-                );
-            }
-
             const rows = result.rows.map(normalizeAccountRow).filter(Boolean);
-            return rows.length > 0 ? rows : DEFAULT_NIKKE_ACCOUNTS;
+            return rows;
         }
 
-        return DEFAULT_NIKKE_ACCOUNTS;
+        return [];
     } catch (error) {
         logger.error('Error loading Nikke accounts:', error);
-        return DEFAULT_NIKKE_ACCOUNTS;
+        return [];
     }
 }
 
@@ -590,6 +685,156 @@ export async function syncNikkeAccountProfile(client, { intl_open_id, union_id =
         };
     } catch (error) {
         logger.error('Error syncing Nikke account profile:', error);
+        return {
+            success: false,
+            reason: 'error',
+            error,
+        };
+    }
+}
+
+export async function syncNikkeUnionAndMemberAccountsForAccount(client, {
+    intl_open_id,
+    union_id,
+    area_id,
+} = {}) {
+    try {
+        const wrapper = client?.db;
+
+        if (!isPostgresSqlReady(wrapper)) {
+            return {
+                success: false,
+                reason: 'database_unavailable',
+            };
+        }
+
+        const normalizedOpenId = toNormalizedOpenId(intl_open_id);
+        const normalizedUnionId = toNormalizedUnionId(union_id);
+        const normalizedAreaId = toNormalizedAreaId(area_id, 84);
+
+        if (!normalizedOpenId) {
+            return {
+                success: false,
+                reason: 'invalid_open_id',
+            };
+        }
+
+        if (!normalizedUnionId) {
+            return {
+                success: false,
+                reason: 'missing_union_id',
+            };
+        }
+
+        let unionCreated = false;
+        const unionExists = await doesUnionExist(wrapper, normalizedUnionId);
+
+        const guildDetailResponse = await getGuildDetail(normalizedUnionId, normalizedAreaId);
+        const guildDetailPayload = await readNikkePayload(guildDetailResponse, 'getGuildDetail');
+        const guildDetail = extractGuildDetailPayload(guildDetailPayload);
+
+        if (!guildDetail) {
+            return {
+                success: false,
+                reason: 'invalid_guild_detail_payload',
+            };
+        }
+
+        const unionAreaId = toNormalizedAreaId(guildDetail.nikke_area_id, normalizedAreaId);
+
+        const guildMembersResponse = await getGuildMembers(normalizedUnionId, unionAreaId);
+        const guildMembersPayload = await readNikkePayload(guildMembersResponse, 'getGuildMembers');
+        const memberItems = extractGuildMembersPayload(guildMembersPayload);
+
+        if (!unionExists) {
+            await upsertUnionFromGuildData(wrapper, {
+                unionId: normalizedUnionId,
+                areaId: unionAreaId,
+                guildDetail,
+                memberItems,
+            });
+            unionCreated = true;
+        }
+
+        const memberIds = [...new Set(
+            memberItems
+                .map((member) => String(member?.member_id || '').trim())
+                .filter(Boolean),
+        )];
+
+        if (memberIds.length === 0) {
+            return {
+                success: true,
+                union_created: unionCreated,
+                union_id: normalizedUnionId,
+                area_id: unionAreaId,
+                members_total: 0,
+                members_added: 0,
+                members_synced: 0,
+                members_sync_failed: 0,
+            };
+        }
+
+        const existingResult = await wrapper.db.pool.query(
+            `SELECT intl_open_id
+             FROM ${pgConfig.tables.nikke_accounts}
+             WHERE intl_open_id = ANY($1::varchar[])`,
+            [memberIds],
+        );
+
+        const existingIds = new Set(existingResult.rows.map((row) => String(row.intl_open_id || '').trim()));
+        const missingMembers = memberItems.filter((member) => {
+            const memberId = String(member?.member_id || '').trim();
+            return memberId && !existingIds.has(memberId);
+        });
+
+        let membersAdded = 0;
+        let membersSynced = 0;
+        let membersSyncFailed = 0;
+
+        for (const member of missingMembers) {
+            const memberOpenId = String(member.member_id || '').trim();
+            if (!memberOpenId) {
+                continue;
+            }
+
+            const memberName = await resolveUniqueAccountName(wrapper, member.nickname, memberOpenId);
+            const addResult = await addNikkeAccount(client, {
+                name: memberName,
+                intl_open_id: memberOpenId,
+                discord_tag: null,
+            });
+
+            if (!addResult.success) {
+                continue;
+            }
+
+            membersAdded += 1;
+
+            const syncResult = await syncNikkeAccountProfile(client, {
+                intl_open_id: memberOpenId,
+                union_id: normalizedUnionId,
+            });
+
+            if (syncResult.success) {
+                membersSynced += 1;
+            } else {
+                membersSyncFailed += 1;
+            }
+        }
+
+        return {
+            success: true,
+            union_created: unionCreated,
+            union_id: normalizedUnionId,
+            area_id: unionAreaId,
+            members_total: memberIds.length,
+            members_added: membersAdded,
+            members_synced: membersSynced,
+            members_sync_failed: membersSyncFailed,
+        };
+    } catch (error) {
+        logger.error('Error syncing Nikke union and member accounts:', error);
         return {
             success: false,
             reason: 'error',

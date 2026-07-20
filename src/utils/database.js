@@ -74,6 +74,7 @@ export {
     addNikkeAccount,
     incrementNikkeAccountPingCount,
     syncNikkeAccountProfile,
+    syncNikkeUnionAndMemberAccountsForAccount,
     getNikkeAccountProfileSection,
     getNikkeAccountProgressByOpenId,
     fetchNikkeAccountProgress,
