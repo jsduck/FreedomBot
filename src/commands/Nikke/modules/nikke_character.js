@@ -317,7 +317,7 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
         });
 
     if (resolvedThumbnail) {
-        embed.setThumbnail(resolvedThumbnail);
+        embed.setImage(resolvedThumbnail);
     }
 
     embed.addFields(
