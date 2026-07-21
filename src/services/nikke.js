@@ -230,7 +230,7 @@ const NIKKE_PAYLOAD_LOGIN = {
 const NIKKE_PAYLOADS = {
     LOGIN: NIKKE_PAYLOAD_LOGIN
 };
-const NIKKE_UNITS = [
+export const NIKKE_UNITS = [
     { id: 203201, name_code: 5017, name: "Miranda", getol: true },
     { id: 235201, name_code: 5066, name: "Helm", getol: true },
     { id: 235301, name_code: 5098, name: "Helm: Aquamarine", getol: true },

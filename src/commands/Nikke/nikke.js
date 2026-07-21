@@ -14,8 +14,8 @@ import { handleQueryGuildCardList } from './modules/nikke_guild.js';
 import { handleAccountAdd, handleAccountDelete, handleAccountUpdate } from './modules/nikke_account.js';
 import { handleAccountProgress, handleAccountProgressAdd, handleAccountProgressFetch, handleAccountProgressRemove } from './modules/nikke_progress.js';
 import { handleUnionCounterDisable, handleUnionCounterEnable, handleUnionSetCounterChannel } from './modules/nikke_union_counter.js';
-import { handleAccountProfile, handleGetMyGuildInfo, handleGetUserCharacters, handleGetUserDailyContentsProgress, handleGetUserProfile, handleGetUserProfileBasicInfo, handleGetUserProfileOutpostInfo, handleSearchUser } from './modules/nikke_user.js';
-import { getNikkeAccounts, getNikkeUnions } from '../../utils/database.js';
+import { handleAccountProfile, handleCharactersUpdate, handleGetMyGuildInfo, handleGetUserCharacters, handleGetUserDailyContentsProgress, handleGetUserProfile, handleGetUserProfileBasicInfo, handleGetUserProfileOutpostInfo, handleSearchUser } from './modules/nikke_user.js';
+import { getNikkeAccounts, getNikkeCharacters, getNikkeUnions } from '../../utils/database.js';
 
 function truncateChoiceName(value, maxLength = 100) {
     return String(value || '').slice(0, maxLength);
@@ -86,6 +86,22 @@ function buildGuildIdAutocompleteChoices(unions, query) {
                     : `${union.name} (${guildId})`
             ),
             value: guildId,
+        }));
+}
+
+function buildCharacterAutocompleteChoices(characters, query) {
+    const normalizedQuery = String(query || '').toLowerCase();
+    return characters
+        .filter((character) => {
+            const name = String(character.name || '').toLowerCase();
+            const nameCode = String(character.name_code || '').toLowerCase();
+            const id = String(character.id || '').toLowerCase();
+            return !normalizedQuery || name.includes(normalizedQuery) || nameCode.includes(normalizedQuery) || id.includes(normalizedQuery);
+        })
+        .slice(0, 25)
+        .map((character) => ({
+            name: truncateChoiceName(`${character.name} (${character.name_code})`),
+            value: String(character.name || ''),
         }));
 }
 
@@ -367,6 +383,7 @@ export default {
                             .setName('name_codes')
                             .setDescription('Nikke name codes')
                             .setRequired(true)
+                            .setAutocomplete(true)
                     )
             )
             .addSubcommand(subcommand =>
@@ -551,6 +568,11 @@ export default {
             )
             .addSubcommand(subcommand =>
                 subcommand
+                    .setName('characters-update')
+                    .setDescription('Fetch KAARAKO characters and insert missing name_codes into nikke_characters')
+            )
+            .addSubcommand(subcommand =>
+                subcommand
                     .setName('get-user-profile')
                     .setDescription('Get user profile from Nikke API')
                     .addStringOption(option =>
@@ -607,6 +629,12 @@ export default {
             if (focused.name === 'guild_id') {
                 const unions = await getNikkeUnions(client);
                 await interaction.respond(buildGuildIdAutocompleteChoices(unions, query));
+                return;
+            }
+
+            if (focused.name === 'name_codes') {
+                const characters = await getNikkeCharacters(client);
+                await interaction.respond(buildCharacterAutocompleteChoices(characters, query));
                 return;
             }
 
@@ -743,6 +771,9 @@ export default {
                     break;
                 case 'get-user-characters':
                     await handleGetUserCharacters(interaction, client);
+                    break;
+                case 'characters-update':
+                    await handleCharactersUpdate(interaction, client);
                     break;
                 case 'get-user-profile':
                     await handleGetUserProfile(interaction, client);

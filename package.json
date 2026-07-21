@@ -12,6 +12,7 @@
     "reset:db": "node scripts/reset-db.js --yes",
     "migrate:keys": "node scripts/migrate-keys.js",
     "migrate:keys:dry": "node scripts/migrate-keys.js --dry-run",
+    "seed:nikke-characters": "node scripts/seed-nikke-characters.js",
     "backup:db": "node scripts/backup.js",
     "restore:db": "node scripts/restore.js",
     "backup:drill": "node scripts/restore-drill.js"

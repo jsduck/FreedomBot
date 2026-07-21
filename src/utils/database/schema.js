@@ -103,6 +103,15 @@ export const tableStatements = [
              AND jsonb_typeof(members) = 'object'
              AND members ? 'counter_channel_id'`,
 
+    `CREATE TABLE IF NOT EXISTS ${t.nikke_characters} (
+        name_code INTEGER PRIMARY KEY,
+        id INTEGER NOT NULL,
+        name VARCHAR(120) NOT NULL,
+        thumbnail TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+
     `CREATE TABLE IF NOT EXISTS ${t.nikke_user_character_cache} (
         intl_open_id VARCHAR(20) NOT NULL,
         name_code INTEGER NOT NULL,
@@ -124,6 +133,7 @@ export const tableStatements = [
 export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_guild_users_guild_id ON ${t.guild_users}(guild_id)`,
     `CREATE INDEX IF NOT EXISTS idx_guild_users_user_id ON ${t.guild_users}(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_nikke_characters_name ON ${t.nikke_characters}(name)`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `
@@ -146,4 +156,5 @@ export const triggerDefinitions = [
     { name: 'update_nikke_accounts_updated_at', table: t.nikke_accounts },
     { name: 'update_nikke_accounts_progress_updated_at', table: t.nikke_accounts_progress },
     { name: 'update_nikke_unions_updated_at', table: t.nikke_unions },
+    { name: 'update_nikke_characters_updated_at', table: t.nikke_characters },
 ];

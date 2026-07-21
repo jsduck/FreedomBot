@@ -40,3 +40,8 @@ export {
     getUserCharacterCache,
     upsertUserCharacterCache,
 } from './database/nikkeCharacterCache.js';
+
+export {
+    getNikkeCharacters,
+    insertMissingNikkeCharacterNameCodes,
+} from './database/nikkeCharacters.js';

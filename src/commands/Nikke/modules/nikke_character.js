@@ -106,8 +106,8 @@ function formatEquipLine(units, effects, lines) {
     const type = formatFunctionDetails(eff.function_type) || "N/A";
     const lvl = eff.level || 0;
 
-    // Convert raw value → percentage
-    const raw = eff.function_value || 0;
+    // Convert raw value to a non-negative percentage
+    const raw = Math.abs(Number(eff.function_value) || 0);
     const val = (raw / 100).toFixed(2) + "%";
 
     return { type, lvl, val };

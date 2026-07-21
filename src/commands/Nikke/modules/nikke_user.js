@@ -4,7 +4,7 @@ import { createEmbed, errorEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { getMyGuildInfo, getUserGameInfo, searchUser, getUserProfile, getUserCharacters, safeJSON } from '../../../services/nikke.js';
-import { getNikkeAccountByOpenId, getNikkeAccountProfileSection, getNikkeUnionById } from '../../../utils/database.js';
+import { getNikkeAccountByOpenId, getNikkeAccountProfileSection, getNikkeAccounts, getNikkeUnionById, insertMissingNikkeCharacterNameCodes } from '../../../utils/database.js';
 
 export const USER_PROFILE_BASIC_INFO_UPDATE_BUTTON_ID = 'nikke_user_profile_basic_info_update';
 export const USER_PROFILE_OUTPOST_INFO_UPDATE_BUTTON_ID = 'nikke_user_profile_outpost_info_update';
@@ -1019,6 +1019,79 @@ export async function handleGetUserCharacters(interaction, client) {
         logger.error("Error getting user characters:", error);
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [errorEmbed("An error occurred while trying to get the user characters. Please try again.")]
+        }).catch(logger.error);
+    }
+}
+
+export async function handleCharactersUpdate(interaction, client) {
+    try {
+        await InteractionHelper.safeDefer(interaction);
+    } catch (error) {
+        logger.error('Failed to defer reply:', error);
+        return;
+    }
+
+    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed('You need **Administrator** permission to run characters update.')],
+        }).catch(logger.error);
+        return;
+    }
+
+    try {
+        const accounts = await getNikkeAccounts(client, { seedDefaults: false });
+        const kaarakoAccount = accounts.find((account) => String(account?.name || '').trim().toLowerCase() === 'kaarako');
+
+        if (!kaarakoAccount?.intl_open_id) {
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [errorEmbed('Could not find Nikke account named **KAARAKO** in nikke_accounts.')],
+            }).catch(logger.error);
+            return;
+        }
+
+        const nikkeAreaId = 84;
+        const response = await getUserCharacters(kaarakoAccount.intl_open_id, nikkeAreaId);
+
+        if (!response.ok) {
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [errorEmbed(`Nikke API call failed with status ${response.status}.`)],
+            }).catch(logger.error);
+            return;
+        }
+
+        const payload = await response.json();
+        const characters = payload?.data?.characters ?? payload?.characters ?? [];
+
+        const nameCodes = [...new Set(
+            (Array.isArray(characters) ? characters : [])
+                .map((character) => Number.parseInt(String(character?.name_code), 10))
+                .filter((value) => Number.isInteger(value)),
+        )];
+
+        const upsertResult = await insertMissingNikkeCharacterNameCodes(client, nameCodes);
+        if (!upsertResult.success) {
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [errorEmbed('Failed to write name_code values to nikke_characters.')],
+            }).catch(logger.error);
+            return;
+        }
+
+        const embed = createEmbed({
+            title: '✅ Characters Updated',
+            description: 'Fetched KAARAKO characters and inserted missing `name_code` values into `nikke_characters`.',
+            color: getColor('success'),
+        }).addFields(
+            { name: 'KAARAKO intl_open_id', value: String(kaarakoAccount.intl_open_id), inline: false },
+            { name: 'Area ID', value: String(nikkeAreaId), inline: true },
+            { name: 'Unique name_codes from API', value: String(upsertResult.requested), inline: true },
+            { name: 'Inserted (new only)', value: String(upsertResult.inserted), inline: true },
+        );
+
+        await InteractionHelper.safeEditReply(interaction, { embeds: [embed] }).catch(logger.error);
+    } catch (error) {
+        logger.error('Error updating Nikke characters table from KAARAKO profile:', error);
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed('An error occurred while updating nikke_characters. Please try again.')],
         }).catch(logger.error);
     }
 }
