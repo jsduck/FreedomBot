@@ -21,7 +21,7 @@ export const userCharacterUpdateHandler = {
             const response = await buildUserCharacterView(client, intlOpenId, String(nameCode), { refresh: true });
 
             await interaction.message.edit({
-                embeds: [response.embed],
+                embeds: response.embeds || [response.embed],
                 components: response.components,
             });
         } catch (error) {
