@@ -11,6 +11,7 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const { Pool } = pg;
 const MAX_DIAGNOSTIC_SAMPLES = 5;
+const useRenderedScrapeArg = process.argv.includes('--rendered');
 
 function slug(value) {
     return String(value)
@@ -396,7 +397,9 @@ async function resolveThumbnailForUnit(unit, scrapedThumbnailMap, scrapedKeys) {
 
 async function enrichUnitsWithThumbnails(units) {
     const nikkeListUrl = process.env.NIKKE_LIST_URL || 'https://www.blablalink.com/shiftyspad/nikke-list';
-    const useBrowserRenderedScrape = String(process.env.NIKKE_LIST_RENDERED_SCRAPE || '').toLowerCase() === 'true';
+    const useBrowserRenderedScrape =
+        useRenderedScrapeArg
+        || String(process.env.NIKKE_LIST_RENDERED_SCRAPE || '').toLowerCase() === 'true';
     let scrapedThumbnailMap = new Map();
     let scrapeDiagnostics = null;
 
