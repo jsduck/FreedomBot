@@ -3,19 +3,7 @@ import { EXPECTED_SCHEMA_LABEL, EXPECTED_SCHEMA_VERSION } from './schemaVersion.
 
 const configuredTables = {
     guilds: 'guilds',
-    users: 'users',
     guild_users: 'guild_users',
-    birthdays: 'birthdays',
-    giveaways: 'giveaways',
-    tickets: 'ticket_data',
-    afk_status: 'afk_status',
-    welcome_configs: 'welcome_configs',
-    leveling_configs: 'leveling_configs',
-    user_levels: 'user_levels',
-    economy: 'economy',
-    invite_tracking: 'invite_tracking',
-    application_roles: 'application_roles',
-    verification_audit: 'verification_audit',
     nikke_accounts: 'nikke_accounts',
     nikke_accounts_progress: 'nikke_accounts_progress',
     nikke_unions: 'nikke_unions',
@@ -25,19 +13,7 @@ const configuredTables = {
 
 const allowedTableIdentifiers = new Set([
     'guilds',
-    'users',
     'guild_users',
-    'birthdays',
-    'giveaways',
-    'ticket_data',
-    'afk_status',
-    'welcome_configs',
-    'leveling_configs',
-    'user_levels',
-    'economy',
-    'invite_tracking',
-    'application_roles',
-    'verification_audit',
     'nikke_accounts',
     'nikke_accounts_progress',
     'nikke_unions',
@@ -145,20 +121,6 @@ export const pgConfig = {
         cache: 1800,
         
         guildConfig: null,
-        
-        economy: null,
-        
-        leveling: null,
-        
-        giveaway: null,
-        
-        ticket: 604800,
-        
-        afk: 86400,
-        
-        welcome: null,
-        
-        birthday: null,
     },
     
     features: {
