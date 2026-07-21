@@ -75,7 +75,8 @@ export async function upsertUserCharacterCache(client, intlOpenId, nameCode, dat
                  ON CONFLICT (intl_open_id, name_code)
                  DO UPDATE SET
                      data = EXCLUDED.data,
-                     fetched_at = NOW()`,
+                     fetched_at = NOW(),
+                     updated_at = NOW()`,
                 [normalizedIntlOpenId, normalizedNameCode, data],
             );
             return true;
@@ -89,7 +90,7 @@ export async function upsertUserCharacterCache(client, intlOpenId, nameCode, dat
             name_code: normalizedNameCode,
             data,
             fetched_at: new Date().toISOString(),
-            updated_at: existing?.updated_at || new Date().toISOString(),
+            updated_at: new Date().toISOString(),
         });
         return true;
     } catch (error) {
