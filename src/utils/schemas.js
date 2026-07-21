@@ -29,46 +29,19 @@ export const LoggingConfigSchema = z
   })
   .default({ enabled: false, enabledEvents: {} });
 
-const AutoVerifyConfigSchema = z
-  .object({
-    enabled: z.boolean().default(false),
-    criteria: z.enum(['account_age', 'server_size', 'none']).default('none'),
-    accountAgeDays: z.number().int().min(1).max(365).nullable().optional(),
-    roleId: z.string().nullable().optional()
-  })
-  .optional();
-
-const VerificationConfigSchema = z
-  .object({
-    enabled: z.boolean().default(false),
-    channelId: z.string().nullable().optional(),
-    messageId: z.string().nullable().optional(),
-    roleId: z.string().optional(),
-    message: z.string().optional(),
-    buttonText: z.string().default('Verify'),
-    autoVerify: AutoVerifyConfigSchema
-  })
-  .optional();
-
 const GuildConfigSchema = z
   .object({
     prefix: z.string().optional(),
     modRole: z.string().nullable().optional(),
     adminRole: z.string().nullable().optional(),
     logChannelId: z.string().nullable().optional(),
-    welcomeChannel: z.string().nullable().optional(),
-    welcomeMessage: z.string().optional(),
-    autoRole: z.string().nullable().optional(),
     dmOnClose: z.boolean().optional(),
     reportChannelId: z.string().nullable().optional(),
-    birthdayChannelId: z.string().nullable().optional(),
-    premiumRoleId: z.string().nullable().optional(),
     logIgnore: LogIgnoreSchema.optional(),
     disabledCommands: z.record(z.boolean()).optional(),
     disabledCategories: z.record(z.boolean()).optional(),
     logging: LoggingConfigSchema.optional(),
     enableLogging: z.boolean().optional(),
-    verification: VerificationConfigSchema
   })
   .passthrough();
 

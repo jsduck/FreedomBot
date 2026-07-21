@@ -23,7 +23,7 @@ function extractId(value) {
 function parseValue(key, rawValue) {
     const value = rawValue.trim();
 
-    if (['modRole', 'adminRole', 'autoRole', 'logChannelId'].includes(key)) {
+    if (['modRole', 'adminRole', 'logChannelId'].includes(key)) {
         if (value.toLowerCase() === 'none') {
             return null;
         }

@@ -38,8 +38,7 @@ const CATEGORY_ICONS = {
     "Reaction Roles": "🎭",
     Community: "👥",
     Birthday: "🎂",
-    "Join To Create": "🔌",
-    Verification: "✅",
+    "Join To Create": "🔌"
 };
 
 function formatCategoryName(rawCategory) {
