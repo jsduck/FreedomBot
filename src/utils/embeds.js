@@ -1,11 +1,11 @@
-// embeds.js
+﻿// embeds.js
 
 import { EmbedBuilder } from 'discord.js';
 import { getColor, botConfig } from '../config/bot.js';
 
 const EMOJI_REGEX = /[\p{Extended_Pictographic}\uFE0F]/gu;
-const EMBED_FOOTER_SYMBOL = Symbol('titanbotFooterText');
-const EMBED_BASE_DESCRIPTION_SYMBOL = Symbol('titanbotBaseDescription');
+const EMBED_FOOTER_SYMBOL = Symbol('SasookFooterText');
+const EMBED_BASE_DESCRIPTION_SYMBOL = Symbol('SasookBaseDescription');
 
 function sanitizeEmbedText(text = '') {
   if (typeof text !== 'string') {
@@ -381,7 +381,7 @@ export function formatQuote(content) {
 
 export function formatList(items, ordered = false) {
   return items
-    .map((item, index) => (ordered ? `${index + 1}.` : '•') + `${item}`)
+    .map((item, index) => (ordered ? `${index + 1}.` : 'â€¢') + `${item}`)
     .join('\n');
 }
 
@@ -406,5 +406,5 @@ export function formatProgressBar(current, max, size = 10) {
   const progress = Math.min(Math.max(0, current / max), 1);
   const filled = Math.round(size * progress);
   const empty = size - filled;
-  return `[${'█'.repeat(filled)}${'░'.repeat(empty)}] ${Math.round(progress * 100)}%`;
+  return `[${'â–ˆ'.repeat(filled)}${'â–‘'.repeat(empty)}] ${Math.round(progress * 100)}%`;
 }

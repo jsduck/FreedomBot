@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+﻿import { spawnSync } from 'node:child_process';
 import { mkdir, readdir, stat, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -104,7 +104,7 @@ async function run() {
 
   const outputPath = args.output
     ? path.resolve(args.output)
-    : path.join(backupDir, `titanbot-backup-${createTimestamp()}.dump`);
+    : path.join(backupDir, `Sasook-backup-${createTimestamp()}.dump`);
 
   const dumpArgs = [
     '--format=custom',

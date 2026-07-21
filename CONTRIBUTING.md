@@ -1,6 +1,6 @@
-# Contributing to TitanBot
+﻿# Contributing to Sasook
 
-Thank you for your interest in contributing to TitanBot! This guide covers local setup, project conventions, and what we look for in pull requests.
+Thank you for your interest in contributing to Sasook! This guide covers local setup, project conventions, and what we look for in pull requests.
 
 ## Ways to Contribute
 
@@ -44,7 +44,7 @@ For Docker-based setup, see [README.md](README.md#docker-deployment-recommended)
 ## Development Workflow
 
 1. **Fork the repository** and create a branch from `main`.
-2. **Make focused changes** — one logical change per pull request when possible.
+2. **Make focused changes** â€” one logical change per pull request when possible.
 3. **Open a pull request** with a clear description of what changed and why.
 
 Use descriptive branch names, for example:
@@ -55,7 +55,7 @@ Use descriptive branch names, for example:
 
 ## Database & Migrations
 
-TitanBot uses PostgreSQL as its primary store. If PostgreSQL is unreachable at startup, the bot can operate in a **degraded in-memory mode** — but that mode is not suitable for production and should not be the only way you test persistence-related changes.
+Sasook uses PostgreSQL as its primary store. If PostgreSQL is unreachable at startup, the bot can operate in a **degraded in-memory mode** â€” but that mode is not suitable for production and should not be the only way you test persistence-related changes.
 
 Useful commands:
 
@@ -71,11 +71,11 @@ Test features that read or write guild data with **both** PostgreSQL and the mem
 
 ## Code Guidelines
 
-- **Match existing style** — ES modules (`import`/`export`), async/await, and the conventions used in neighboring files.
-- **Handle errors gracefully** — catch failures, log with context, and send user-friendly embed replies where appropriate.
-- **Avoid breaking guild isolation** — guild-specific config and data must stay scoped per server (`guild:{guildId}:...` keys, `interaction.guildId`).
-- **Keep changes minimal** — prefer extending existing utilities and services over duplicating logic.
-- **Document user-facing behavior** — update README.md when setup steps or configuration change; mention new env vars in `.env.example`.
+- **Match existing style** â€” ES modules (`import`/`export`), async/await, and the conventions used in neighboring files.
+- **Handle errors gracefully** â€” catch failures, log with context, and send user-friendly embed replies where appropriate.
+- **Avoid breaking guild isolation** â€” guild-specific config and data must stay scoped per server (`guild:{guildId}:...` keys, `interaction.guildId`).
+- **Keep changes minimal** â€” prefer extending existing utilities and services over duplicating logic.
+- **Document user-facing behavior** â€” update README.md when setup steps or configuration change; mention new env vars in `.env.example`.
 
 There is no ESLint config in this repo today; consistency with surrounding code is the main bar.
 
@@ -100,3 +100,4 @@ When reporting a bug, include:
 ## License
 
 By contributing, you agree that your contributions will be licensed under the same [MIT License](LICENSE) that covers this project.
+

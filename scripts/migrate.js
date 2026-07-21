@@ -1,4 +1,4 @@
-import pg from 'pg';
+﻿import pg from 'pg';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -143,7 +143,7 @@ const migrate = async () => {
 
     logger.info('✨ Migration completed successfully!');
     logger.info(`📌 Schema version recorded: v${EXPECTED_SCHEMA_VERSION} (${EXPECTED_SCHEMA_LABEL})`);
-    logger.info('📚 Your database is now ready for TitanBot.');
+    logger.info('📚 Your database is now ready for Sasook.');
   } catch (error) {
     logger.error('❌ Migration failed:', error);
     process.exit(1);
@@ -219,3 +219,4 @@ if (command === 'apply') {
   logger.error(`Unknown command: ${command}. Use one of: apply, check, status`);
   process.exit(1);
 }
+

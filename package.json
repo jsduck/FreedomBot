@@ -1,5 +1,5 @@
-{
-  "name": "titanbot",
+﻿{
+  "name": "Sasook",
   "version": "2.1.0",
   "description": "Modular Ultimate Community Bot by Touchpoint Support",
   "main": "src/app.js",
@@ -39,3 +39,4 @@
     "undici": "^6.27.0"
   }
 }
+

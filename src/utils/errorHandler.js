@@ -1,11 +1,11 @@
-// errorHandler.js — the single entry point for all error handling.
+﻿// errorHandler.js â€” the single entry point for all error handling.
 //
 // Rules:
-// 1. Commands/handlers: throw TitanBotError (via createError) or let errors propagate;
+// 1. Commands/handlers: throw SasookError (via createError) or let errors propagate;
 //    interactionCreate routes them through handleInteractionError. For expected user-facing
 //    failures (validation, cooldowns), use replyUserError.
 //    Do NOT wrap a command's execute() body in a try/catch whose only purpose is to call
-//    handleInteractionError — that is redundant because interactionCreate already catches
+//    handleInteractionError â€” that is redundant because interactionCreate already catches
 //    command.execute errors and calls handleInteractionError with COMMAND_ERROR_SUBTYPES.
 //    Only keep a local try/catch when the catch does something more (custom recovery,
 //    typed re-throw, status-code branching) or when it lives in a standalone handler
@@ -38,10 +38,10 @@ export const ErrorTypes = {
     UNKNOWN: 'unknown'
 };
 
-export class TitanBotError extends Error {
+export class SasookError extends Error {
     constructor(message, type = ErrorTypes.UNKNOWN, userMessage = null, context = {}) {
         super(message);
-        this.name = 'TitanBotError';
+        this.name = 'SasookError';
         this.type = type;
         this.userMessage = userMessage;
         this.context = context;
@@ -68,7 +68,7 @@ const DATABASE_ERROR_CODES = new Set([
 ]);
 
 export function categorizeError(error) {
-    if (error instanceof TitanBotError) {
+    if (error instanceof SasookError) {
         return error.type;
     }
 
@@ -281,7 +281,7 @@ async function sendErrorResponse(interaction, embed, context = {}) {
         const useEphemeral = context.ephemeral !== false;
 
         if (interaction.replied) {
-            // A visible reply already exists; don't overwrite it — follow up ephemerally.
+            // A visible reply already exists; don't overwrite it â€” follow up ephemerally.
             await interaction.followUp({ ...errorMessage, flags: MessageFlags.Ephemeral });
         } else if (interaction.deferred) {
             await interaction.editReply(errorMessage);
@@ -358,7 +358,7 @@ const USER_ERROR_TYPES = new Set([
 
 function buildErrorReference(resolvedErrorCode, traceId) {
     const shortTrace = traceId ? String(traceId).slice(0, 8) : null;
-    return shortTrace ? `${resolvedErrorCode} · ${shortTrace}` : resolvedErrorCode;
+    return shortTrace ? `${resolvedErrorCode} Â· ${shortTrace}` : resolvedErrorCode;
 }
 
 export async function handleInteractionError(interaction, error, context = {}) {
@@ -426,7 +426,7 @@ export function withErrorHandling(fn, context = {}) {
                 (arg.isCommand || arg.isButton || arg.isModalSubmit || arg.isStringSelectMenu || arg.isChatInputCommand || arg._isPrefixCommand)
             );
 
-            // Slash commands are handled by interactionCreate — re-throw so the
+            // Slash commands are handled by interactionCreate â€” re-throw so the
             // central handler can attach trace context and command subtypes.
             if (interaction?.isChatInputCommand?.()) {
                 throw error;
@@ -449,12 +449,12 @@ export function createError(message, type = ErrorTypes.UNKNOWN, userMessage = nu
         errorCode: context?.errorCode || getDefaultErrorCodeByType(type)
     };
 
-    return new TitanBotError(message, type, userMessage, normalizedContext);
+    return new SasookError(message, type, userMessage, normalizedContext);
 }
 
 export default {
     ErrorTypes,
-    TitanBotError,
+    SasookError,
     categorizeError,
     getUserMessage,
     replyUserError,
@@ -464,3 +464,4 @@ export default {
     withErrorHandling,
     createError
 };
+

@@ -1,4 +1,4 @@
-import { assertAllowlistedIdentifier } from '../../utils/sqlIdentifiers.js';
+﻿import { assertAllowlistedIdentifier } from '../../utils/sqlIdentifiers.js';
 import { EXPECTED_SCHEMA_LABEL, EXPECTED_SCHEMA_VERSION } from './schemaVersion.js';
 
 const configuredTables = {
@@ -52,7 +52,7 @@ const validatedTables = Object.fromEntries(
     ])
 );
 
-const DEFAULT_POSTGRES_URL = 'postgresql://localhost:5432/titanbot';
+const DEFAULT_POSTGRES_URL = 'postgresql://localhost:5432/Sasook';
 
 export function resolveSslConfig() {
     const sslEnv = process.env.POSTGRES_SSL?.toLowerCase();
@@ -87,7 +87,7 @@ export function resolvePostgresPoolConfig() {
         min: parseInt(process.env.POSTGRES_MIN_CONNECTIONS) || 2,
         idleTimeoutMillis: parseInt(process.env.POSTGRES_IDLE_TIMEOUT) || 30000,
         connectionTimeoutMillis: parseInt(process.env.POSTGRES_CONNECTION_TIMEOUT) || 10000,
-        application_name: 'titanbot',
+        application_name: 'Sasook',
         statement_timeout: process.env.NODE_ENV === 'production' ? 30000 : 0,
         keepalives: 1,
         keepalives_idle: 30,
@@ -101,7 +101,7 @@ export function resolvePostgresPoolConfig() {
     return {
         host: process.env.POSTGRES_HOST || 'localhost',
         port: parseInt(process.env.POSTGRES_PORT) || 5432,
-        database: process.env.POSTGRES_DB || 'titanbot',
+        database: process.env.POSTGRES_DB || 'Sasook',
         user: process.env.POSTGRES_USER || 'postgres',
         password: (process.env.POSTGRES_PASSWORD || '').toString(),
         ...sharedOptions,
@@ -115,7 +115,7 @@ export const pgConfig = {
         
         host: process.env.POSTGRES_HOST || 'localhost',
         port: parseInt(process.env.POSTGRES_PORT) || 5432,
-        database: process.env.POSTGRES_DB || 'titanbot',
+        database: process.env.POSTGRES_DB || 'Sasook',
         user: process.env.POSTGRES_USER || 'postgres',
         password: (process.env.POSTGRES_PASSWORD || '').toString(),
         ssl: resolveSslConfig(),
@@ -125,7 +125,7 @@ export const pgConfig = {
         idleTimeoutMillis: parseInt(process.env.POSTGRES_IDLE_TIMEOUT) || 30000,
         connectionTimeoutMillis: parseInt(process.env.POSTGRES_CONNECTION_TIMEOUT) || 10000,
 
-        application_name: 'titanbot',
+        application_name: 'Sasook',
         statement_timeout: process.env.NODE_ENV === 'production' ? 30000 : 0,
         keepalives: 1,
         keepalives_idle: 30,

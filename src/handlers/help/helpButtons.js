@@ -1,4 +1,4 @@
-import { createEmbed } from '../../utils/embeds.js';
+﻿import { createEmbed } from '../../utils/embeds.js';
 import { createAllCommandsMenu } from './helpSelectMenus.js';
 import { createInitialHelpMenu } from '../../commands/Core/help.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
@@ -43,7 +43,7 @@ export const helpBugReportButton = {
         const githubButton = new ButtonBuilder()
             .setLabel('🐛 Report Bug on GitHub')
             .setStyle(ButtonStyle.Link)
-            .setURL('https://github.com/codebymitch/TitanBot/issues');
+            .setURL('https://github.com/codebymitch/Sasook/issues');
 
         const bugRow = new ActionRowBuilder().addComponents(githubButton);
 
@@ -59,7 +59,7 @@ export const helpBugReportButton = {
             color: 'error'
         });
         bugReportEmbed.setFooter({
-            text: 'TitanBot Bug Reporting System',
+            text: 'Sasook Bug Reporting System',
             iconURL: client.user.displayAvatarURL()
         });
         bugReportEmbed.setTimestamp();

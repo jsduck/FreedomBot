@@ -1,4 +1,4 @@
-name: Migration Version Check
+﻿name: Migration Version Check
 
 on:
   pull_request:
@@ -16,24 +16,24 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: titanbot
-          POSTGRES_PASSWORD: titanbot
-          POSTGRES_DB: titanbot
+          POSTGRES_USER: Sasook
+          POSTGRES_PASSWORD: Sasook
+          POSTGRES_DB: Sasook
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U titanbot -d titanbot"
+          --health-cmd "pg_isready -U Sasook -d Sasook"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
     env:
-      POSTGRES_URL: postgresql://titanbot:titanbot@localhost:5432/titanbot
+      POSTGRES_URL: postgresql://Sasook:Sasook@localhost:5432/Sasook
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
-      POSTGRES_DB: titanbot
-      POSTGRES_USER: titanbot
-      POSTGRES_PASSWORD: titanbot
+      POSTGRES_DB: Sasook
+      POSTGRES_USER: Sasook
+      POSTGRES_PASSWORD: Sasook
       POSTGRES_SSL: "false"
       SCHEMA_VERSION: "1"
       SCHEMA_VERSION_LABEL: "baseline-v1"
@@ -56,3 +56,4 @@ jobs:
 
       - name: Validate migration version
         run: npm run migrate:check
+
