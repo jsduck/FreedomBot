@@ -1,8 +1,9 @@
 import { pgConfig } from '../../config/database/postgres.js';
 import { logger } from '../logger.js';
+import { getNikkeUserCharacterCacheKey } from './keys.js';
 
 function getFallbackKey(intlOpenId, nameCode) {
-    return `nikke:user-character:${intlOpenId}:${nameCode}`;
+    return getNikkeUserCharacterCacheKey(intlOpenId, nameCode);
 }
 
 function isPostgresSqlReady(wrapper) {
