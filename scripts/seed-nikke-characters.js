@@ -23,6 +23,72 @@ function buildDotGgThumbnail(img) {
     return `https://static.dotgg.gg/nikke/characters/${img}.webp`;
 }
 
+function decodeHtmlEntities(value) {
+    return String(value || '')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>');
+}
+
+function normalizeCharacterName(value) {
+    return String(value || '')
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+}
+
+function parsePlayerItemsFromHtml(html, pageUrl) {
+    const thumbnailMap = new Map();
+    const segments = html.split(/<div[^>]*data-cname="player-item"[^>]*>/i);
+
+    for (let index = 1; index < segments.length; index += 1) {
+        const block = segments[index];
+        const srcMatch = block.match(/<img[^>]*class="[^"]*nikkes-player-item-img[^"]*"[^>]*src="([^"]+)"/i);
+        const nameMatch = block.match(/<p[^>]*class="[^"]*name[^"]*"[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i);
+
+        if (!srcMatch || !nameMatch) {
+            continue;
+        }
+
+        const name = decodeHtmlEntities(nameMatch[1]).trim();
+        const normalizedName = normalizeCharacterName(name);
+        if (!normalizedName) {
+            continue;
+        }
+
+        let thumbnailUrl;
+        try {
+            thumbnailUrl = new URL(srcMatch[1], pageUrl).href;
+        } catch {
+            continue;
+        }
+
+        thumbnailMap.set(normalizedName, thumbnailUrl);
+    }
+
+    return thumbnailMap;
+}
+
+async function fetchPlayerItemThumbnails(pageUrl) {
+    const response = await fetch(pageUrl, {
+        headers: {
+            'User-Agent': 'FreedomBot/1.0 (+nikke-character-seeder)',
+            'Accept': 'text/html,application/xhtml+xml',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch player item page: ${response.status} ${response.statusText}`);
+    }
+
+    const html = await response.text();
+    return parsePlayerItemsFromHtml(html, pageUrl);
+}
+
 function normalizeUnits(units) {
     const dedupedByNameCode = new Map();
 
@@ -46,9 +112,14 @@ function normalizeUnits(units) {
     return [...dedupedByNameCode.values()];
 }
 
-async function resolveThumbnailForUnit(unit) {
+async function resolveThumbnailForUnit(unit, scrapedThumbnailMap) {
     if (unit.thumbnail) {
         return unit.thumbnail;
+    }
+
+    const scrapedThumbnail = scrapedThumbnailMap?.get(normalizeCharacterName(unit.name));
+    if (scrapedThumbnail) {
+        return scrapedThumbnail;
     }
 
     try {
@@ -67,10 +138,24 @@ async function resolveThumbnailForUnit(unit) {
 }
 
 async function enrichUnitsWithThumbnails(units) {
+    const nikkeListUrl = process.env.NIKKE_LIST_URL || 'https://www.blablalink.com/shiftyspad/nikke-list';
+    let scrapedThumbnailMap = new Map();
+
+    try {
+        scrapedThumbnailMap = await fetchPlayerItemThumbnails(nikkeListUrl);
+        logger.info('Loaded scraped Nikke thumbnails', {
+            event: 'nikke_characters.seed.scrape.completed',
+            sourceUrl: nikkeListUrl,
+            scrapedCount: scrapedThumbnailMap.size,
+        });
+    } catch (error) {
+        logger.warn(`Failed to scrape Nikke thumbnails from ${nikkeListUrl}: ${error.message}`);
+    }
+
     return Promise.all(
         units.map(async (unit) => ({
             ...unit,
-            thumbnail: await resolveThumbnailForUnit(unit),
+            thumbnail: await resolveThumbnailForUnit(unit, scrapedThumbnailMap),
         })),
     );
 }
