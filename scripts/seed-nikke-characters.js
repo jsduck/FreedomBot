@@ -93,7 +93,9 @@ function parsePlayerItemsFromHtml(html, pageUrl) {
 
     for (let index = 1; index < segments.length; index += 1) {
         const block = segments[index];
-        const srcMatch = block.match(/<img[^>]*class="[^"]*nikkes-player-item-img[^"]*"[^>]*src="([^"]+)"/i);
+        const srcMatch =
+            block.match(/<img[^>]*class="[^"]*nikkes-player-item-img[^"]*"[^>]*src="([^"]+)"/i)
+            || block.match(/<img[^>]*class="[^"]*nikkes-all-item-img[^"]*"[^>]*src="([^"]+)"/i);
         const nameMatch = block.match(/<p[^>]*class="[^"]*name[^"]*"[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i);
 
         if (!srcMatch) {
@@ -135,6 +137,128 @@ function parsePlayerItemsFromHtml(html, pageUrl) {
         thumbnailMap,
         diagnostics,
     };
+}
+
+async function fetchPlayerItemThumbnailsWithBrowser(pageUrl) {
+    let playwrightModule;
+
+    try {
+        playwrightModule = await import('playwright');
+    } catch (error) {
+        throw new Error(`Playwright is not installed (${error.message})`);
+    }
+
+    const chromium = playwrightModule?.chromium;
+    if (!chromium) {
+        throw new Error('Playwright chromium browser is unavailable.');
+    }
+
+    const browser = await chromium.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+
+    try {
+        const page = await browser.newPage();
+        await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+        await page.waitForTimeout(5000);
+
+        const extraction = await page.evaluate((maxSamples) => {
+            const normalize = (value) => String(value || '')
+                .normalize('NFKD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, ' ')
+                .trim();
+
+            const toAbsoluteUrl = (value) => {
+                try {
+                    return new URL(value, window.location.href).href;
+                } catch {
+                    return null;
+                }
+            };
+
+            const pickName = (img) => {
+                const card = img.closest('[data-cname="player-item"]') || img.closest('div');
+                if (!card) {
+                    return null;
+                }
+
+                const explicitName = card.querySelector('p.name span')?.textContent?.trim();
+                if (explicitName) {
+                    return explicitName;
+                }
+
+                const lines = String(card.innerText || '')
+                    .split(/\n+/)
+                    .map((line) => line.trim())
+                    .filter(Boolean);
+
+                return lines[0] || null;
+            };
+
+            const imageNodes = Array.from(document.querySelectorAll('img.nikkes-player-item-img, img.nikkes-all-item-img'));
+            const rows = [];
+
+            for (const img of imageNodes) {
+                const src = img.getAttribute('src') || img.getAttribute('data-src');
+                const absoluteSrc = src ? toAbsoluteUrl(src) : null;
+                const rawName = pickName(img);
+                const normalizedName = normalize(rawName);
+
+                if (!absoluteSrc || !normalizedName) {
+                    continue;
+                }
+
+                rows.push({
+                    rawName,
+                    normalizedName,
+                    thumbnailUrl: absoluteSrc,
+                    className: img.className || null,
+                });
+            }
+
+            const seen = new Set();
+            const deduped = [];
+
+            for (const row of rows) {
+                const key = `${row.normalizedName}|${row.thumbnailUrl}`;
+                if (seen.has(key)) {
+                    continue;
+                }
+
+                seen.add(key);
+                deduped.push(row);
+            }
+
+            return {
+                extractedCount: deduped.length,
+                extractionSamples: deduped.slice(0, maxSamples),
+                rows: deduped,
+            };
+        }, MAX_DIAGNOSTIC_SAMPLES);
+
+        const thumbnailMap = new Map();
+        for (const row of extraction.rows || []) {
+            thumbnailMap.set(row.normalizedName, row.thumbnailUrl);
+        }
+
+        return {
+            thumbnailMap,
+            diagnostics: {
+                mode: 'playwright_dom',
+                segmentCount: null,
+                extractedCount: extraction.extractedCount || 0,
+                missingNameCount: null,
+                missingSrcCount: null,
+                invalidUrlCount: null,
+                extractionSamples: extraction.extractionSamples || [],
+            },
+        };
+    } finally {
+        await browser.close();
+    }
 }
 
 async function fetchPlayerItemThumbnails(pageUrl) {
@@ -272,16 +396,29 @@ async function resolveThumbnailForUnit(unit, scrapedThumbnailMap, scrapedKeys) {
 
 async function enrichUnitsWithThumbnails(units) {
     const nikkeListUrl = process.env.NIKKE_LIST_URL || 'https://www.blablalink.com/shiftyspad/nikke-list';
+    const useBrowserRenderedScrape = String(process.env.NIKKE_LIST_RENDERED_SCRAPE || '').toLowerCase() === 'true';
     let scrapedThumbnailMap = new Map();
     let scrapeDiagnostics = null;
 
     try {
-        const scrapeResult = await fetchPlayerItemThumbnails(nikkeListUrl);
+        let scrapeResult;
+        if (useBrowserRenderedScrape) {
+            logger.info('Using browser-rendered Nikke thumbnail scrape mode', {
+                event: 'nikke_characters.seed.scrape.mode',
+                sourceUrl: nikkeListUrl,
+                mode: 'playwright_dom',
+            });
+            scrapeResult = await fetchPlayerItemThumbnailsWithBrowser(nikkeListUrl);
+        } else {
+            scrapeResult = await fetchPlayerItemThumbnails(nikkeListUrl);
+        }
+
         scrapedThumbnailMap = scrapeResult.thumbnailMap;
         scrapeDiagnostics = scrapeResult.diagnostics;
 
         const scrapeSummary = {
             sourceUrl: nikkeListUrl,
+            mode: scrapeDiagnostics?.mode || (useBrowserRenderedScrape ? 'playwright_dom' : 'static_html'),
             scrapedCount: scrapedThumbnailMap.size,
             segmentCount: scrapeDiagnostics?.segmentCount ?? 0,
             extractedCount: scrapeDiagnostics?.extractedCount ?? 0,

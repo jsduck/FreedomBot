@@ -1,0 +1,311 @@
+{
+  "games": [
+    {
+      "game": "Nikke",
+      "label": "JP/KR/NA/SEA/Global",
+      "game_i18n_key": "nikke",
+      "label_i18n_key": "nikke_area_29080",
+      "value": "29080",
+      "intl_sdk_env": {
+        "prod": "aws-na"
+      },
+      "cms_game_id": 16,
+      "avatar": "https://sg-lipcommunity.playerinfinite.com/lip/assets/imgs/games/avatar/nikke.png"
+    },
+    {
+      "game": "Nikke",
+      "label": "HK/MC/TW",
+      "game_i18n_key": "nikke",
+      "label_i18n_key": "nikke_area_29157",
+      "value": "29157",
+      "intl_sdk_env": {
+        "prod": "sg"
+      },
+      "cms_game_id": 16,
+      "avatar": "https://sg-lipcommunity.playerinfinite.com/lip/assets/imgs/games/avatar/nikke.png"
+    },
+    {
+      "game": "Tower of Fantansy",
+      "label": "AP/NA/EU/SA/SEA",
+      "game_i18n_key": "tower_of_fantansy",
+      "label_i18n_key": "tower_of_fantansy_area_29093",
+      "value": "29093",
+      "intl_sdk_env": {
+        "prod": "aws-na"
+      },
+      "cms_game_id": 4,
+      "avatar": "https://sg-lipcommunity.playerinfinite.com/lip/assets/imgs/games/avatar/tof.png"
+    },
+    {
+      "game": "Alchemy Stars",
+      "label": "JP/KR/SEA/Global",
+      "game_i18n_key": "alchemy_stars",
+      "label_i18n_key": "alchemy_stars_area_28006",
+      "value": "28006",
+      "intl_sdk_env": {
+        "prod": "sg"
+      },
+      "cms_game_id": 17,
+      "avatar": "https://sg-lipcommunity.playerinfinite.com/lip/assets/imgs/games/avatar/alchemy.png"
+    },
+    {
+      "game": "Alchemy Stars",
+      "label": "US",
+      "game_i18n_key": "alchemy_stars",
+      "label_i18n_key": "alchemy_stars_area_29042",
+      "value": "29042",
+      "intl_sdk_env": {
+        "prod": "na"
+      },
+      "cms_game_id": 17,
+      "avatar": "https://sg-lipcommunity.playerinfinite.com/lip/assets/imgs/games/avatar/alchemy.png"
+    },
+    {
+      "game": "Alchemy Stars",
+      "label": "HK/MC/TW",
+      "game_i18n_key": "alchemy_stars",
+      "label_i18n_key": "alchemy_stars_area_29052",
+      "value": "29052",
+      "intl_sdk_env": {
+        "prod": "sg"
+      },
+      "cms_game_id": 17,
+      "avatar": "https://sg-lipcommunity.playerinfinite.com/lip/assets/imgs/games/avatar/alchemy.png"
+    },
+    {
+      "game": "Arena Breakout",
+      "label": "Global",
+      "game_i18n_key": "arena_breakout",
+      "label_i18n_key": "arena_breakout_area_29013",
+      "value": "29013",
+      "intl_sdk_env": {
+        "prod": "sg"
+      },
+      "cms_game_id": 20,
+      "avatar": "https://sg-lipcommunity.playerinfinite.com/lip/assets/imgs/games/avatar/arena.png"
+    },
+    {
+      "game": "Undawn",
+      "label": "Global",
+      "game_i18n_key": "undawn",
+      "label_i18n_key": "undawn_area_28014",
+      "value": "28014",
+      "intl_sdk_env": {
+        "prod": "sg"
+      },
+      "cms_game_id": "8",
+      "avatar": "https://sg-lipcommunity.playerinfinite.com/lip/assets/imgs/games/avatar/undawn.png"
+    },
+    {
+      "game": "Undawn",
+      "label": "North America",
+      "game_i18n_key": "undawn",
+      "label_i18n_key": "undawn_area_29043",
+      "value": "29043",
+      "intl_sdk_env": {
+        "prod": "na"
+      },
+      "cms_game_id": "8",
+      "avatar": "https://sg-lipcommunity.playerinfinite.com/lip/assets/imgs/games/avatar/undawn.png"
+    },
+    {
+      "game": "Undawn",
+      "label": "Japan",
+      "game_i18n_key": "undawn",
+      "label_i18n_key": "undawn_area_29044",
+      "value": "29044",
+      "intl_sdk_env": {
+        "prod": "jp"
+      },
+      "cms_game_id": "8",
+      "avatar": "https://sg-lipcommunity.playerinfinite.com/lip/assets/imgs/games/avatar/undawn.png"
+    },
+    {
+      "game": "Honor of Kings",
+      "label": "Global",
+      "game_i18n_key": "honor_of_kings",
+      "label_i18n_key": "honor_of_kings_area_29134",
+      "value": "29134",
+      "intl_sdk_env": {
+        "prod": "hok"
+      },
+      "cms_game_id": 9,
+      "avatar": "https://sg-lipcommunity.playerinfinite.com/lip/assets/imgs/games/avatar/hok.png"
+    }
+  ],
+  "reward_games": [29080, 29157],
+  "grayscale": {
+    "system": {
+      "relation": "and",
+      "logics": [
+        {
+          "type": "openid",
+          "relation": "contains",
+          "rules": []
+        }
+      ]
+    },
+    "vconsole": {
+      "relation": "and",
+      "logics": [
+        {
+          "type": "openid",
+          "relation": "contains",
+          "rules": []
+        }
+      ]
+    },
+    "annual_event": {
+      "relation": "and",
+      "logics": [
+        {
+          "type": "timestamp",
+          "relation": "or",
+          "rules": [
+            {
+              "min": 1744617600,
+              "max": 1744617600
+            }
+          ]
+        }
+      ]
+    },
+    "laboratory": {
+      "relation": "and",
+      "logics": [
+        {
+          "type": "openid",
+          "relation": "contains",
+          "rules": [
+            "29080-9114975017832856527",
+            "29080-15361182275618517235",
+            "29080-7843617511805826153",
+            "29080-13859454067074907126",
+            "29080-15339510991458024648",
+            "29080-17110900044390973006",
+            "29157-736043624008501505",
+            "29080-12229356120646705800",
+            "29080-13708978565652545838",
+            "29080-8774679254582234419"
+          ]
+        }
+      ]
+    }
+  },
+  "jump_url_white_list": {
+    "configs": {
+      "values": [
+        {
+          "type": "full_path",
+          "values": [
+            "https://game.naver.com/lounge/NIKKE_The_Goddess_of_Victory",
+            "https://twitter.com/NIKKE_kr",
+            "https://www.facebook.com/nikke.kr.official",
+            "https://www.youtube.com/@nikkekr",
+            "https://www.tiktok.com/@nikke_kr",
+            "https://twitter.com/NIKKE_en",
+            "https://www.instagram.com/nikke_global",
+            "https://www.facebook.com/NIKKE.Global",
+            "https://discord.gg/nikke-en",
+            "https://www.reddit.com/r/NikkeMobile",
+            "https://www.tiktok.com/@nikke_en",
+            "https://www.youtube.com/c/NIKKEEN",
+            "https://twitter.com/NIKKE_japan",
+            "http://discord.gg/nikke-jp",
+            "https://www.youtube.com/channel/UCvi81mltkpbF2UEvC_e864g",
+            "https://page.line.me/614wojwp?openQrModal=true",
+            "https://www.tiktok.com/@nikke_japan",
+            "https://www.facebook.com/TW.NIKKE",
+            "https://www.youtube.com/channel/UCLI0h6wX_RpEbDcB11UV_RA",
+            "https://www.instagram.com/tw.nikke",
+            "https://www.facebook.com/nikke.th.official",
+            "https://www.youtube.com/channel/UCqy4ixXAiY51xoRJS8Aj2mQ",
+            "https://discord.com/invite/nikke-th",
+            "https://bit.ly/3qdPmYS",
+            "https://www.facebook.com/nikke.official.ph/?ref=page_internal",
+            "https://discord.gg/sbUywbxPby",
+            "https://www.facebook.com/nikkeindonesia",
+            "https://www.instagram.com/nikke_id",
+            "https://www.facebook.com/nikkemysg"
+          ],
+          "priority": 1
+        },
+        {
+          "type": "domain",
+          "values": ["levelinfinite.com", "pass.levelinfinite.com", "nikke.hotcool.tw"],
+          "priority": 2
+        },
+        {
+          "type": "domain_regex",
+          "values": ["nikke-*.com"],
+          "priority": 3
+        }
+      ]
+    }
+  },
+  "laboratory": {
+    "midas": {
+      "openids": [
+        "29080-9114975017832856527",
+        "29080-15361182275618517235",
+        "29080-7843617511805826153",
+        "29080-13859454067074907126",
+        "29080-15339510991458024648",
+        "29080-17110900044390973006",
+        "29157-736043624008501505",
+        "29080-12229356120646705800",
+        "29080-13708978565652545838",
+        "29080-8774679254582234419"
+      ],
+      "url": {
+        "29080": "https://www.midasbuy.com/nikkeinapp/us/buy/nikkegl",
+        "29157": "https://www.midasbuy.com/nikkeinapp/us/buy/nikkegl"
+      }
+    }
+  },
+  "image": {
+    "thumbnail_quality": 1
+  },
+  "annual_event": {
+    "value": "default",
+    "configs": [
+      {
+        "value": "default",
+        "bg_config": {
+          "bg_image": "https://sg-cdn.blablalink.com/standalonesite/ugc/public/image/b0dd2575-28f0-4396-9d7b-32b2df97e421.jpeg?height=1080&width=1920",
+          "bg_color": "#d9c29f"
+        },
+        "bg_text": {
+          "visible": false,
+          "i18n_key": "cpr_bg_text"
+        }
+      },
+      {
+        "value": "2.5",
+        "bg_config": {
+          "bg_image": "https://sg-cdn.blablalink.com/standalonesite/ugc/public/image/db39eda8-017c-40c0-997c-c88766fbaae8.jpeg?height=1080&width=1920",
+          "bg_color": "#07163f"
+        }
+      },
+      {
+        "value": "atmosphere",
+        "bg_config": {
+          "bg_image": "https://sg-cdn.blablalink.com/standalonesite/ugc/public/image/67675a59-6144-4ffd-bf0c-77f52bcc499b.jpeg",
+          "bg_color": "#141625"
+        }
+      },
+      {
+        "value": "summerLife",
+        "bg_config": {
+          "bg_image": "https://sg-cdn.blablalink.com/standalonesite/ugc/public/image/a2248344-7b9d-4d21-92af-981b694395c5.jpeg?height=1080&width=1920",
+          "bg_color": "#14154e"
+        }
+      }
+    ]
+  },
+  "letter_event": {
+    "target_url": "https://www.blablalink.com/events/time-capsulse/index.html"
+  },
+  "hide_lang_switch": false
+}
+
