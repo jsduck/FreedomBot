@@ -10,6 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const { Pool } = pg;
+const MAX_DIAGNOSTIC_SAMPLES = 5;
 
 function slug(value) {
     return String(value)
@@ -41,14 +42,59 @@ function normalizeCharacterName(value) {
         .trim();
 }
 
+function addCappedSample(target, value, maxSize = MAX_DIAGNOSTIC_SAMPLES) {
+    if (!Array.isArray(target) || target.length >= maxSize) {
+        return;
+    }
+
+    target.push(value);
+}
+
+function findScrapeCandidates(normalizedName, scrapedKeys, limit = 3) {
+    if (!normalizedName || !Array.isArray(scrapedKeys) || scrapedKeys.length === 0) {
+        return [];
+    }
+
+    const tokens = normalizedName.split(' ').filter((token) => token.length >= 4);
+    const candidates = [];
+
+    for (const key of scrapedKeys) {
+        if (key.includes(normalizedName) || normalizedName.includes(key) || tokens.some((token) => key.includes(token))) {
+            candidates.push(key);
+        }
+
+        if (candidates.length >= limit) {
+            break;
+        }
+    }
+
+    return candidates;
+}
+
 function parsePlayerItemsFromHtml(html, pageUrl) {
     const thumbnailMap = new Map();
     const segments = html.split(/<div[^>]*data-cname="player-item"[^>]*>/i);
+    const diagnostics = {
+        segmentCount: Math.max(segments.length - 1, 0),
+        extractedCount: 0,
+        missingNameCount: 0,
+        missingSrcCount: 0,
+        invalidUrlCount: 0,
+        extractionSamples: [],
+    };
 
     for (let index = 1; index < segments.length; index += 1) {
         const block = segments[index];
         const srcMatch = block.match(/<img[^>]*class="[^"]*nikkes-player-item-img[^"]*"[^>]*src="([^"]+)"/i);
         const nameMatch = block.match(/<p[^>]*class="[^"]*name[^"]*"[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i);
+
+        if (!srcMatch) {
+            diagnostics.missingSrcCount += 1;
+        }
+
+        if (!nameMatch) {
+            diagnostics.missingNameCount += 1;
+        }
 
         if (!srcMatch || !nameMatch) {
             continue;
@@ -64,16 +110,31 @@ function parsePlayerItemsFromHtml(html, pageUrl) {
         try {
             thumbnailUrl = new URL(srcMatch[1], pageUrl).href;
         } catch {
+            diagnostics.invalidUrlCount += 1;
             continue;
         }
 
         thumbnailMap.set(normalizedName, thumbnailUrl);
+        diagnostics.extractedCount += 1;
+        addCappedSample(diagnostics.extractionSamples, {
+            rawName: name,
+            normalizedName,
+            thumbnailUrl,
+        });
     }
 
-    return thumbnailMap;
+    return {
+        thumbnailMap,
+        diagnostics,
+    };
 }
 
 async function fetchPlayerItemThumbnails(pageUrl) {
+    logger.info('Fetching Nikke list page for thumbnail scraping', {
+        event: 'nikke_characters.seed.scrape.fetch.start',
+        sourceUrl: pageUrl,
+    });
+
     const response = await fetch(pageUrl, {
         headers: {
             'User-Agent': 'FreedomBot/1.0 (+nikke-character-seeder)',
@@ -86,7 +147,27 @@ async function fetchPlayerItemThumbnails(pageUrl) {
     }
 
     const html = await response.text();
-    return parsePlayerItemsFromHtml(html, pageUrl);
+    const contentType = response.headers.get('content-type') || 'unknown';
+    const parseResult = parsePlayerItemsFromHtml(html, pageUrl);
+
+    logger.info('Fetched and parsed Nikke list page', {
+        event: 'nikke_characters.seed.scrape.fetch.complete',
+        sourceUrl: pageUrl,
+        finalUrl: response.url,
+        redirected: response.redirected,
+        status: response.status,
+        contentType,
+        htmlLength: html.length,
+        hasPlayerItemMarker: html.includes('data-cname="player-item"'),
+        segmentCount: parseResult.diagnostics.segmentCount,
+        extractedCount: parseResult.diagnostics.extractedCount,
+        missingNameCount: parseResult.diagnostics.missingNameCount,
+        missingSrcCount: parseResult.diagnostics.missingSrcCount,
+        invalidUrlCount: parseResult.diagnostics.invalidUrlCount,
+        extractionSamples: parseResult.diagnostics.extractionSamples,
+    });
+
+    return parseResult;
 }
 
 function normalizeUnits(units) {
@@ -112,52 +193,182 @@ function normalizeUnits(units) {
     return [...dedupedByNameCode.values()];
 }
 
-async function resolveThumbnailForUnit(unit, scrapedThumbnailMap) {
+async function resolveThumbnailForUnit(unit, scrapedThumbnailMap, scrapedKeys) {
+    const normalizedName = normalizeCharacterName(unit.name);
+
     if (unit.thumbnail) {
-        return unit.thumbnail;
+        return {
+            thumbnail: unit.thumbnail,
+            source: 'existing_thumbnail',
+            normalizedName,
+        };
     }
 
-    const scrapedThumbnail = scrapedThumbnailMap?.get(normalizeCharacterName(unit.name));
+    const scrapedThumbnail = scrapedThumbnailMap?.get(normalizedName);
     if (scrapedThumbnail) {
-        return scrapedThumbnail;
+        return {
+            thumbnail: scrapedThumbnail,
+            source: 'scraped_match',
+            normalizedName,
+        };
     }
 
     try {
         const response = await getCharacterByName(slug(unit.name));
         if (!response.ok) {
-            return null;
+            return {
+                thumbnail: null,
+                source: 'unresolved',
+                normalizedName,
+                dotggStatus: String(response.status),
+                unresolvedReason: 'dotgg_http_error',
+                scrapeCandidates: findScrapeCandidates(normalizedName, scrapedKeys),
+            };
         }
 
         const payload = await response.json();
         const img = payload?.img;
-        return img ? buildDotGgThumbnail(img) : null;
+        if (!img) {
+            return {
+                thumbnail: null,
+                source: 'unresolved',
+                normalizedName,
+                dotggStatus: String(response.status),
+                unresolvedReason: 'dotgg_missing_img',
+                scrapeCandidates: findScrapeCandidates(normalizedName, scrapedKeys),
+            };
+        }
+
+        return {
+            thumbnail: buildDotGgThumbnail(img),
+            source: 'dotgg_fallback',
+            normalizedName,
+            dotggStatus: String(response.status),
+        };
     } catch (error) {
-        logger.warn(`Failed to resolve thumbnail for ${unit.name}: ${error.message}`);
-        return null;
+        return {
+            thumbnail: null,
+            source: 'unresolved',
+            normalizedName,
+            dotggStatus: 'error',
+            unresolvedReason: 'dotgg_exception',
+            scrapeCandidates: findScrapeCandidates(normalizedName, scrapedKeys),
+            errorMessage: error.message,
+        };
     }
 }
 
 async function enrichUnitsWithThumbnails(units) {
     const nikkeListUrl = process.env.NIKKE_LIST_URL || 'https://www.blablalink.com/shiftyspad/nikke-list';
     let scrapedThumbnailMap = new Map();
+    let scrapeDiagnostics = null;
 
     try {
-        scrapedThumbnailMap = await fetchPlayerItemThumbnails(nikkeListUrl);
+        const scrapeResult = await fetchPlayerItemThumbnails(nikkeListUrl);
+        scrapedThumbnailMap = scrapeResult.thumbnailMap;
+        scrapeDiagnostics = scrapeResult.diagnostics;
+
         logger.info('Loaded scraped Nikke thumbnails', {
             event: 'nikke_characters.seed.scrape.completed',
             sourceUrl: nikkeListUrl,
             scrapedCount: scrapedThumbnailMap.size,
+            segmentCount: scrapeDiagnostics?.segmentCount ?? 0,
+            extractedCount: scrapeDiagnostics?.extractedCount ?? 0,
+            missingNameCount: scrapeDiagnostics?.missingNameCount ?? 0,
+            missingSrcCount: scrapeDiagnostics?.missingSrcCount ?? 0,
+            invalidUrlCount: scrapeDiagnostics?.invalidUrlCount ?? 0,
         });
     } catch (error) {
         logger.warn(`Failed to scrape Nikke thumbnails from ${nikkeListUrl}: ${error.message}`);
     }
 
-    return Promise.all(
-        units.map(async (unit) => ({
-            ...unit,
-            thumbnail: await resolveThumbnailForUnit(unit, scrapedThumbnailMap),
-        })),
+    const scrapedKeys = [...scrapedThumbnailMap.keys()];
+    const enrichedRowsWithMeta = await Promise.all(
+        units.map(async (unit) => {
+            const result = await resolveThumbnailForUnit(unit, scrapedThumbnailMap, scrapedKeys);
+            return {
+                ...unit,
+                thumbnail: result.thumbnail,
+                _resolution: result,
+            };
+        }),
     );
+
+    const resolutionDiagnostics = {
+        sourceCounts: {
+            existing_thumbnail: 0,
+            scraped_match: 0,
+            dotgg_fallback: 0,
+            unresolved: 0,
+        },
+        dotgg: {
+            attempts: 0,
+            successes: 0,
+            statusCounts: {},
+        },
+        unresolvedSamples: [],
+        scrapedMatchSamples: [],
+    };
+
+    for (const row of enrichedRowsWithMeta) {
+        const source = row._resolution?.source || 'unresolved';
+        if (resolutionDiagnostics.sourceCounts[source] === undefined) {
+            resolutionDiagnostics.sourceCounts[source] = 0;
+        }
+        resolutionDiagnostics.sourceCounts[source] += 1;
+
+        if (source === 'scraped_match') {
+            addCappedSample(resolutionDiagnostics.scrapedMatchSamples, {
+                name: row.name,
+                normalizedName: row._resolution?.normalizedName || null,
+                thumbnail: row.thumbnail,
+            });
+        }
+
+        if (source === 'dotgg_fallback' || row._resolution?.dotggStatus) {
+            const status = row._resolution?.dotggStatus || 'unknown';
+            resolutionDiagnostics.dotgg.attempts += 1;
+            resolutionDiagnostics.dotgg.statusCounts[status] =
+                (resolutionDiagnostics.dotgg.statusCounts[status] || 0) + 1;
+
+            if (source === 'dotgg_fallback') {
+                resolutionDiagnostics.dotgg.successes += 1;
+            }
+        }
+
+        if (source === 'unresolved') {
+            addCappedSample(resolutionDiagnostics.unresolvedSamples, {
+                name: row.name,
+                normalizedName: row._resolution?.normalizedName || null,
+                reason: row._resolution?.unresolvedReason || 'unknown',
+                dotggStatus: row._resolution?.dotggStatus || null,
+                scrapeCandidates: row._resolution?.scrapeCandidates || [],
+                errorMessage: row._resolution?.errorMessage || null,
+            });
+        }
+    }
+
+    logger.info('Nikke thumbnail resolution diagnostics', {
+        event: 'nikke_characters.seed.thumbnail_resolution',
+        sourceUrl: nikkeListUrl,
+        scrapedCount: scrapedThumbnailMap.size,
+        sourceCounts: resolutionDiagnostics.sourceCounts,
+        dotggAttempts: resolutionDiagnostics.dotgg.attempts,
+        dotggSuccesses: resolutionDiagnostics.dotgg.successes,
+        dotggStatusCounts: resolutionDiagnostics.dotgg.statusCounts,
+        unresolvedSamples: resolutionDiagnostics.unresolvedSamples,
+        scrapedMatchSamples: resolutionDiagnostics.scrapedMatchSamples,
+    });
+
+    return {
+        rows: enrichedRowsWithMeta.map(({ _resolution, ...row }) => row),
+        diagnostics: {
+            scrape: scrapeDiagnostics,
+            resolution: resolutionDiagnostics,
+            scrapedCount: scrapedThumbnailMap.size,
+            sourceUrl: nikkeListUrl,
+        },
+    };
 }
 
 async function run() {
@@ -172,7 +383,9 @@ async function run() {
     });
 
     const normalizedRows = normalizeUnits(NIKKE_UNITS);
-    const rows = await enrichUnitsWithThumbnails(normalizedRows);
+    const enrichmentResult = await enrichUnitsWithThumbnails(normalizedRows);
+    const rows = enrichmentResult.rows;
+    const diagnostics = enrichmentResult.diagnostics;
     if (rows.length === 0) {
         throw new Error('No valid Nikke units found to seed.');
     }
@@ -215,6 +428,10 @@ async function run() {
             thumbnailsResolved: rows.filter((row) => Boolean(row.thumbnail)).length,
             affectedRows: upsertResult.rowCount,
             truncated: truncate,
+            scrapeSourceUrl: diagnostics?.sourceUrl || null,
+            scrapedCount: diagnostics?.scrapedCount || 0,
+            scrapeDiagnostics: diagnostics?.scrape || null,
+            resolutionDiagnostics: diagnostics?.resolution || null,
         });
     } catch (error) {
         await client.query('ROLLBACK');
