@@ -43,6 +43,38 @@ function normalizeCharacterName(value) {
         .trim();
 }
 
+function isPlaceholderImageUrl(value) {
+    const url = String(value || '').trim().toLowerCase();
+    if (!url) {
+        return true;
+    }
+
+    // Most lazy placeholders are 1x1 data URI gifs.
+    return url.startsWith('data:image/');
+}
+
+function pickPreferredImageUrl(...candidates) {
+    for (const candidate of candidates) {
+        const value = String(candidate || '').trim();
+        if (!value) {
+            continue;
+        }
+
+        if (!isPlaceholderImageUrl(value)) {
+            return value;
+        }
+    }
+
+    for (const candidate of candidates) {
+        const value = String(candidate || '').trim();
+        if (value) {
+            return value;
+        }
+    }
+
+    return null;
+}
+
 function addCappedSample(target, value, maxSize = MAX_DIAGNOSTIC_SAMPLES) {
     if (!Array.isArray(target) || target.length >= maxSize) {
         return;
@@ -97,9 +129,21 @@ function parsePlayerItemsFromHtml(html, pageUrl) {
         const srcMatch =
             block.match(/<img[^>]*class="[^"]*nikkes-player-item-img[^"]*"[^>]*src="([^"]+)"/i)
             || block.match(/<img[^>]*class="[^"]*nikkes-all-item-img[^"]*"[^>]*src="([^"]+)"/i);
+        const dataSrcMatch =
+            block.match(/<img[^>]*class="[^"]*nikkes-player-item-img[^"]*"[^>]*data-src="([^"]+)"/i)
+            || block.match(/<img[^>]*class="[^"]*nikkes-all-item-img[^"]*"[^>]*data-src="([^"]+)"/i);
+        const srcSetMatch =
+            block.match(/<img[^>]*class="[^"]*nikkes-player-item-img[^"]*"[^>]*srcset="([^"]+)"/i)
+            || block.match(/<img[^>]*class="[^"]*nikkes-all-item-img[^"]*"[^>]*srcset="([^"]+)"/i);
         const nameMatch = block.match(/<p[^>]*class="[^"]*name[^"]*"[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i);
+        const srcSetFirstUrl = srcSetMatch?.[1]?.split(',')?.[0]?.trim()?.split(' ')?.[0] || null;
+        const selectedImageUrl = pickPreferredImageUrl(
+            dataSrcMatch?.[1],
+            srcSetFirstUrl,
+            srcMatch?.[1],
+        );
 
-        if (!srcMatch) {
+        if (!selectedImageUrl) {
             diagnostics.missingSrcCount += 1;
         }
 
@@ -107,7 +151,7 @@ function parsePlayerItemsFromHtml(html, pageUrl) {
             diagnostics.missingNameCount += 1;
         }
 
-        if (!srcMatch || !nameMatch) {
+        if (!selectedImageUrl || !nameMatch) {
             continue;
         }
 
@@ -119,7 +163,7 @@ function parsePlayerItemsFromHtml(html, pageUrl) {
 
         let thumbnailUrl;
         try {
-            thumbnailUrl = new URL(srcMatch[1], pageUrl).href;
+            thumbnailUrl = new URL(selectedImageUrl, pageUrl).href;
         } catch {
             diagnostics.invalidUrlCount += 1;
             continue;
@@ -180,6 +224,30 @@ async function fetchPlayerItemThumbnailsWithBrowser(pageUrl) {
                 }
             };
 
+            const isPlaceholder = (value) => String(value || '').trim().toLowerCase().startsWith('data:image/');
+
+            const pickPreferred = (...candidates) => {
+                for (const candidate of candidates) {
+                    const value = String(candidate || '').trim();
+                    if (!value) {
+                        continue;
+                    }
+
+                    if (!isPlaceholder(value)) {
+                        return value;
+                    }
+                }
+
+                for (const candidate of candidates) {
+                    const value = String(candidate || '').trim();
+                    if (value) {
+                        return value;
+                    }
+                }
+
+                return null;
+            };
+
             const pickName = (img) => {
                 const card = img.closest('[data-cname="player-item"]') || img.closest('div');
                 if (!card) {
@@ -203,8 +271,13 @@ async function fetchPlayerItemThumbnailsWithBrowser(pageUrl) {
             const rows = [];
 
             for (const img of imageNodes) {
-                const src = img.getAttribute('src') || img.getAttribute('data-src');
-                const absoluteSrc = src ? toAbsoluteUrl(src) : null;
+                const src = img.getAttribute('src');
+                const dataSrc = img.getAttribute('data-src');
+                const dataOriginal = img.getAttribute('data-original');
+                const srcSet = img.getAttribute('srcset');
+                const srcSetFirst = srcSet ? srcSet.split(',')[0]?.trim()?.split(' ')[0] : null;
+                const selectedSrc = pickPreferred(dataSrc, dataOriginal, srcSetFirst, src);
+                const absoluteSrc = selectedSrc ? toAbsoluteUrl(selectedSrc) : null;
                 const rawName = pickName(img);
                 const normalizedName = normalize(rawName);
 
