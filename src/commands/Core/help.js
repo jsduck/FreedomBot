@@ -23,24 +23,14 @@ const HELP_MENU_TIMEOUT_MS = 5 * 60 * 1000;
 
 const CATEGORY_ICONS = {
     Core: "ℹ️",
-    Moderation: "🛡️",
-    Economy: "💰",
-    Music: "🎵",
+    Nikke: "🎯",
     Fun: "🎮",
-    Leveling: "📊",
     Utility: "🔧",
-    Ticket: "🎫",
-    Welcome: "👋",
-    Giveaway: "🎉",
     Counter: "🔢",
     Tools: "🛠️",
-    Search: "🔍",
-    "Reaction Roles": "🎭",
     Community: "👥",
-    Birthday: "🎂",
-    "Join To Create": "🔌"
+    Config: "⚙️",
 };
-
 function formatCategoryName(rawCategory) {
     return rawCategory
         .replace(/_/g, '')
@@ -116,11 +106,6 @@ export async function createInitialHelpMenu(client) {
         .setLabel("Report Bug")
         .setStyle(ButtonStyle.Danger);
 
-    const supportButton = new ButtonBuilder()
-        .setLabel("Support Server")
-        .setURL("https://discord.gg/QnWNz2dKCE")
-        .setStyle(ButtonStyle.Link);
-
     const selectRow = createSelectMenu(
         CATEGORY_SELECT_ID,
         "Select to view the commands",
@@ -129,7 +114,6 @@ export async function createInitialHelpMenu(client) {
 
     const buttonRow = new ActionRowBuilder().addComponents([
         bugReportButton,
-        supportButton,
     ]);
 
     return {
