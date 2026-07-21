@@ -27,7 +27,6 @@ const COMMAND_ERROR_SUBTYPES = {
   nikke: 'nikke_failed',
   ping: 'ping_failed',
   stats: 'stats_failed',
-  support: 'support_failed',
   uptime: 'uptime_failed',
 };
 
