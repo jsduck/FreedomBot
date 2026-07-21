@@ -50,6 +50,14 @@ function addCappedSample(target, value, maxSize = MAX_DIAGNOSTIC_SAMPLES) {
     target.push(value);
 }
 
+function toLogJson(value) {
+    try {
+        return JSON.stringify(value);
+    } catch {
+        return '{"error":"failed_to_serialize_log_payload"}';
+    }
+}
+
 function findScrapeCandidates(normalizedName, scrapedKeys, limit = 3) {
     if (!normalizedName || !Array.isArray(scrapedKeys) || scrapedKeys.length === 0) {
         return [];
@@ -150,8 +158,7 @@ async function fetchPlayerItemThumbnails(pageUrl) {
     const contentType = response.headers.get('content-type') || 'unknown';
     const parseResult = parsePlayerItemsFromHtml(html, pageUrl);
 
-    logger.info('Fetched and parsed Nikke list page', {
-        event: 'nikke_characters.seed.scrape.fetch.complete',
+    const fetchDiagnostics = {
         sourceUrl: pageUrl,
         finalUrl: response.url,
         redirected: response.redirected,
@@ -165,6 +172,11 @@ async function fetchPlayerItemThumbnails(pageUrl) {
         missingSrcCount: parseResult.diagnostics.missingSrcCount,
         invalidUrlCount: parseResult.diagnostics.invalidUrlCount,
         extractionSamples: parseResult.diagnostics.extractionSamples,
+    };
+
+    logger.info(`Fetched and parsed Nikke list page ${toLogJson(fetchDiagnostics)}`, {
+        event: 'nikke_characters.seed.scrape.fetch.complete',
+        ...fetchDiagnostics,
     });
 
     return parseResult;
@@ -268,8 +280,7 @@ async function enrichUnitsWithThumbnails(units) {
         scrapedThumbnailMap = scrapeResult.thumbnailMap;
         scrapeDiagnostics = scrapeResult.diagnostics;
 
-        logger.info('Loaded scraped Nikke thumbnails', {
-            event: 'nikke_characters.seed.scrape.completed',
+        const scrapeSummary = {
             sourceUrl: nikkeListUrl,
             scrapedCount: scrapedThumbnailMap.size,
             segmentCount: scrapeDiagnostics?.segmentCount ?? 0,
@@ -277,6 +288,11 @@ async function enrichUnitsWithThumbnails(units) {
             missingNameCount: scrapeDiagnostics?.missingNameCount ?? 0,
             missingSrcCount: scrapeDiagnostics?.missingSrcCount ?? 0,
             invalidUrlCount: scrapeDiagnostics?.invalidUrlCount ?? 0,
+        };
+
+        logger.info(`Loaded scraped Nikke thumbnails ${toLogJson(scrapeSummary)}`, {
+            event: 'nikke_characters.seed.scrape.completed',
+            ...scrapeSummary,
         });
     } catch (error) {
         logger.warn(`Failed to scrape Nikke thumbnails from ${nikkeListUrl}: ${error.message}`);
@@ -348,8 +364,7 @@ async function enrichUnitsWithThumbnails(units) {
         }
     }
 
-    logger.info('Nikke thumbnail resolution diagnostics', {
-        event: 'nikke_characters.seed.thumbnail_resolution',
+    const resolutionSummary = {
         sourceUrl: nikkeListUrl,
         scrapedCount: scrapedThumbnailMap.size,
         sourceCounts: resolutionDiagnostics.sourceCounts,
@@ -358,6 +373,11 @@ async function enrichUnitsWithThumbnails(units) {
         dotggStatusCounts: resolutionDiagnostics.dotgg.statusCounts,
         unresolvedSamples: resolutionDiagnostics.unresolvedSamples,
         scrapedMatchSamples: resolutionDiagnostics.scrapedMatchSamples,
+    };
+
+    logger.info(`Nikke thumbnail resolution diagnostics ${toLogJson(resolutionSummary)}`, {
+        event: 'nikke_characters.seed.thumbnail_resolution',
+        ...resolutionSummary,
     });
 
     return {
@@ -443,9 +463,17 @@ async function run() {
 }
 
 run().catch((error) => {
-    logger.error('Failed to seed nikke_characters table', {
+    const errorDetails = {
+        name: error?.name || null,
+        message: error?.message || null,
+        code: error?.code || null,
+        detail: error?.detail || null,
+    };
+
+    logger.error(`Failed to seed nikke_characters table ${toLogJson(errorDetails)}`, {
         event: 'nikke_characters.seed.failed',
-        error: error.message,
+        error: error?.message || String(error),
+        errorDetails,
     });
     process.exit(1);
 });
