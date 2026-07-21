@@ -333,16 +333,8 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
             color: getColor('success')
         });
 
-    let portraitEmbed = null;
-
     if (resolvedThumbnail) {
         embed.setThumbnail(buildThumbnailUrl(resolvedThumbnail));
-
-        portraitEmbed = createEmbed({
-            title: `${resolvedCharacterName} Portrait`,
-            color: getColor('success'),
-        });
-        portraitEmbed.setImage(resolvedThumbnail);
     }
 
     embed.addFields(
@@ -401,11 +393,8 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
                 }
             );
 
-    const embeds = portraitEmbed ? [embed, portraitEmbed] : [embed];
-
     return {
         embed,
-        embeds,
         components: buildUserCharacterComponents(intlOpenId, nameCode),
     };
 }
@@ -423,7 +412,7 @@ export async function handleUserCharacter(interaction, client) {
     const response = await buildUserCharacterView(client, intl_open_id, name_codes);
 
     await InteractionHelper.safeEditReply(interaction, {
-        embeds: response.embeds || [response.embed],
+        embeds: [response.embed],
         components: response.components,
     });
 }
