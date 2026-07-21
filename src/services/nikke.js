@@ -1,7 +1,22 @@
-import fetch from "node-fetch";
 import fetchCookie from "fetch-cookie";
 
-const fetchWithCookies = fetchCookie(fetch);
+const fetchWithCookies = fetchCookie(globalThis.fetch);
+
+function getSetCookieHeaders(response) {
+    const headers = response?.headers;
+    if (!headers) return [];
+
+    if (typeof headers.getSetCookie === "function") {
+        return headers.getSetCookie();
+    }
+
+    if (typeof headers.raw === "function") {
+        return headers.raw()["set-cookie"] || [];
+    }
+
+    const single = headers.get("set-cookie");
+    return single ? [single] : [];
+}
 
 const nikkeBase = [
     { id: 203201, name_code: 5017, name: "Miranda", getol: true },
@@ -1206,11 +1221,14 @@ export async function login() {
     }
     var res = await fetchWithCookies(url, options);
 
-    if (!res.headers.raw()["set-cookie"]) {
+    const setCookies = getSetCookieHeaders(res);
+    if (setCookies.length === 0) {
         console.log(res);
         throw new Error("Login failed: No cookies received");
     }
-    token = res.data?.token;
+
+    const loginPayload = await res.clone().json().catch(() => null);
+    token = loginPayload?.data?.token || loginPayload?.token || null;
 
     return res;
 }
