@@ -14,10 +14,7 @@ const DEFAULT_ANOMALY_POLICY = Object.freeze({
 });
 
 const RISKY_COMMAND_CATEGORIES = new Set([
-  'moderation',
-  'ticket',
-  'config',
-  'verification'
+  'config'
 ]);
 
 const RISKY_COMMAND_NAMES = new Set([
@@ -32,9 +29,7 @@ const RISKY_COMMAND_NAMES = new Set([
   'warn',
   'unban',
   'lock',
-  'unlock',
-  'ticket',
-  'reactroles'
+  'unlock'
 ]);
 
 const blockedAttemptStore = new Map();

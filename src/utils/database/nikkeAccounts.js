@@ -9,10 +9,7 @@ import {
 } from '../../services/nikke.js';
 
 const DEFAULT_NIKKE_ACCOUNTS = Object.freeze([]);
-
-const DEFAULT_NIKKE_UNIONS = Object.freeze([
-    { name: 'Avaricia', union_id: '25471', area_id: 84 },
-]);
+const DEFAULT_NIKKE_UNIONS = Object.freeze([]);
 
 const MAX_NIKKE_ACCOUNT_COMMAND_CHOICES = 5;
 const MAX_NIKKE_UNION_COMMAND_CHOICES = 10;
