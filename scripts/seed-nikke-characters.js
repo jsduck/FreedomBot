@@ -27,6 +27,7 @@ function normalizeUnits(units) {
             id,
             name_code: nameCode,
             name,
+            thumbnail: unit?.thumbnail || null,
         });
     }
 
@@ -52,6 +53,7 @@ async function run() {
     const ids = rows.map((row) => row.id);
     const nameCodes = rows.map((row) => row.name_code);
     const names = rows.map((row) => row.name);
+    const thumbnails = rows.map((row) => row.thumbnail);
 
     const table = pgConfig.tables.nikke_characters;
     const truncate = process.argv.includes('--truncate');
@@ -65,15 +67,16 @@ async function run() {
         }
 
         const upsertResult = await client.query(
-            `INSERT INTO ${table} (id, name_code, name)
-             SELECT seeded.id, seeded.name_code, seeded.name
-             FROM UNNEST($1::int[], $2::int[], $3::text[]) AS seeded(id, name_code, name)
+            `INSERT INTO ${table} (id, name_code, name, thumbnail)
+             SELECT seeded.id, seeded.name_code, seeded.name, seeded.thumbnail
+             FROM UNNEST($1::int[], $2::int[], $3::text[], $4::text[]) AS seeded(id, name_code, name, thumbnail)
              ON CONFLICT (name_code)
              DO UPDATE SET
                  id = EXCLUDED.id,
                  name = EXCLUDED.name,
+                 thumbnail = EXCLUDED.thumbnail,
                  updated_at = CURRENT_TIMESTAMP`,
-            [ids, nameCodes, names],
+            [ids, nameCodes, names, thumbnails],
         );
 
         await client.query('COMMIT');
