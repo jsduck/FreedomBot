@@ -43,5 +43,7 @@ export {
 
 export {
     getNikkeCharacters,
+    getNikkeCharacterByName,
+    getNikkeCharacterByNameCode,
     insertMissingNikkeCharacterNameCodes,
 } from './database/nikkeCharacters.js';

@@ -3,13 +3,25 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { logger } from '../src/utils/logger.js';
-import { NIKKE_UNITS } from '../src/services/nikke.js';
+import { NIKKE_UNITS, getCharacterByName } from '../src/services/nikke.js';
 import { pgConfig, resolveSslConfig } from '../src/config/database/postgres.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const { Pool } = pg;
+
+function slug(value) {
+    return String(value)
+        .toLowerCase()
+        .replace(/[:]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '');
+}
+
+function buildDotGgThumbnail(img) {
+    return `https://static.dotgg.gg/nikke/characters/${img}.webp`;
+}
 
 function normalizeUnits(units) {
     const dedupedByNameCode = new Map();
@@ -34,6 +46,35 @@ function normalizeUnits(units) {
     return [...dedupedByNameCode.values()];
 }
 
+async function resolveThumbnailForUnit(unit) {
+    if (unit.thumbnail) {
+        return unit.thumbnail;
+    }
+
+    try {
+        const response = await getCharacterByName(slug(unit.name));
+        if (!response.ok) {
+            return null;
+        }
+
+        const payload = await response.json();
+        const img = payload?.img;
+        return img ? buildDotGgThumbnail(img) : null;
+    } catch (error) {
+        logger.warn(`Failed to resolve thumbnail for ${unit.name}: ${error.message}`);
+        return null;
+    }
+}
+
+async function enrichUnitsWithThumbnails(units) {
+    return Promise.all(
+        units.map(async (unit) => ({
+            ...unit,
+            thumbnail: await resolveThumbnailForUnit(unit),
+        })),
+    );
+}
+
 async function run() {
     const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
     if (!connectionString) {
@@ -45,7 +86,8 @@ async function run() {
         ssl: resolveSslConfig(),
     });
 
-    const rows = normalizeUnits(NIKKE_UNITS);
+    const normalizedRows = normalizeUnits(NIKKE_UNITS);
+    const rows = await enrichUnitsWithThumbnails(normalizedRows);
     if (rows.length === 0) {
         throw new Error('No valid Nikke units found to seed.');
     }
@@ -85,6 +127,7 @@ async function run() {
             event: 'nikke_characters.seed.completed',
             table,
             sourceCount: rows.length,
+            thumbnailsResolved: rows.filter((row) => Boolean(row.thumbnail)).length,
             affectedRows: upsertResult.rowCount,
             truncated: truncate,
         });

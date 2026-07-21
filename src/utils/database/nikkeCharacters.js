@@ -104,3 +104,59 @@ export async function insertMissingNikkeCharacterNameCodes(client, nameCodes) {
         };
     }
 }
+
+export async function getNikkeCharacterByNameCode(client, nameCode) {
+    try {
+        const wrapper = client?.db;
+
+        if (!isPostgresSqlReady(wrapper)) {
+            return null;
+        }
+
+        const normalized = Number.parseInt(String(nameCode), 10);
+        if (!Number.isInteger(normalized)) {
+            return null;
+        }
+
+        const result = await wrapper.db.pool.query(
+            `SELECT name_code, id, name, thumbnail, created_at, updated_at
+             FROM ${pgConfig.tables.nikke_characters}
+             WHERE name_code = $1
+             LIMIT 1`,
+            [normalized],
+        );
+
+        return normalizeCharacterRow(result.rows[0]) || null;
+    } catch (error) {
+        logger.error(`Error loading Nikke character by name_code ${nameCode}:`, error);
+        return null;
+    }
+}
+
+export async function getNikkeCharacterByName(client, name) {
+    try {
+        const wrapper = client?.db;
+
+        if (!isPostgresSqlReady(wrapper)) {
+            return null;
+        }
+
+        const normalized = String(name || '').trim();
+        if (!normalized) {
+            return null;
+        }
+
+        const result = await wrapper.db.pool.query(
+            `SELECT name_code, id, name, thumbnail, created_at, updated_at
+             FROM ${pgConfig.tables.nikke_characters}
+             WHERE LOWER(name) = LOWER($1)
+             LIMIT 1`,
+            [normalized],
+        );
+
+        return normalizeCharacterRow(result.rows[0]) || null;
+    } catch (error) {
+        logger.error(`Error loading Nikke character by name ${name}:`, error);
+        return null;
+    }
+}

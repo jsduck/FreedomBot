@@ -1,6 +1,5 @@
 import { logger } from '../../../utils/logger.js';
 import { handleInteractionError, replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
-import { getNameByCode } from '../../../services/nikke.js';
 import { buildUserCharacterView, USER_CHARACTER_UPDATE_BUTTON_ID } from '../../../commands/Nikke/modules/nikke_character.js';
 
 export const userCharacterUpdateHandler = {
@@ -19,8 +18,7 @@ export const userCharacterUpdateHandler = {
 
             await interaction.deferUpdate();
 
-            const resolvedName = getNameByCode(nameCode) || nameCode;
-            const response = await buildUserCharacterView(client, intlOpenId, resolvedName, { refresh: true });
+            const response = await buildUserCharacterView(client, intlOpenId, String(nameCode), { refresh: true });
 
             await interaction.message.edit({
                 embeds: [response.embed],

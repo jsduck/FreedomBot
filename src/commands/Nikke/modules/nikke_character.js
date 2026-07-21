@@ -3,8 +3,8 @@ import { createEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { createError, ErrorTypes } from '../../../utils/errorHandler.js';
-import { getUserCharacterCache, upsertUserCharacterCache, getNikkeAccountByOpenId, getNikkeUnionById } from '../../../utils/database.js';
-import { getUserCharacterDetails, getCharacterByName, getNameCodeByName, getNameByCode } from '../../../services/nikke.js';
+import { getUserCharacterCache, upsertUserCharacterCache, getNikkeAccountByOpenId, getNikkeCharacterByName, getNikkeCharacterByNameCode, getNikkeUnionById } from '../../../utils/database.js';
+import { getUserCharacterDetails, getCharacterByName } from '../../../services/nikke.js';
 import { ButtonStyle, ActionRowBuilder, ButtonBuilder } from 'discord.js';
 
 function getDups(dups) {
@@ -201,20 +201,53 @@ export function buildUserCharacterComponents(intlOpenId, nameCode) {
     ];
 }
 
+async function resolveCharacterRecord(client, nameOrCode) {
+    const rawInput = String(nameOrCode || '').trim();
+    if (!rawInput) {
+        return null;
+    }
+
+    const parsedCode = Number.parseInt(rawInput, 10);
+    const isNumericInput = Number.isInteger(parsedCode) && String(parsedCode) === rawInput;
+
+    if (isNumericInput) {
+        const byCode = await getNikkeCharacterByNameCode(client, parsedCode);
+        if (byCode) {
+            return byCode;
+        }
+    }
+
+    return getNikkeCharacterByName(client, rawInput);
+}
+
 export async function buildUserCharacterView(client, intlOpenId, nameCodes, { refresh = false } = {}) {
-    const nameCode = getNameCodeByName(nameCodes);
+    const characterRecord = await resolveCharacterRecord(client, nameCodes);
+    const nameCode = characterRecord?.name_code ?? null;
+    const characterName = characterRecord?.name || String(nameCodes || '').trim();
 
     if (!nameCode) {
         throw createError(
             `Unknown Nikke character: ${nameCodes}`,
             ErrorTypes.VALIDATION,
-            `I could not find a Nikke character matching "${nameCodes}".`,
+            `I could not find a Nikke character matching "${nameCodes}" in nikke_characters.`,
             { expected: true },
         );
     }
 
-    const characterResponse = await getCharacterByName(slug(nameCodes));
-    const charJson = await characterResponse.json();
+    let resolvedThumbnail = characterRecord?.thumbnail || null;
+    if (!resolvedThumbnail) {
+        try {
+            const characterResponse = await getCharacterByName(slug(characterName));
+            if (characterResponse.ok) {
+                const charJson = await characterResponse.json();
+                if (charJson?.img) {
+                    resolvedThumbnail = `https://static.dotgg.gg/nikke/characters/${charJson.img}.webp`;
+                }
+            }
+        } catch (error) {
+            logger.warn(`Failed to load dotgg character metadata for ${characterName}: ${error.message}`);
+        }
+    }
 
     let payload = null;
     let cacheRecord = null;
@@ -267,7 +300,7 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
     extractOLvalue(gear, OLdict);
     const OLarray = Object.entries(OLdict).map(([key, value]) => {
         const num = Number(value);
-        const formatted = isNaN(num) ? String(value) : `${num.toFixed(2)}%`;
+        const formatted = isNaN(num) ? String(value) : `${Math.abs(Number(num).toFixed(2))}%`;
         return [formatFunctionDetails(key), formatted];
     });
 
@@ -275,12 +308,17 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
     const union = await getNikkeUnionById(client, account?.union_id);
     const unionName = union?.name || 'UNION';
     const synchroLevel = resolveSynchroLevelFromOutpost(account, units[0].lv);
+    const resolvedCharacterName = characterRecord?.name || `Name Code ${units[0].name_code}`;
 
     const embed = createEmbed({
-            title: `[${unionName}] ${account?.name ?? intlOpenId}'s ${getNameByCode(units[0].name_code)}`,
+            title: `[${unionName}] ${account?.name ?? intlOpenId}'s ${resolvedCharacterName}`,
             description: '',
             color: getColor('success')
-        }).setThumbnail("https://static.dotgg.gg/nikke/characters/" + charJson.img + ".webp");
+        });
+
+    if (resolvedThumbnail) {
+        embed.setThumbnail(resolvedThumbnail);
+    }
 
     embed.addFields(
                 { 
