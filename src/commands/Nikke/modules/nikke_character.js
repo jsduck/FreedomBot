@@ -10,11 +10,13 @@ import { ButtonStyle, ActionRowBuilder, ButtonBuilder } from 'discord.js';
 function getDups(dups) {
     switch (dups) {
         case 0:
+            return `-`;
         case 1:
+            return `⭐`;
         case 2:
             return `⭐`.repeat(dups);
         case 3:
-            return `⭐⭐⭐`;
+            return `⭐`.repeat(dups);
         default:
             return `CORE ${dups-3}`;
     }
@@ -189,6 +191,21 @@ function slug(value) {
         .replace(/[^a-z0-9-]/g, '');
 }
 
+function buildThumbnailUrl(url) {
+    const raw = String(url || '').trim();
+    if (!raw) {
+        return null;
+    }
+
+    // SG CDN supports imageMogr2 transforms; tighten crop so subject appears larger.
+    if (raw.includes('sg-tools-cdn.blablalink.com') && !raw.includes('imageMogr2=')) {
+        const separator = raw.includes('?') ? '&' : '?';
+        return `${raw}${separator}imageMogr2/thumbnail/220x%3E/quality/90/format/webp/interlace/0`;
+    }
+
+    return raw;
+}
+
 export function buildUserCharacterComponents(intlOpenId, nameCode) {
     return [
         new ActionRowBuilder().addComponents(
@@ -317,7 +334,7 @@ export async function buildUserCharacterView(client, intlOpenId, nameCodes, { re
         });
 
     if (resolvedThumbnail) {
-        embed.setImage(resolvedThumbnail);
+        embed.setThumbnail(buildThumbnailUrl(resolvedThumbnail));
     }
 
     embed.addFields(
