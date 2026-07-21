@@ -6,14 +6,9 @@ import cron from 'node-cron';
 
 import config from './config/application.js';
 import { initializeDatabase } from './utils/database.js';
-import { getGuildConfig } from './services/config/guildConfig.js';
-import { getServerCounters, saveServerCounters, updateCounter } from './services/serverstatsService.js';
 import { logger, startupLog, shutdownLog } from './utils/logger.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
 import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.js';
-import { initializeMusic } from './services/music/riffySetup.js';
-import { shutdownMusic } from './services/music/playerHandler.js';
-import { runUnionDailyMissionCounterCheck, runUnionOutpostStorageCounterCheck } from './services/nikkeUnionCounterService.js';
 import pkg from '../package.json' with { type: 'json' };
 import { EXPECTED_SCHEMA_VERSION, EXPECTED_SCHEMA_LABEL } from './config/database/schemaVersion.js';
 
@@ -21,18 +16,8 @@ class TitanBot extends Client {
   constructor() {
     super({
       intents: [
-        
-        GatewayIntentBits.Guilds,                        
-        GatewayIntentBits.GuildMembers,                 
-
-        GatewayIntentBits.GuildMessages,                
-        GatewayIntentBits.GuildMessageReactions,        
-        GatewayIntentBits.MessageContent,               
-        GatewayIntentBits.DirectMessages,
-
-        GatewayIntentBits.GuildVoiceStates,             
-
-        GatewayIntentBits.GuildBans,                    
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
       ],
     });
 
@@ -82,8 +67,6 @@ class TitanBot extends Client {
       startupLog('Loading handlers...');
       await this.loadHandlers();
       startupLog('Handlers loaded');
-
-      initializeMusic(this);
       
       startupLog('Logging into Discord...');
       await this.login(this.config.bot.token);
@@ -247,49 +230,7 @@ class TitanBot extends Client {
   }
 
   setupCronJobs() {
-    cron.schedule('*/15 * * * *', runSafeTask('counter_update', () => this.updateAllCounters()));
-    // Rollback schedules:
-    // cron.schedule('0 * * * *', runSafeTask('nikke_union_outpost_counter_check', () => runUnionOutpostStorageCounterCheck(this)));
-    // cron.schedule('0,30 * * * *', runSafeTask('nikke_union_daily_mission_counter_check', () => runUnionDailyMissionCounterCheck(this)));
-    cron.schedule('*/5 * * * *', runSafeTask('nikke_union_outpost_counter_check', () => runUnionOutpostStorageCounterCheck(this)));
-    cron.schedule('*/5 * * * *', runSafeTask('nikke_union_daily_mission_counter_check', () => runUnionDailyMissionCounterCheck(this)));
-  }
-
-  async updateAllCounters() {
-    if (!this.db) {
-      logger.warn('Database not available for counter updates');
-      return;
-    }
-    
-    for (const [guildId, guild] of this.guilds.cache) {
-      try {
-        const counters = await getServerCounters(this, guildId);
-        const validCounters = [];
-        const orphanedCounters = [];
-        
-        for (const counter of counters) {
-          if (counter && counter.type && counter.channelId && counter.enabled !== false) {
-            const channel = guild.channels.cache.get(counter.channelId);
-            if (channel) {
-              validCounters.push(counter);
-              await updateCounter(this, guild, counter);
-            } else {
-              orphanedCounters.push(counter);
-              logger.info(`Removing orphaned counter ${counter.id} (type: ${counter.type}, deleted channel: ${counter.channelId}) from guild ${guildId}`);
-            }
-          }
-        }
-        
-        // Save cleaned counters if any were orphaned
-        // Save cleaned counters if any were orphaned
-        if (orphanedCounters.length > 0) {
-          await saveServerCounters(this, guildId, validCounters);
-          logger.info(`Cleaned up ${orphanedCounters.length} orphaned counter(s) from guild ${guildId} during scheduled update`);
-        }
-      } catch (error) {
-        logger.error(`Error updating counters for guild ${guildId}:`, error);
-      }
-    }
+    // Intentionally minimal: command invocation does not require background jobs.
   }
 
   async loadHandlers() {
@@ -354,10 +295,6 @@ class TitanBot extends Client {
       logger.info('Stopping cron jobs...');
       cron.getTasks().forEach(task => task.stop());
       logger.info('✅ Cron jobs stopped');
-
-      logger.info('Stopping music players...');
-      await shutdownMusic(this);
-      logger.info('✅ Music players stopped');
 
       if (this.webServer) {
         logger.info('Closing web server...');

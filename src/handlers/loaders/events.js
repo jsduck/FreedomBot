@@ -9,9 +9,11 @@ const __dirname = dirname(__filename);
 
 export default async function loadEvents(client) {
     const eventsPath = join(__dirname, '../../events');
-    const eventFiles = await readdir(eventsPath).then(files => files.filter(file => file.endsWith('.js')));
+    const eventFiles = await readdir(eventsPath).then((files) =>
+        files.filter((file) => file.endsWith('.js') && file === 'interactionCreate.js'),
+    );
 
-    logger.info(`Found ${eventFiles.length} event files to load`);
+    logger.info(`Found ${eventFiles.length} event files to load (interaction only)`);
 
     for (const file of eventFiles) {
         const filePath = join(eventsPath, file);

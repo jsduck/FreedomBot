@@ -8,6 +8,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const interactionTypes = ['buttons', 'selectMenus', 'modals'];
+const allowedPathTokens = ['/help/', '/nikke/', '/config/'];
+
+function isAllowedInteractionPath(interactionsPath, filePath) {
+  const normalizedPath = filePath.slice(interactionsPath.length).replace(/\\/g, '/').toLowerCase();
+  return allowedPathTokens.some((token) => normalizedPath.includes(token));
+}
 
 async function getAllInteractionFiles(directory, fileList = []) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -33,7 +39,10 @@ export default async (client) => {
       const typePath = join(interactionsPath, type);
 
       try {
-        const interactionFiles = await getAllInteractionFiles(typePath);
+        const allInteractionFiles = await getAllInteractionFiles(typePath);
+        const interactionFiles = allInteractionFiles.filter((filePath) =>
+          isAllowedInteractionPath(interactionsPath, filePath),
+        );
         let loadedCount = 0;
 
         for (const filePath of interactionFiles) {

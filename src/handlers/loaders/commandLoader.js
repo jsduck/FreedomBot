@@ -9,6 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const MAX_COMMANDS = 100;
 const COMMAND_COUNT_WARN_THRESHOLD = 90;
+const ALLOWED_COMMAND_CATEGORIES = new Set(['Core', 'Nikke']);
 
 function getSubcommandInfo(commandData) {
     const subcommands = [];
@@ -51,12 +52,20 @@ async function getAllFiles(directory, fileList = []) {
     return fileList;
 }
 
+function isAllowedCommandFile(filePath) {
+    const normalizedPath = filePath.replace(/\\/g, '/');
+    return Array.from(ALLOWED_COMMAND_CATEGORIES).some(
+        (category) => normalizedPath.includes(`/commands/${category}/`),
+    );
+}
+
 export async function loadCommands(client) {
     client.commands = new Collection();
     const commandsPath = path.join(__dirname, '../../commands');
-    const commandFiles = await getAllFiles(commandsPath);
+    const allCommandFiles = await getAllFiles(commandsPath);
+    const commandFiles = allCommandFiles.filter(isAllowedCommandFile);
     
-    logger.info(`Found ${commandFiles.length} command files to load`);
+    logger.info(`Found ${commandFiles.length} command files to load (Core/Nikke only)`);
     
     const uniqueCommandNames = new Set();
     
