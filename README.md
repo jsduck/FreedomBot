@@ -16,7 +16,7 @@
 <a name="features-overview"></a>
 ## Features Overview
 
-Sasook offers a complete suite of tools for Discord server management and community engagement:
+feature desc
 
 <table>
 <tr>
@@ -127,7 +127,7 @@ docker pull ghcr.io/jsduck/Sasook:main
    Environment options reference:
    - `NODE_ENV`: `development`, `production`, `test` (any non-`production` value is treated as non-production)
    - `LOG_LEVEL`: `error`, `warn`, `info`, `http`, `verbose`, `debug`, `silly`
-   - Accepted aliases for `LOG_LEVEL` in this bot: `warns`, `warning`, `warnings` â†’ `warn`
+   - Accepted aliases for `LOG_LEVEL` in this bot: `warns`, `warning`, `warnings` -> `warn`
 
    Recommended production `.env` (easy mode + default mode):
    ```env
@@ -148,7 +148,7 @@ Notes:
 - Global slash commands may take up to about an hour to propagate on first deploy
 - Each server has **isolated** data: config, economy, tickets, leveling, dashboards, warnings, etc. (all keys are scoped as `guild:{guildId}:...`)
 - In the [Discord Developer Portal](https://discord.com/developers/applications), ensure your bot is not restricted to a single guild if you plan to invite it elsewhere
-- Generate an OAuth2 invite URL from the [Discord Developer Portal](https://discord.com/developers/applications) (OAuth2 â†’ URL Generator, scopes: `bot` and `applications.commands`)
+- Generate an OAuth2 invite URL from the [Discord Developer Portal](https://discord.com/developers/applications) (OAuth2 -> URL Generator, scopes: `bot` and `applications.commands`)
 
 4. **Setup PostgreSQL Database** (Optional but recommended)
    ```bash
@@ -171,7 +171,7 @@ Notes:
 
 > **Note on database migrations:** Schema tables and legacy key migrations run
 > **automatically on startup**, so` managed hosts like **Railway** need no manual
-> migration step â€” just deploy/restart. To disable auto-migration set
+> migration step - just deploy/restart. To disable auto-migration set
 > `AUTO_MIGRATE=false`. You can still run a manual key migration locally with
 > `node scripts/migrate-keys.js --dry-run` (preview) or `node scripts/migrate-keys.js`.
 <a name="bot-intents"></a>
@@ -180,9 +180,8 @@ Notes:
 Sasook requires the following Discord intents:
 - **Guilds**
 - **Guild Messages**
-- **Message Content**
 - **Guild Members**
-- **Guild Message Reactions**
+- **Message Content**
 - **Direct Messages**
 - **Bot**
 - **Applications.commands**
