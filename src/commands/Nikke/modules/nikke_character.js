@@ -200,7 +200,7 @@ function buildThumbnailUrl(url) {
     // Discord thumbnail frame size is fixed; crop tighter so the portrait appears larger.
     if (raw.includes('sg-tools-cdn.blablalink.com') && !raw.includes('imageMogr2')) {
         const separator = raw.includes('?') ? '&' : '?';
-        return `${raw}${separator}imageMogr2/thumbnail/540x%3E/gravity/North/crop/220x220/quality/92/format/webp/interlace/0`;
+        return `${raw}${separator}imageMogr2/thumbnail/540x%3E/gravity/Center/crop/220x220/quality/92/format/webp/interlace/0`;
     }
 
     return raw;
